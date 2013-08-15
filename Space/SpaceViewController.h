@@ -1,5 +1,5 @@
 //
-//  AppDelegate.h
+//  SpaceViewController.h
 //  Space
 //
 //  Created by Nigel Brooke on 2013-08-15.
@@ -8,8 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface AppDelegate : UIResponder <UIApplicationDelegate>
-
-@property (strong, nonatomic) UIWindow *window;
+@interface SpaceViewController : UIViewController
 
 @end

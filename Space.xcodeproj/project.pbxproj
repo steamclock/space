@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A62D413317BD795F0073DDB4 /* Database.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413217BD795F0073DDB4 /* Database.m */; };
+		A62D413917BD7BE80073DDB4 /* Circle.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413817BD7BE80073DDB4 /* Circle.m */; };
+		A62D413C17BD7D850073DDB4 /* SpaceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413B17BD7D850073DDB4 /* SpaceViewController.m */; };
 		A6F553EF17BD737200728B8C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6F553EE17BD737200728B8C /* Foundation.framework */; };
 		A6F553F117BD737200728B8C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6F553F017BD737200728B8C /* CoreGraphics.framework */; };
 		A6F553F317BD737200728B8C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6F553F217BD737200728B8C /* UIKit.framework */; };
@@ -35,6 +38,12 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A62D413117BD795F0073DDB4 /* Database.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Database.h; path = ../../space/Space/Database.h; sourceTree = "<group>"; };
+		A62D413217BD795F0073DDB4 /* Database.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Database.m; path = ../../space/Space/Database.m; sourceTree = "<group>"; };
+		A62D413717BD7BE80073DDB4 /* Circle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Circle.h; path = ../../space/Space/Circle.h; sourceTree = "<group>"; };
+		A62D413817BD7BE80073DDB4 /* Circle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Circle.m; path = ../../space/Space/Circle.m; sourceTree = "<group>"; };
+		A62D413A17BD7D850073DDB4 /* SpaceViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SpaceViewController.h; path = ../../space/Space/SpaceViewController.h; sourceTree = "<group>"; };
+		A62D413B17BD7D850073DDB4 /* SpaceViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SpaceViewController.m; path = ../../space/Space/SpaceViewController.m; sourceTree = "<group>"; };
 		A6F553EB17BD737200728B8C /* Space.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Space.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A6F553EE17BD737200728B8C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		A6F553F017BD737200728B8C /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -117,6 +126,12 @@
 			children = (
 				A6F553FF17BD737200728B8C /* AppDelegate.h */,
 				A6F5540017BD737200728B8C /* AppDelegate.m */,
+				A62D413117BD795F0073DDB4 /* Database.h */,
+				A62D413217BD795F0073DDB4 /* Database.m */,
+				A62D413717BD7BE80073DDB4 /* Circle.h */,
+				A62D413817BD7BE80073DDB4 /* Circle.m */,
+				A62D413A17BD7D850073DDB4 /* SpaceViewController.h */,
+				A62D413B17BD7D850073DDB4 /* SpaceViewController.m */,
 				A6F5540517BD737200728B8C /* Images.xcassets */,
 				A6F5540217BD737200728B8C /* Space.xcdatamodeld */,
 				A6F553F717BD737200728B8C /* Supporting Files */,
@@ -250,6 +265,9 @@
 			files = (
 				A6F5540117BD737200728B8C /* AppDelegate.m in Sources */,
 				A6F553FD17BD737200728B8C /* main.m in Sources */,
+				A62D413917BD7BE80073DDB4 /* Circle.m in Sources */,
+				A62D413C17BD7D850073DDB4 /* SpaceViewController.m in Sources */,
+				A62D413317BD795F0073DDB4 /* Database.m in Sources */,
 				A6F5540417BD737200728B8C /* Space.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -447,6 +465,7 @@
 				A6F5541F17BD737200728B8C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		A6F5542017BD737200728B8C /* Build configuration list for PBXNativeTarget "SpaceTests" */ = {
 			isa = XCConfigurationList;
@@ -455,6 +474,7 @@
 				A6F5542217BD737200728B8C /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
