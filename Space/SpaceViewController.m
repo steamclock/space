@@ -10,11 +10,24 @@
 #import "Database.h"
 #import "Circle.h"
 
-#import <objc/objc-runtime.h>
+@interface CircleView : UIImageView
 
-static char associatedObjectKey;
+@property Circle* circle;
+
+@end
+
+@implementation CircleView
+
+@end
 
 @interface SpaceViewController ()
+
+@property (nonatomic) UIDynamicAnimator* animator;
+@property (nonatomic) UIGravityBehavior* gravity;
+@property (nonatomic) UICollisionBehavior* collision;
+@property (nonatomic) UIDynamicItemBehavior* drag;
+
+@property BOOL simulating;
 
 @end
 
@@ -24,8 +37,23 @@ static char associatedObjectKey;
 {
     [super viewDidLoad];
     
+    self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
+    
+    self.gravity = [[UIGravityBehavior alloc] initWithItems:self.view.subviews];
+    self.gravity.gravityDirection = CGVectorMake(0, 0);
+    self.collision = [[UICollisionBehavior alloc] initWithItems:self.view.subviews];
+    self.collision.translatesReferenceBoundsIntoBoundary = YES;
+    
+    [self.animator addBehavior:self.gravity];
+    [self.animator addBehavior:self.collision];
+    [self.animator addBehavior:self.drag];
+
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceTap:)];
     [self.view addGestureRecognizer:tapGestureRecognizer];
+    
+    UITapGestureRecognizer *doubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceDoubleTap:)];
+    doubleTapGestureRecognizer.numberOfTapsRequired = 2;
+    [self.view addGestureRecognizer:doubleTapGestureRecognizer];
     
     NSArray* circles = [[Database sharedDatabase] circles];
     
@@ -35,11 +63,17 @@ static char associatedObjectKey;
 }
 
 -(void)circleTap: (UITapGestureRecognizer *)recognizer {
-    UIView* view = recognizer.view;
-    Circle* circle = objc_getAssociatedObject(view, &associatedObjectKey);
+    CircleView* view = (CircleView*)recognizer.view;
+    Circle* circle = view.circle;
     [view removeFromSuperview];
     [circle removeFromDatabase];
+    [self.gravity removeItem:view];
+    [self.collision removeItem:view];
     [[Database sharedDatabase] save];
+}
+
+-(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {
+    self.gravity.gravityDirection = CGVectorMake(0, 1);
 }
 
 -(void)spaceTap:(UITapGestureRecognizer *)recognizer {
@@ -56,22 +90,36 @@ static char associatedObjectKey;
 }
 
 -(void)circleDrag:(UIPanGestureRecognizer*)recognizer {
-    UIView* view = recognizer.view;
-    CGPoint drag = [recognizer locationInView:self.view];
-    view.frame = CGRectMake(drag.x - (view.frame.size.width / 2), drag.y - (view.frame.size.height / 2), view.frame.size.width, view.frame.size.height);
     
-    Circle* circle = objc_getAssociatedObject(view, &associatedObjectKey);
+    CircleView* view = (CircleView*)recognizer.view;
+    CGPoint drag = [recognizer locationInView:self.view];
+
+    if(recognizer.state == UIGestureRecognizerStateBegan) {
+        self.drag = [[UIDynamicItemBehavior alloc] init];
+        self.drag.density = 1000000.0f;
+        [self.drag addItem:view];
+        [self.gravity removeItem:view];
+    }
+    
+    view.center = CGPointMake(drag.x, drag.y);
+    
+    [self.animator updateItemUsingCurrentState:view];
+    
+    Circle* circle = view.circle;
     circle.positionX = drag.x;
     circle.positionY = drag.y;
-    
+
     if(recognizer.state == UIGestureRecognizerStateEnded) {
+        [self.gravity addItem:view];
+        [self.drag removeItem:view];
+        self.drag = nil;
         [[Database sharedDatabase] save];
     }
 }
 
 -(void)addViewForCircle:(Circle*)circle {
-    UIImageView* imageView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
-    imageView.frame = CGRectOffset(imageView.frame, circle.positionX - (imageView.frame.size.width / 2), circle.positionY - (imageView.frame.size.height / 2));
+    CircleView* imageView = [[CircleView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
+    imageView.center = CGPointMake(circle.positionX, circle.positionY);
     
     imageView.userInteractionEnabled = YES;
     
@@ -81,8 +129,10 @@ static char associatedObjectKey;
     UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(circleDrag:)];
     [imageView addGestureRecognizer:panGestureRecognizer];
     
-    objc_setAssociatedObject(imageView, &associatedObjectKey, circle, OBJC_ASSOCIATION_RETAIN);
+    imageView.circle = circle;
 
     [self.view addSubview:imageView];
+    [self.gravity addItem:imageView];
+    [self.collision addItem:imageView];
 }
 @end
