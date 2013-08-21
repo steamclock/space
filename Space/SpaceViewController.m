@@ -10,16 +10,7 @@
 #import "FocusViewController.h"
 #import "Database.h"
 #import "Circle.h"
-
-@interface CircleView : UIImageView
-
-@property Circle* circle;
-
-@end
-
-@implementation CircleView
-
-@end
+#import "CircleView.h"
 
 @interface SpaceViewController ()
 
