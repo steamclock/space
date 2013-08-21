@@ -37,6 +37,9 @@
 {
     [super viewDidLoad];
     
+    self.view.backgroundColor = [UIColor whiteColor];
+    self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
     
     self.gravity = [[UIGravityBehavior alloc] initWithItems:self.view.subviews];

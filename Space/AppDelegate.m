@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "DrawerViewController.h"
 #import "SpaceViewController.h"
 #import "Database.h"
 
@@ -19,8 +20,18 @@
     self.window.backgroundColor = [UIColor whiteColor];
     [self.window makeKeyAndVisible];
     
-    self.window.rootViewController = [SpaceViewController new];
+    self.window.backgroundColor = [UIColor darkGrayColor];
     
+    DrawerViewController* drawer = [DrawerViewController new];
+    drawer.contents = [SpaceViewController new];
+    
+    UIViewController* container = [UIViewController new];
+    container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    [container addChildViewController:drawer];
+    [container.view addSubview:drawer.view];
+    
+    self.window.rootViewController = container;
+
     return YES;
 }
 
