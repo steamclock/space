@@ -8,6 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
+@class FocusViewController;
+
 @interface SpaceViewController : UIViewController
+
+@property (nonatomic) FocusViewController* focus;
 
 @end

@@ -11,8 +11,7 @@
 
 @implementation Circle
 
-@dynamic positionX;
-@dynamic positionY;
+@dynamic positionX, positionY, title, content;
 
 -(void)removeFromDatabase {
     [self.managedObjectContext deleteObject:self];

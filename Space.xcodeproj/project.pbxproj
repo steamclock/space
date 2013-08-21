@@ -11,6 +11,7 @@
 		A62D413917BD7BE80073DDB4 /* Circle.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413817BD7BE80073DDB4 /* Circle.m */; };
 		A62D413C17BD7D850073DDB4 /* SpaceViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413B17BD7D850073DDB4 /* SpaceViewController.m */; };
 		A6EF0DDF17C41173005EF2A0 /* DrawerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A6EF0DDE17C41173005EF2A0 /* DrawerViewController.m */; };
+		A6EF0DE217C537DD005EF2A0 /* FocusViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A6EF0DE117C537DD005EF2A0 /* FocusViewController.m */; };
 		A6F553EF17BD737200728B8C /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6F553EE17BD737200728B8C /* Foundation.framework */; };
 		A6F553F117BD737200728B8C /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6F553F017BD737200728B8C /* CoreGraphics.framework */; };
 		A6F553F317BD737200728B8C /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A6F553F217BD737200728B8C /* UIKit.framework */; };
@@ -47,6 +48,8 @@
 		A62D413B17BD7D850073DDB4 /* SpaceViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = SpaceViewController.m; path = ../../space/Space/SpaceViewController.m; sourceTree = "<group>"; };
 		A6EF0DDD17C41173005EF2A0 /* DrawerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DrawerViewController.h; sourceTree = "<group>"; };
 		A6EF0DDE17C41173005EF2A0 /* DrawerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DrawerViewController.m; sourceTree = "<group>"; };
+		A6EF0DE017C537DD005EF2A0 /* FocusViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FocusViewController.h; sourceTree = "<group>"; };
+		A6EF0DE117C537DD005EF2A0 /* FocusViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FocusViewController.m; sourceTree = "<group>"; };
 		A6F553EB17BD737200728B8C /* Space.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Space.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A6F553EE17BD737200728B8C /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		A6F553F017BD737200728B8C /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -137,6 +140,8 @@
 				A6EF0DDE17C41173005EF2A0 /* DrawerViewController.m */,
 				A62D413A17BD7D850073DDB4 /* SpaceViewController.h */,
 				A62D413B17BD7D850073DDB4 /* SpaceViewController.m */,
+				A6EF0DE017C537DD005EF2A0 /* FocusViewController.h */,
+				A6EF0DE117C537DD005EF2A0 /* FocusViewController.m */,
 				A6F5540517BD737200728B8C /* Images.xcassets */,
 				A6F5540217BD737200728B8C /* Space.xcdatamodeld */,
 				A6F553F717BD737200728B8C /* Supporting Files */,
@@ -275,6 +280,7 @@
 				A6EF0DDF17C41173005EF2A0 /* DrawerViewController.m in Sources */,
 				A62D413317BD795F0073DDB4 /* Database.m in Sources */,
 				A6F5540417BD737200728B8C /* Space.xcdatamodeld in Sources */,
+				A6EF0DE217C537DD005EF2A0 /* FocusViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

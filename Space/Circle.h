@@ -15,6 +15,9 @@
 @property (nonatomic) float positionX;
 @property (nonatomic) float positionY;
 
+@property (nonatomic) NSString* title;
+@property (nonatomic) NSString* content;
+
 -(void)removeFromDatabase;
 
 @end

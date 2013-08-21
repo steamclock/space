@@ -9,6 +9,7 @@
 #import "AppDelegate.h"
 #import "DrawerViewController.h"
 #import "SpaceViewController.h"
+#import "FocusViewController.h"
 #import "Database.h"
 
 @implementation AppDelegate
@@ -22,13 +23,24 @@
     
     self.window.backgroundColor = [UIColor darkGrayColor];
     
+    SpaceViewController* space = [SpaceViewController new];
+    
     DrawerViewController* drawer = [DrawerViewController new];
-    drawer.contents = [SpaceViewController new];
+    drawer.contents = space;
     
     UIViewController* container = [UIViewController new];
+    
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    
     [container addChildViewController:drawer];
     [container.view addSubview:drawer.view];
+    
+    FocusViewController* focus = [FocusViewController new];
+    space.focus = focus;
+    
+    [container addChildViewController:focus];
+    [container.view addSubview:focus.view];
+    focus.view.hidden = YES;
     
     self.window.rootViewController = container;
 

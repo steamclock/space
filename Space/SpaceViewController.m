@@ -7,6 +7,7 @@
 //
 
 #import "SpaceViewController.h"
+#import "FocusViewController.h"
 #import "Database.h"
 #import "Circle.h"
 
@@ -68,11 +69,14 @@
 -(void)circleTap: (UITapGestureRecognizer *)recognizer {
     CircleView* view = (CircleView*)recognizer.view;
     Circle* circle = view.circle;
+    [self.focus focusOn:circle];
+    
+    /*
     [view removeFromSuperview];
     [circle removeFromDatabase];
     [self.gravity removeItem:view];
     [self.collision removeItem:view];
-    [[Database sharedDatabase] save];
+    [[Database sharedDatabase] save];*/
 }
 
 -(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {
