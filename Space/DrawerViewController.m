@@ -17,13 +17,13 @@
 @property (nonatomic) float initialFrameY;
 @property (nonatomic) float minY;
 @property (nonatomic) float maxY;
+@property (nonatomic) BOOL haveLayedOut;
 
 @end
 
 @implementation DrawerViewController
 
-- (void)viewDidLoad
-{
+- (void)viewDidLoad {
     [super viewDidLoad];
 
     self.view.backgroundColor = [UIColor blueColor];
@@ -39,23 +39,39 @@
     [self.view addSubview:self.dragHandle];
     
     UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
+
     [self.dragHandle addGestureRecognizer:panGestureRecognizer];
 }
 
--(void)dragHandleMoved:(UIPanGestureRecognizer*)recognizer {
-    CGPoint drag = [recognizer locationInView:self.view.superview];
-    
-    if(recognizer.state == UIGestureRecognizerStateBegan) {
-        NSLog(@"X");
-        self.dragStart = drag;
-        self.initialFrameY = self.view.frame.origin.y;
-        
-        self.maxY = 0;
-        self.minY = -(self.view.superview.bounds.size.height - 200);
-    }
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+    [self calculateDrawerExtents];
+    [self setDrawerPosition:self.view.frame.origin.y];
+}
 
+-(void)calculateDrawerExtents {
+    CGRect bounds = self.view.superview.bounds;
+    
+    self.maxY = -100;
+    self.minY = -(bounds.size.height - 200);
+}
+
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+}
+
+-(void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    
+    if(!self.haveLayedOut) {
+        self.haveLayedOut = YES;
+        [self calculateDrawerExtents];
+        [self setDrawerPosition:self.minY];
+    }
+}
+-(void)setDrawerPosition:(float)positionY {
     CGRect frame = self.view.frame;
-    frame.origin.y = self.initialFrameY + (drag.y - self.dragStart.y);
+    frame.origin.y = positionY;
     
     if(frame.origin.y > self.maxY) {
         frame.origin.y = self.maxY;
@@ -65,6 +81,18 @@
     }
     
     self.view.frame = frame;
+}
+
+-(void)dragHandleMoved:(UIPanGestureRecognizer*)recognizer {
+    CGPoint drag = [recognizer locationInView:self.view.superview];
+    
+    if(recognizer.state == UIGestureRecognizerStateBegan) {
+        self.dragStart = drag;
+        self.initialFrameY = self.view.frame.origin.y;
+        [self calculateDrawerExtents];
+    }
+
+    [self setDrawerPosition:self.initialFrameY + (drag.y - self.dragStart.y)];
 }
 
 -(void)setContents:(UIViewController *)contents {
