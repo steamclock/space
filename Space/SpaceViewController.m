@@ -17,7 +17,9 @@
 @property (nonatomic) UIDynamicAnimator* animator;
 @property (nonatomic) UIGravityBehavior* gravity;
 @property (nonatomic) UICollisionBehavior* collision;
-@property (nonatomic) UIDynamicItemBehavior* drag;
+@property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
+
+@property (nonatomic) UIDynamicItemBehavior* activeDrag;
 
 @property BOOL simulating;
 
@@ -34,14 +36,17 @@
 
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
     
-    self.gravity = [[UIGravityBehavior alloc] initWithItems:self.view.subviews];
+    self.gravity = [[UIGravityBehavior alloc] init];
     self.gravity.gravityDirection = CGVectorMake(0, 0);
-    self.collision = [[UICollisionBehavior alloc] initWithItems:self.view.subviews];
+    self.collision = [[UICollisionBehavior alloc] init];
     self.collision.translatesReferenceBoundsIntoBoundary = YES;
+    self.dynamicProperties = [[UIDynamicItemBehavior alloc] init];
+    self.dynamicProperties.allowsRotation = NO;
     
     [self.animator addBehavior:self.gravity];
     [self.animator addBehavior:self.collision];
-    [self.animator addBehavior:self.drag];
+    [self.animator addBehavior:self.activeDrag];
+    [self.animator addBehavior:self.dynamicProperties];
 
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceTap:)];
     [self.view addGestureRecognizer:tapGestureRecognizer];
@@ -67,6 +72,7 @@
     [circle removeFromDatabase];
     [self.gravity removeItem:view];
     [self.collision removeItem:view];
+    [self.dynamicProperties removeItem:view];
     [[Database sharedDatabase] save];*/
 }
 
@@ -93,9 +99,9 @@
     CGPoint drag = [recognizer locationInView:self.view];
 
     if(recognizer.state == UIGestureRecognizerStateBegan) {
-        self.drag = [[UIDynamicItemBehavior alloc] init];
-        self.drag.density = 1000000.0f;
-        [self.drag addItem:view];
+        self.activeDrag = [[UIDynamicItemBehavior alloc] init];
+        self.activeDrag.density = 1000000.0f;
+        [self.activeDrag addItem:view];
         [self.gravity removeItem:view];
     }
     
@@ -109,8 +115,8 @@
 
     if(recognizer.state == UIGestureRecognizerStateEnded) {
         [self.gravity addItem:view];
-        [self.drag removeItem:view];
-        self.drag = nil;
+        [self.activeDrag removeItem:view];
+        self.activeDrag = nil;
         [[Database sharedDatabase] save];
     }
 }
@@ -132,5 +138,6 @@
     [self.view addSubview:imageView];
     [self.gravity addItem:imageView];
     [self.collision addItem:imageView];
+    [self.dynamicProperties addItem:imageView];
 }
 @end
