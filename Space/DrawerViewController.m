@@ -29,10 +29,10 @@
     self.view.backgroundColor = [UIColor blueColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    float dragTop = self.view.bounds.size.height - 100;
+    float dragTop = self.view.bounds.size.height - 25;
     float dragLeft = (self.view.bounds.size.width / 2) - 50;
     
-    self.dragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 100, 50)];
+    self.dragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 100, 20)];
     self.dragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
     self.dragHandle.backgroundColor = [UIColor redColor];
 
