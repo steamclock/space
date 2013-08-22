@@ -1,0 +1,10 @@
+PODS:
+  - QBPopupMenu (1.1)
+
+DEPENDENCIES:
+  - QBPopupMenu
+
+SPEC CHECKSUMS:
+  QBPopupMenu: 5415fc5b411c235b8d149fcfd25f2064e064a77a
+
+COCOAPODS: 0.22.2

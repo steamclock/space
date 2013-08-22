@@ -35,8 +35,11 @@
     return self;
 }
 
+-(void)dealloc {
+    [_circle removeObserver:self forKeyPath:@"title"];
+}
+
 -(void)commonSetup {
-    [self addObserver:self forKeyPath:@"circle" options:0 context:NULL];
     self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, self.frame.size.height, self.frame.size.width, 20)];
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
     [self addSubview:self.titleLabel];

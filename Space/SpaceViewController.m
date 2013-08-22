@@ -11,6 +11,7 @@
 #import "Database.h"
 #import "Circle.h"
 #import "CircleView.h"
+#import "QBPopupMenu.h"
 
 @interface SpaceViewController ()
 
@@ -21,7 +22,9 @@
 
 @property (nonatomic) UIDynamicItemBehavior* activeDrag;
 
-@property BOOL simulating;
+@property (nonatomic) BOOL simulating;
+
+@property (nonatomic) CircleView* viewForMenu;
 
 @end
 
@@ -66,14 +69,35 @@
     CircleView* view = (CircleView*)recognizer.view;
     Circle* circle = view.circle;
     [self.focus focusOn:circle];
+}
+
+-(void)circleLongPress: (UITapGestureRecognizer *)recognizer {
+    if(recognizer.state == UIGestureRecognizerStateBegan) {
+        CircleView* view = (CircleView*)recognizer.view;
+        self.viewForMenu = view;
+        
+        QBPopupMenu* menu = [[QBPopupMenu alloc] init];
+        menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:@"Delete" target:self action:@selector(circleMenuDelete:)] ];
+        
+        // Bleech. Gnarly dependancy on view hierarchy above this view to present the menu in the top level view, need to clean this up
+        [menu showInView:self.view.superview.superview atPoint:CGPointMake(view.center.x, view.center.y + self.view.superview.frame.origin.y)];
+    }
+}
+
+-(void)circleMenuDelete:(id)sender {
+    Circle* circle = self.viewForMenu.circle;
     
-    /*
-    [view removeFromSuperview];
     [circle removeFromDatabase];
-    [self.gravity removeItem:view];
-    [self.collision removeItem:view];
-    [self.dynamicProperties removeItem:view];
-    [[Database sharedDatabase] save];*/
+    [[Database sharedDatabase] save];
+    
+    [self.gravity removeItem:self.viewForMenu];
+    [self.collision removeItem:self.viewForMenu];
+    [self.dynamicProperties removeItem:self.viewForMenu];
+    
+    [self.viewForMenu removeFromSuperview];
+    self.viewForMenu = nil;
+    
+//    [sender dismiss];
 }
 
 -(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {
@@ -92,6 +116,7 @@
     
     [[Database sharedDatabase] save];
 }
+
 
 -(void)circleDrag:(UIPanGestureRecognizer*)recognizer {
     
@@ -133,6 +158,9 @@
     UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(circleDrag:)];
     [imageView addGestureRecognizer:panGestureRecognizer];
     
+    UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(circleLongPress:)];
+    [imageView addGestureRecognizer:longPress];
+
     imageView.circle = circle;
 
     [self.view addSubview:imageView];
