@@ -8,11 +8,11 @@
 
 #import "FocusViewController.h"
 #import "Database.h"
-#import "Circle.h"
+#import "Note.h"
 
 @interface FocusViewController ()
 
-@property (nonatomic) Circle* circle;
+@property (nonatomic) Note* note;
 @property (nonatomic) UIView* focus;
 @property (nonatomic) UITextField* titleField;
 @property (nonatomic) UITextView* contentField;
@@ -56,8 +56,8 @@
     [self.titleField resignFirstResponder];
     [self.contentField resignFirstResponder];
     
-    self.circle.title = self.titleField.text;
-    self.circle.content = self.contentField.text;
+    self.note.title = self.titleField.text;
+    self.note.content = self.contentField.text;
     
     [[Database sharedDatabase] save];
     
@@ -70,11 +70,11 @@
     // Dispose of any resources that can be recreated.
 }
 
--(void)focusOn:(Circle *)circle {
-    self.circle = circle;
+-(void)focusOn:(Note *)note {
+    self.note = note;
     
-    self.titleField.text = self.circle.title;
-    self.contentField.text = self.circle.content;
+    self.titleField.text = self.note.title;
+    self.contentField.text = self.note.content;
 
     self.view.hidden = NO;
 }

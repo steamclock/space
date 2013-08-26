@@ -1,5 +1,5 @@
 //
-//  SpaceViewController.h
+//  CanvasViewController.h
 //  Space
 //
 //  Created by Nigel Brooke on 2013-08-15.
@@ -10,7 +10,7 @@
 
 @class FocusViewController;
 
-@interface SpaceViewController : UIViewController
+@interface CanvasViewController : UIViewController
 
 @property (nonatomic) FocusViewController* focus;
 

@@ -1,5 +1,5 @@
 //
-//  CircleView.h
+//  NoteView.h
 //  Space
 //
 //  Created by Nigel Brooke on 2013-08-21.
@@ -8,10 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
-@class Circle;
+@class Note;
 
-@interface CircleView : UIImageView
+@interface NoteView : UIImageView
 
-@property Circle* circle;
+@property Note* note;
 
 @end

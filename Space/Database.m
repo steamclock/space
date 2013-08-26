@@ -96,13 +96,13 @@
     }
 }
 
--(Circle*)createCircle {
-    return[NSEntityDescription insertNewObjectForEntityForName:@"Circle" inManagedObjectContext:self.managedObjectContext];
+-(Note*)createNote {
+    return[NSEntityDescription insertNewObjectForEntityForName:@"Note" inManagedObjectContext:self.managedObjectContext];
 }
 
--(NSArray*)circles {
+-(NSArray*)notes {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Circle" inManagedObjectContext:self.managedObjectContext];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Note" inManagedObjectContext:self.managedObjectContext];
     [request setEntity:entity];
 
     NSError *error = nil;

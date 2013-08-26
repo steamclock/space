@@ -1,23 +1,23 @@
 //
-//  CircleView.m
+//  NoteView.m
 //  Space
 //
 //  Created by Nigel Brooke on 2013-08-21.
 //  Copyright (c) 2013 University of British Columbia. All rights reserved.
 //
 
-#import "CircleView.h"
-#import "Circle.h"
+#import "NoteView.h"
+#import "Note.h"
 
-@interface CircleView () {
-    Circle* _circle;
+@interface NoteView () {
+    Note* _note;
 }
 
 @property UILabel* titleLabel;
 
 @end
 
-@implementation CircleView
+@implementation NoteView
 
 - (id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
@@ -36,7 +36,7 @@
 }
 
 -(void)dealloc {
-    [_circle removeObserver:self forKeyPath:@"title"];
+    [_note removeObserver:self forKeyPath:@"title"];
 }
 
 -(void)commonSetup {
@@ -48,26 +48,26 @@
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if([keyPath isEqualToString:@"title"]) {
-        self.titleLabel.text = self.circle.title;
+        self.titleLabel.text = self.note.title;
     }
 }
 
--(void)setCircle:(Circle *)circle {
-    [_circle removeObserver:self forKeyPath:@"title"];
-    _circle = circle;
-    self.titleLabel.text = circle.title;
-    [_circle addObserver:self forKeyPath:@"title" options:0 context:NULL];
+-(void)setNote:(Note *)note {
+    [_note removeObserver:self forKeyPath:@"title"];
+    _note = note;
+    self.titleLabel.text = note.title;
+    [_note addObserver:self forKeyPath:@"title" options:0 context:NULL];
 }
 
--(Circle*)circle {
-    return _circle;
+-(Note*)note {
+    return _note;
 }
 
 -(void)setCenter:(CGPoint)center {
     [super setCenter:center];
     
-    self.circle.positionX = center.x;
-    self.circle.positionY = center.y;
+    self.note.positionX = center.x;
+    self.note.positionY = center.y;
 }
 
 

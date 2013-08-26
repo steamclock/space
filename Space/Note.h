@@ -1,5 +1,5 @@
 //
-//  Circle.h
+//  Note.h
 //  Space
 //
 //  Created by Nigel Brooke on 2013-08-15.
@@ -10,7 +10,7 @@
 #import <CoreData/CoreData.h>
 
 
-@interface Circle : NSManagedObject
+@interface Note : NSManagedObject
 
 @property (nonatomic) float positionX;
 @property (nonatomic) float positionY;

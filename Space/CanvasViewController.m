@@ -1,19 +1,19 @@
 //
-//  SpaceViewController.m
+//  CanvasViewController.m
 //  Space
 //
 //  Created by Nigel Brooke on 2013-08-15.
 //  Copyright (c) 2013 University of British Columbia. All rights reserved.
 //
 
-#import "SpaceViewController.h"
+#import "CanvasViewController.h"
 #import "FocusViewController.h"
 #import "Database.h"
-#import "Circle.h"
-#import "CircleView.h"
+#import "Note.h"
+#import "NoteView.h"
 #import "QBPopupMenu.h"
 
-@interface SpaceViewController ()
+@interface CanvasViewController ()
 
 @property (nonatomic) UIDynamicAnimator* animator;
 @property (nonatomic) UIGravityBehavior* gravity;
@@ -24,11 +24,11 @@
 
 @property (nonatomic) BOOL simulating;
 
-@property (nonatomic) CircleView* viewForMenu;
+@property (nonatomic) NoteView* viewForMenu;
 
 @end
 
-@implementation SpaceViewController
+@implementation CanvasViewController
 
 - (void)viewDidLoad
 {
@@ -58,36 +58,35 @@
     doubleTapGestureRecognizer.numberOfTapsRequired = 2;
     [self.view addGestureRecognizer:doubleTapGestureRecognizer];
     
-    NSArray* circles = [[Database sharedDatabase] circles];
+    NSArray* notes = [[Database sharedDatabase] notes];
     
-    for(Circle* circle in circles) {
-        [self addViewForCircle:circle];
+    for(Note* note in notes) {
+        [self addViewForNote:note];
     }
 }
 
--(void)circleTap: (UITapGestureRecognizer *)recognizer {
-    CircleView* view = (CircleView*)recognizer.view;
-    Circle* circle = view.circle;
-    [self.focus focusOn:circle];
+-(void)noteTap: (UITapGestureRecognizer *)recognizer {
+    NoteView* view = (NoteView*)recognizer.view;
+    [self.focus focusOn:view.note];
 }
 
--(void)circleLongPress: (UITapGestureRecognizer *)recognizer {
+-(void)noteLongPress: (UITapGestureRecognizer *)recognizer {
     if(recognizer.state == UIGestureRecognizerStateBegan) {
-        CircleView* view = (CircleView*)recognizer.view;
+        NoteView* view = (NoteView*)recognizer.view;
         self.viewForMenu = view;
         
         QBPopupMenu* menu = [[QBPopupMenu alloc] init];
-        menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:@"Delete" target:self action:@selector(circleMenuDelete:)] ];
+        menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:@"Delete" target:self action:@selector(noteMenuDelete:)] ];
         
         // Bleech. Gnarly dependancy on view hierarchy above this view to present the menu in the top level view, need to clean this up
         [menu showInView:self.view.superview.superview atPoint:CGPointMake(view.center.x, view.center.y + self.view.superview.frame.origin.y)];
     }
 }
 
--(void)circleMenuDelete:(id)sender {
-    Circle* circle = self.viewForMenu.circle;
+-(void)noteMenuDelete:(id)sender {
+    Note* note = self.viewForMenu.note;
     
-    [circle removeFromDatabase];
+    [note removeFromDatabase];
     [[Database sharedDatabase] save];
     
     [self.gravity removeItem:self.viewForMenu];
@@ -105,22 +104,22 @@
 }
 
 -(void)spaceTap:(UITapGestureRecognizer *)recognizer {
-    Circle* circle = [[Database sharedDatabase] createCircle];
+    Note* note = [[Database sharedDatabase] createNote];
     
     CGPoint position = [recognizer locationInView:self.view];
     
-    circle.positionX = position.x;
-    circle.positionY = position.y;
+    note.positionX = position.x;
+    note.positionY = position.y;
 
-    [self addViewForCircle:circle];
+    [self addViewForNote:note];
     
     [[Database sharedDatabase] save];
 }
 
 
--(void)circleDrag:(UIPanGestureRecognizer*)recognizer {
+-(void)noteDrag:(UIPanGestureRecognizer*)recognizer {
     
-    CircleView* view = (CircleView*)recognizer.view;
+    NoteView* view = (NoteView*)recognizer.view;
     CGPoint drag = [recognizer locationInView:self.view];
 
     if(recognizer.state == UIGestureRecognizerStateBegan) {
@@ -134,9 +133,9 @@
     
     [self.animator updateItemUsingCurrentState:view];
     
-    Circle* circle = view.circle;
-    circle.positionX = drag.x;
-    circle.positionY = drag.y;
+    Note* note = view.note;
+    note.positionX = drag.x;
+    note.positionY = drag.y;
 
     if(recognizer.state == UIGestureRecognizerStateEnded) {
         [self.gravity addItem:view];
@@ -146,22 +145,22 @@
     }
 }
 
--(void)addViewForCircle:(Circle*)circle {
-    CircleView* imageView = [[CircleView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
-    imageView.center = CGPointMake(circle.positionX, circle.positionY);
+-(void)addViewForNote:(Note*)note {
+    NoteView* imageView = [[NoteView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
+    imageView.center = CGPointMake(note.positionX, note.positionY);
     
     imageView.userInteractionEnabled = YES;
     
-    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(circleTap:)];
+    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(noteTap:)];
     [imageView addGestureRecognizer:tapGestureRecognizer];
     
-    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(circleDrag:)];
+    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(noteDrag:)];
     [imageView addGestureRecognizer:panGestureRecognizer];
     
-    UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(circleLongPress:)];
+    UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(noteLongPress:)];
     [imageView addGestureRecognizer:longPress];
 
-    imageView.circle = circle;
+    imageView.note = note;
 
     [self.view addSubview:imageView];
     [self.gravity addItem:imageView];

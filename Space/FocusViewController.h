@@ -8,10 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
-@class Circle;
+@class Note;
 
 @interface FocusViewController : UIViewController
 
--(void)focusOn:(Circle*)circle;
+-(void)focusOn:(Note*)note;
 
 @end

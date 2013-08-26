@@ -8,7 +8,7 @@
 
 #import "AppDelegate.h"
 #import "DrawerViewController.h"
-#import "SpaceViewController.h"
+#import "CanvasViewController.h"
 #import "FocusViewController.h"
 #import "Database.h"
 
@@ -23,7 +23,7 @@
     
     self.window.backgroundColor = [UIColor darkGrayColor];
     
-    SpaceViewController* space = [SpaceViewController new];
+    CanvasViewController* space = [CanvasViewController new];
     
     DrawerViewController* drawer = [DrawerViewController new];
     drawer.contents = space;

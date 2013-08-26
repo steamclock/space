@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 
-@class Circle;
+@class Note;
 
 @interface Database : NSObject
 
@@ -16,7 +16,7 @@
 
 -(void)save;
 
--(Circle*)createCircle;
--(NSArray*)circles;
+-(Note*)createNote;
+-(NSArray*)notes;
 
 @end
