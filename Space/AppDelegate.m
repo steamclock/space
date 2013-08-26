@@ -10,6 +10,8 @@
 #import "DrawerViewController.h"
 #import "CanvasViewController.h"
 #import "FocusViewController.h"
+#import "CanvasSelectionViewController.h"
+
 #import "Database.h"
 
 @implementation AppDelegate
@@ -23,10 +25,10 @@
     
     self.window.backgroundColor = [UIColor darkGrayColor];
     
-    CanvasViewController* space = [CanvasViewController new];
+    CanvasViewController* canvas = [CanvasViewController new];
     
     DrawerViewController* drawer = [DrawerViewController new];
-    drawer.contents = space;
+    drawer.contents = canvas;
     
     UIViewController* container = [UIViewController new];
     
@@ -36,11 +38,15 @@
     [container.view addSubview:drawer.view];
     
     FocusViewController* focus = [FocusViewController new];
-    space.focus = focus;
+    canvas.focus = focus;
     
     [container addChildViewController:focus];
     [container.view addSubview:focus.view];
     focus.view.hidden = YES;
+    
+    CanvasSelectionViewController* canvasSelect = [CanvasSelectionViewController new];
+    [container addChildViewController:canvasSelect];
+    [container.view addSubview:canvasSelect.view];
     
     self.window.rootViewController = container;
 
