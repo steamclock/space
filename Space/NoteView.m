@@ -40,8 +40,13 @@
 }
 
 -(void)commonSetup {
-    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, self.frame.size.height, self.frame.size.width, 20)];
+    self.contentMode = UIViewContentModeScaleToFill;
+    self.frame = CGRectMake(0, 0, 24, 24);
+
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.center.x - 32, self.frame.size.height, 64, 20)];
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
+    self.titleLabel.font = [UIFont systemFontOfSize:14];
+    
     [self addSubview:self.titleLabel];
     self.clipsToBounds = NO;
 }
