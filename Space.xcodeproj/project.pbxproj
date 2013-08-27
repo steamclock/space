@@ -11,6 +11,7 @@
 		A62D413917BD7BE80073DDB4 /* Note.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413817BD7BE80073DDB4 /* Note.m */; };
 		A62D413C17BD7D850073DDB4 /* CanvasViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413B17BD7D850073DDB4 /* CanvasViewController.m */; };
 		A699F2F817CC06830001E6B0 /* CanvasSelectionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A699F2F717CC06830001E6B0 /* CanvasSelectionViewController.m */; };
+		A699F2FD17CC18FB0001E6B0 /* Notifications.m in Sources */ = {isa = PBXBuildFile; fileRef = A699F2FC17CC18FB0001E6B0 /* Notifications.m */; };
 		A6EF0DDF17C41173005EF2A0 /* DrawerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A6EF0DDE17C41173005EF2A0 /* DrawerViewController.m */; };
 		A6EF0DE217C537DD005EF2A0 /* FocusViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A6EF0DE117C537DD005EF2A0 /* FocusViewController.m */; };
 		A6EF0DE517C56310005EF2A0 /* NoteView.m in Sources */ = {isa = PBXBuildFile; fileRef = A6EF0DE417C56310005EF2A0 /* NoteView.m */; };
@@ -52,6 +53,8 @@
 		A62D413B17BD7D850073DDB4 /* CanvasViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CanvasViewController.m; sourceTree = "<group>"; };
 		A699F2F617CC06830001E6B0 /* CanvasSelectionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CanvasSelectionViewController.h; sourceTree = "<group>"; };
 		A699F2F717CC06830001E6B0 /* CanvasSelectionViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CanvasSelectionViewController.m; sourceTree = "<group>"; };
+		A699F2FB17CC18FB0001E6B0 /* Notifications.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Notifications.h; sourceTree = "<group>"; };
+		A699F2FC17CC18FB0001E6B0 /* Notifications.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Notifications.m; sourceTree = "<group>"; };
 		A6EF0DDD17C41173005EF2A0 /* DrawerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DrawerViewController.h; sourceTree = "<group>"; };
 		A6EF0DDE17C41173005EF2A0 /* DrawerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DrawerViewController.m; sourceTree = "<group>"; };
 		A6EF0DE017C537DD005EF2A0 /* FocusViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FocusViewController.h; sourceTree = "<group>"; };
@@ -142,6 +145,8 @@
 		A6F553F617BD737200728B8C /* Space */ = {
 			isa = PBXGroup;
 			children = (
+				A699F2FB17CC18FB0001E6B0 /* Notifications.h */,
+				A699F2FC17CC18FB0001E6B0 /* Notifications.m */,
 				A6F553FF17BD737200728B8C /* AppDelegate.h */,
 				A6F5540017BD737200728B8C /* AppDelegate.m */,
 				A62D413117BD795F0073DDB4 /* Database.h */,
@@ -330,6 +335,7 @@
 				A699F2F817CC06830001E6B0 /* CanvasSelectionViewController.m in Sources */,
 				A62D413917BD7BE80073DDB4 /* Note.m in Sources */,
 				A62D413C17BD7D850073DDB4 /* CanvasViewController.m in Sources */,
+				A699F2FD17CC18FB0001E6B0 /* Notifications.m in Sources */,
 				A6EF0DDF17C41173005EF2A0 /* DrawerViewController.m in Sources */,
 				A62D413317BD795F0073DDB4 /* Database.m in Sources */,
 				A6F5540417BD737200728B8C /* Space.xcdatamodeld in Sources */,

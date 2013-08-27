@@ -12,6 +12,7 @@
 #import "Note.h"
 #import "NoteView.h"
 #import "QBPopupMenu.h"
+#import "Notifications.h"
 
 @interface CanvasViewController ()
 
@@ -26,6 +27,7 @@
 
 @property (nonatomic) NoteView* viewForMenu;
 
+@property (nonatomic) int currentCanvas;
 @end
 
 @implementation CanvasViewController
@@ -58,11 +60,32 @@
     doubleTapGestureRecognizer.numberOfTapsRequired = 2;
     [self.view addGestureRecognizer:doubleTapGestureRecognizer];
     
-    NSArray* notes = [[Database sharedDatabase] notes];
+    self.currentCanvas = 0;
+    [self loadCurrentCanvas];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
+}
+
+-(void)loadCurrentCanvas {
+    
+    for(UIView* view in self.view.subviews) {
+        [self.gravity removeItem:view];
+        [self.collision removeItem:view];
+        [self.dynamicProperties removeItem:view];
+    }
+    
+    [[self.view subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    
+    NSArray* notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
     
     for(Note* note in notes) {
         [self addViewForNote:note];
     }
+}
+
+-(void)canvasChangedNotification:(NSNotification*)notification {
+    self.currentCanvas = [notification.userInfo[@"canvas"] intValue];
+    [self loadCurrentCanvas];
 }
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
@@ -95,8 +118,6 @@
     
     [self.viewForMenu removeFromSuperview];
     self.viewForMenu = nil;
-    
-//    [sender dismiss];
 }
 
 -(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {
@@ -108,6 +129,7 @@
     
     CGPoint position = [recognizer locationInView:self.view];
     
+    note.canvas = self.currentCanvas;
     note.positionX = position.x;
     note.positionY = position.y;
 
@@ -160,11 +182,11 @@
     UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(noteLongPress:)];
     [imageView addGestureRecognizer:longPress];
 
-    imageView.note = note;
-
     [self.view addSubview:imageView];
     [self.gravity addItem:imageView];
     [self.collision addItem:imageView];
     [self.dynamicProperties addItem:imageView];
+
+    imageView.note = note;
 }
 @end

@@ -37,16 +37,16 @@
     [container addChildViewController:drawer];
     [container.view addSubview:drawer.view];
     
+    CanvasSelectionViewController* canvasSelect = [CanvasSelectionViewController new];
+    [container addChildViewController:canvasSelect];
+    [container.view addSubview:canvasSelect.view];
+
     FocusViewController* focus = [FocusViewController new];
     canvas.focus = focus;
     
     [container addChildViewController:focus];
     [container.view addSubview:focus.view];
     focus.view.hidden = YES;
-    
-    CanvasSelectionViewController* canvasSelect = [CanvasSelectionViewController new];
-    [container addChildViewController:canvasSelect];
-    [container.view addSubview:canvasSelect.view];
     
     self.window.rootViewController = container;
 

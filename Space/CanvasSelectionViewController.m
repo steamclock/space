@@ -7,10 +7,12 @@
 //
 
 #import "CanvasSelectionViewController.h"
+#import "Notifications.h"
 
 @interface CanvasSelectionViewController ()
 
 @property UIToolbar* toolbar;
+@property NSArray* buttons;
 
 @end
 
@@ -50,16 +52,25 @@
 - (void)setupToolbarWithCanvasNames:(NSArray*)canvasNames
 {
     NSMutableArray* items = [NSMutableArray new];
+    NSMutableArray* buttons = [NSMutableArray new];
     
     for (NSString* name in canvasNames) {
         [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil] ];
-        [items addObject:[[UIBarButtonItem alloc] initWithTitle:name style:UIBarButtonItemStylePlain target:nil action:nil] ];
+        
+        UIBarButtonItem* button = [[UIBarButtonItem alloc] initWithTitle:name style:UIBarButtonItemStylePlain target:self action:@selector(buttonPress:)];
+        [items addObject: button];
+        [buttons addObject:button];
     }
 
     [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil] ];
     [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:nil action:nil] ];
     
     self.toolbar.items = items;
+    self.buttons = buttons;
+}
+
+-(IBAction)buttonPress:(id)sender {
+    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":[NSNumber numberWithInt:[self.buttons indexOfObject:sender]]}];
 }
 
 @end

@@ -12,6 +12,9 @@
 
 @interface Note : NSManagedObject
 
+@property (nonatomic) int canvas;
+@property (nonatomic) BOOL trashed;
+
 @property (nonatomic) float positionX;
 @property (nonatomic) float positionY;
 

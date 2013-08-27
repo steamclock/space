@@ -100,8 +100,9 @@
     return[NSEntityDescription insertNewObjectForEntityForName:@"Note" inManagedObjectContext:self.managedObjectContext];
 }
 
--(NSArray*)notes {
+-(NSArray*)notesInCanvas:(int)canvas {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    request.predicate = [NSPredicate predicateWithFormat:@"canvas == %@", [NSNumber numberWithInt:canvas]];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Note" inManagedObjectContext:self.managedObjectContext];
     [request setEntity:entity];
 

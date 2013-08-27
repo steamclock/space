@@ -17,6 +17,6 @@
 -(void)save;
 
 -(Note*)createNote;
--(NSArray*)notes;
+-(NSArray*)notesInCanvas:(int)canvas;
 
 @end
