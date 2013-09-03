@@ -9,13 +9,16 @@
 #import "DrawerViewController.h"
 
 @interface DrawerViewController () {
-    UIViewController* _contents;
+    UIViewController* _topDrawerContents;
+    UIViewController* _bottomDrawerContents;
 }
 
-@property (nonatomic) UIView* dragHandle;
+@property (nonatomic) UIView* topDragHandle;
+@property (nonatomic) UIView* bottomDragHandle;
 @property (nonatomic) CGPoint dragStart;
 @property (nonatomic) float initialFrameY;
 @property (nonatomic) float minY;
+@property (nonatomic) float restX;
 @property (nonatomic) float maxY;
 @property (nonatomic) BOOL haveLayedOut;
 
@@ -26,21 +29,31 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.view.backgroundColor = [UIColor blueColor];
+    self.view.frame = CGRectMake(0, -1024, 768, 1024 * 3);
+    self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    float dragTop = self.view.bounds.size.height - 25;
+    float dragTop = 1024 + 175;
     float dragLeft = (self.view.bounds.size.width / 2) - 50;
+    float dragBottom = 1024 + 924;
     
-    self.dragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 100, 20)];
-    self.dragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
-    self.dragHandle.backgroundColor = [UIColor redColor];
+    self.topDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 100, 20)];
+    self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
+    self.topDragHandle.backgroundColor = [UIColor redColor];
 
-    [self.view addSubview:self.dragHandle];
+    [self.view addSubview:self.topDragHandle];
+
+    self.bottomDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragBottom, 100, 20)];
+    self.bottomDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
+    self.bottomDragHandle.backgroundColor = [UIColor redColor];
     
-    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
+    [self.view addSubview:self.bottomDragHandle];
 
-    [self.dragHandle addGestureRecognizer:panGestureRecognizer];
+    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(topDragHandleMoved:)];
+    [self.view addGestureRecognizer:panGestureRecognizer];
+
+    panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(topDragHandleMoved:)];
+    [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
@@ -50,14 +63,19 @@
 }
 
 -(void)calculateDrawerExtents {
-    CGRect bounds = self.view.superview.bounds;
+    //CGRect bounds = self.view.superview.bounds;
     
-    self.maxY = -100;
-    self.minY = -(bounds.size.height - 200);
+    self.restX = -1024;
+    self.maxY = -224;
+    self.minY = -1824;
 }
 
 -(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+}
+
+-(void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
 }
 
 -(void)viewDidLayoutSubviews {
@@ -65,10 +83,11 @@
     
     if(!self.haveLayedOut) {
         self.haveLayedOut = YES;
-        [self calculateDrawerExtents];
-        [self setDrawerPosition:self.minY];
+ //       [self calculateDrawerExtents];
+//        [self setDrawerPosition:self.maxY];
     }
 }
+
 -(void)setDrawerPosition:(float)positionY {
     CGRect frame = self.view.frame;
     frame.origin.y = positionY;
@@ -83,7 +102,7 @@
     self.view.frame = frame;
 }
 
--(void)dragHandleMoved:(UIPanGestureRecognizer*)recognizer {
+-(void)topDragHandleMoved:(UIPanGestureRecognizer*)recognizer {
     CGPoint drag = [recognizer locationInView:self.view.superview];
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
@@ -95,19 +114,39 @@
     [self setDrawerPosition:self.initialFrameY + (drag.y - self.dragStart.y)];
 }
 
--(void)setContents:(UIViewController *)contents {
-    [_contents removeFromParentViewController];
-    [contents.view removeFromSuperview];
-    _contents = contents;
-    if(contents) {
-        [self addChildViewController:contents];
-        [self.view addSubview:contents.view];
-        [self.view bringSubviewToFront:self.dragHandle];
+-(void)setTopDrawerContents:(UIViewController *)contents {
+    [_topDrawerContents removeFromParentViewController];
+    [_topDrawerContents.view removeFromSuperview];
+    _topDrawerContents = contents;
+    
+    if(_topDrawerContents) {
+        _topDrawerContents.view.frame = CGRectMake(0, 1024 - 824, 768, 1024);
+        [self addChildViewController:_topDrawerContents];
+        [self.view addSubview:_topDrawerContents.view];
+        [self.view bringSubviewToFront:self.topDragHandle];
+        [self.view bringSubviewToFront:self.bottomDragHandle];
     }
 }
 
--(UIViewController*)contents {
-    return _contents;
+-(UIViewController*)topDrawerContents {
+    return _topDrawerContents;
 }
 
+-(void)setBottomDrawerContents:(UIViewController *)contents {
+    [_bottomDrawerContents removeFromParentViewController];
+    [_bottomDrawerContents.view removeFromSuperview];
+    _bottomDrawerContents = contents;
+    
+    if(_bottomDrawerContents) {
+        _bottomDrawerContents.view.frame = CGRectMake(0, (1024 * 2) - 200, 768, 1024);
+        [self addChildViewController:_bottomDrawerContents];
+        [self.view addSubview:_bottomDrawerContents.view];
+        [self.view bringSubviewToFront:self.topDragHandle];
+        [self.view bringSubviewToFront:self.bottomDragHandle];
+    }
+}
+
+-(UIViewController*)bottomDrawerContents {
+    return _topDrawerContents;
+}
 @end

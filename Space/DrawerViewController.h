@@ -10,6 +10,7 @@
 
 @interface DrawerViewController : UIViewController
 
-@property (nonatomic) UIViewController* contents;
+@property (nonatomic) UIViewController* topDrawerContents;
+@property (nonatomic) UIViewController* bottomDrawerContents;
 
 @end
