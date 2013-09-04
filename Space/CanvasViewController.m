@@ -28,11 +28,22 @@
 @property (nonatomic) NoteView* viewForMenu;
 
 @property (nonatomic) int currentCanvas;
+@property (nonatomic) BOOL isTrashMode;
+
 @end
 
 @implementation CanvasViewController
 
-- (void)viewDidLoad
+-(id)initAsTrashCanvas {
+
+    if (self = [super init]) {
+        self.isTrashMode = YES;
+    }
+    
+    return self;
+}
+
+-(void)viewDidLoad
 {
     [super viewDidLoad];
     
@@ -64,6 +75,7 @@
     [self loadCurrentCanvas];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteDeletedNotification:) name:kNoteDeletedNotification object:nil];
 }
 
 -(void)loadCurrentCanvas {
@@ -76,7 +88,14 @@
     
     [[self.view subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
     
-    NSArray* notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
+    NSArray* notes;
+    
+    if (self.isTrashMode) {
+        notes = [[Database sharedDatabase] deletedNotesInCanvas:self.currentCanvas];
+        NSLog(@"Number of deleted notes = %d", [notes count]);
+    } else {
+        notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
+    }
     
     for(Note* note in notes) {
         [self addViewForNote:note];
@@ -86,6 +105,13 @@
 -(void)canvasChangedNotification:(NSNotification*)notification {
     self.currentCanvas = [notification.userInfo[@"canvas"] intValue];
     [self loadCurrentCanvas];
+}
+
+-(void)noteDeletedNotification:(NSNotification*)notification {
+    if (self.isTrashMode) {
+        Note* deletedNote = [notification.userInfo objectForKey:@"Key_DeletedNote"];
+        [self addViewForNote:deletedNote];
+    }
 }
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
@@ -109,7 +135,8 @@
 -(void)noteMenuDelete:(id)sender {
     Note* note = self.viewForMenu.note;
     
-    [note removeFromDatabase];
+    // [note removeFromDatabase];
+    [note markAsTrashed];
     [[Database sharedDatabase] save];
     
     [self.gravity removeItem:self.viewForMenu];
@@ -118,6 +145,11 @@
     
     [self.viewForMenu removeFromSuperview];
     self.viewForMenu = nil;
+    
+    NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[@"Key_DeletedNote"]];
+    
+    NSNotification* noteDeletedNotification = [[NSNotification alloc] initWithName:kNoteDeletedNotification object:self userInfo:deletedNoteInfo];
+    [[NSNotificationCenter defaultCenter] postNotification:noteDeletedNotification];
 }
 
 -(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {

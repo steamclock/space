@@ -161,11 +161,11 @@
 				A62D413B17BD7D850073DDB4 /* CanvasViewController.m */,
 				A6EF0DE017C537DD005EF2A0 /* FocusViewController.h */,
 				A6EF0DE117C537DD005EF2A0 /* FocusViewController.m */,
+				A699F2F617CC06830001E6B0 /* CanvasSelectionViewController.h */,
+				A699F2F717CC06830001E6B0 /* CanvasSelectionViewController.m */,
 				A6F5540517BD737200728B8C /* Images.xcassets */,
 				A6F5540217BD737200728B8C /* Space.xcdatamodeld */,
 				A6F553F717BD737200728B8C /* Supporting Files */,
-				A699F2F617CC06830001E6B0 /* CanvasSelectionViewController.h */,
-				A699F2F717CC06830001E6B0 /* CanvasSelectionViewController.m */,
 			);
 			path = Space;
 			sourceTree = "<group>";

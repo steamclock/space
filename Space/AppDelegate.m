@@ -26,7 +26,7 @@
     self.window.backgroundColor = [UIColor darkGrayColor];
     
     CanvasViewController* canvas = [CanvasViewController new];
-    CanvasViewController* trash = [CanvasViewController new];
+    CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvas];
     
     DrawerViewController* drawer = [DrawerViewController new];
     drawer.topDrawerContents = canvas;

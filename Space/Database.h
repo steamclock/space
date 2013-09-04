@@ -7,8 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-
-@class Note;
+#import "Note.h"
 
 @interface Database : NSObject
 
@@ -18,5 +17,6 @@
 
 -(Note*)createNote;
 -(NSArray*)notesInCanvas:(int)canvas;
+-(NSArray*)deletedNotesInCanvas:(int)canvas;
 
 @end

@@ -11,7 +11,11 @@
 
 @implementation Note
 
-@dynamic positionX, positionY, title, content;
+@dynamic canvas, content, positionX, positionY, title, trashed;
+
+-(void)markAsTrashed {
+    self.trashed = YES;
+}
 
 -(void)removeFromDatabase {
     [self.managedObjectContext deleteObject:self];

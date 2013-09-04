@@ -21,6 +21,7 @@
 @property (nonatomic) NSString* title;
 @property (nonatomic) NSString* content;
 
+-(void)markAsTrashed;
 -(void)removeFromDatabase;
 
 @end

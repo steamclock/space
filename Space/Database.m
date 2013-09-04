@@ -97,24 +97,43 @@
 }
 
 -(Note*)createNote {
-    return[NSEntityDescription insertNewObjectForEntityForName:@"Note" inManagedObjectContext:self.managedObjectContext];
+    
+    Note* newNote = [NSEntityDescription insertNewObjectForEntityForName:@"Note" inManagedObjectContext:self.managedObjectContext];
+    
+    newNote.trashed = NO;
+
+    return newNote;
 }
 
 -(NSArray*)notesInCanvas:(int)canvas {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
-    request.predicate = [NSPredicate predicateWithFormat:@"canvas == %@", [NSNumber numberWithInt:canvas]];
+    request.predicate = [NSPredicate predicateWithFormat:@"canvas == %@ AND trashed == %@", [NSNumber numberWithInt:canvas], [NSNumber numberWithBool:NO]];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Note" inManagedObjectContext:self.managedObjectContext];
     [request setEntity:entity];
+    
+    return [self getNotesWithRequest:request];
+}
 
-    NSError *error = nil;
+-(NSArray*)deletedNotesInCanvas:(int)canvas {
+    NSFetchRequest *request = [[NSFetchRequest alloc] init];
+    request.predicate = [NSPredicate predicateWithFormat:@"canvas == %@ AND trashed == %@", [NSNumber numberWithInt:canvas], [NSNumber numberWithBool:YES]];
+    NSEntityDescription *entity = [NSEntityDescription entityForName:@"Note" inManagedObjectContext:self.managedObjectContext];
+    [request setEntity:entity];
     
-    NSArray *fetchResults = [[self.managedObjectContext executeFetchRequest:request error:&error] mutableCopy];
+    return [self getNotesWithRequest:request];
+}
+
+-(NSArray*)getNotesWithRequest:(NSFetchRequest*)request {
     
-    if (fetchResults == nil) {
+    NSError* error = nil;
+    
+    NSArray* results = [[self.managedObjectContext executeFetchRequest:request error:&error] mutableCopy];
+    
+    if (results == nil) {
         // TODO: Handle the error.
     }
     
-    return fetchResults;
+    return results;
 }
 
 @end

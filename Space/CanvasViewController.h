@@ -14,4 +14,6 @@
 
 @property (nonatomic) FocusViewController* focus;
 
+-(id)initAsTrashCanvas;
+
 @end
