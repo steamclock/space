@@ -8,6 +8,7 @@
 
 #import "CanvasSelectionViewController.h"
 #import "CanvasTitleEditPopover.h"
+#import "Database.h"
 #import "Notifications.h"
 #import "Constants.h"
 
@@ -17,6 +18,7 @@
 @property NSArray* buttons;
 
 @property (strong, nonatomic) NSMutableArray* canvasTitles;
+@property (strong, nonatomic) NSMutableArray* canvasTitleIndices;
 
 @property (strong, nonatomic) UIButton* currentlyEditingButton;
 @property (strong, nonatomic) UILabel* currentlyEditingTitle;
@@ -42,11 +44,12 @@
         self.toolbar = [UIToolbar new];
         self.defaults = [NSUserDefaults standardUserDefaults];
 
-        if ([self.defaults objectForKey:Key_CanvasTitles]) {
+        if ([self.defaults objectForKey:Key_CanvasTitles] && [self.defaults objectForKey:Key_CanvasTitleIndices]) {
             self.canvasTitles = [self.defaults objectForKey:Key_CanvasTitles];
-            [self setupToolbarWithCanvasTitles:self.canvasTitles];
+            self.canvasTitleIndices = [self.defaults objectForKey:Key_CanvasTitleIndices];
+            [self setupToolbarWithCanvasTitles:self.canvasTitles andIndices:self.canvasTitleIndices];
         } else {
-            [self setupToolbarWithCanvasTitles:@[@"One", @"Two"]];
+            [self setupToolbarWithCanvasTitles:@[@"One", @"Two"] andIndices:@[@0, @1]];
         }
         
         self.view = self.toolbar;
@@ -64,7 +67,24 @@
                 weakSelf.brandNewCanvasTitle = title;
                 NSLog(@"New title = %@", weakSelf.brandNewCanvasTitle);
                 [self.canvasTitles addObject:weakSelf.brandNewCanvasTitle];
-                [self setupToolbarWithCanvasTitles:self.canvasTitles];
+                
+                BOOL isIndexUpdated = NO;
+                for (int i = 0; i < [self.canvasTitleIndices count]; i++) {
+                    
+                    if ([self.canvasTitleIndices containsObject:[NSNumber numberWithInt:i]]) {
+                        continue;
+                    } else {
+                        [self.canvasTitleIndices addObject:[NSNumber numberWithInt:i]];
+                        isIndexUpdated = YES;
+                        break;
+                    }
+                }
+                
+                if (isIndexUpdated == NO) {
+                    [self.canvasTitleIndices addObject:[NSNumber numberWithInt:self.canvasTitleIndices.count]];
+                }
+                
+                [self setupToolbarWithCanvasTitles:self.canvasTitles andIndices:self.canvasTitleIndices];
             };
         }
     }
@@ -83,19 +103,21 @@
     [super didReceiveMemoryWarning];
 }
 
-- (void)setupToolbarWithCanvasTitles:(NSArray*)canvasTitles
+- (void)setupToolbarWithCanvasTitles:(NSArray*)canvasTitles andIndices:(NSArray*)canvasIndices
 {
     self.toolbar.items = nil;
     
     self.canvasTitles = [canvasTitles mutableCopy];
+    self.canvasTitleIndices = [canvasIndices mutableCopy];
     [self.defaults setObject:self.canvasTitles forKey:Key_CanvasTitles];
+    [self.defaults setObject:self.canvasTitleIndices forKey:Key_CanvasTitleIndices];
     [self.defaults synchronize];
     
     NSMutableArray* items = [NSMutableArray new];
     NSMutableArray* buttons = [NSMutableArray new];
     
     // Used to help identify and locate the custom UIButton that's embedded in each of the BarButtonItems,
-    // corresponds to actual cavans title index that the button represents.
+    // corresponds to actual canvas title array's index that the button represents.
     int indexTag = 0;
     
     for (NSString* name in canvasTitles) {
@@ -142,8 +164,9 @@
     UIButton* pressedButton = (UIButton*)sender;
     
     NSLog(@"Button number = %@", [NSNumber numberWithInt:pressedButton.tag]);
+    NSLog(@"Canvas number = %@", self.canvasTitleIndices[pressedButton.tag]);
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":[NSNumber numberWithInt:pressedButton.tag]}];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":self.canvasTitleIndices[pressedButton.tag]}];
 }
 
 -(IBAction)titleLongPress:(UITapGestureRecognizer *)recognizer {
@@ -161,13 +184,23 @@
     
     [self.currentlyEditingTitle setText:textField.text];
     
-    [self.canvasTitles replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:textField.text];
+    // Assumes delete when an empty string is provided, for now.
+    if([textField.text isEqualToString:@""]) {
+        
+        int canvasToDelete = [self.canvasTitleIndices[self.currentlyEditingButton.tag] intValue];
+        [[Database sharedDatabase] deleteAllNotesInCanvas:canvasToDelete];
+        [self.canvasTitles removeObjectAtIndex:self.currentlyEditingButton.tag];
+        [self.canvasTitleIndices removeObjectAtIndex:self.currentlyEditingButton.tag];
+    } else {
+        [self.canvasTitles replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:textField.text];
+        [self.canvasTitleIndices replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:textField.text];
+    }
     
     [self swapTextFieldWithTitleLabel];
     
     [textField resignFirstResponder];
     
-    [self setupToolbarWithCanvasTitles:self.canvasTitles];
+    [self setupToolbarWithCanvasTitles:self.canvasTitles andIndices:self.canvasTitleIndices];
     
     return YES;
 }

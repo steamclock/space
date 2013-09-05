@@ -96,6 +96,27 @@
     }
 }
 
+-(void)deleteAllNotesInCanvas:(int)canvas {
+    
+    NSLog(@"Canvas to delete = %@", [NSNumber numberWithInt:canvas]);
+    
+    NSFetchRequest* deleteRequest = [[NSFetchRequest alloc] init];
+    [deleteRequest setEntity:[NSEntityDescription entityForName:@"Note" inManagedObjectContext:self.managedObjectContext]];
+    
+    NSPredicate* predicate = [NSPredicate predicateWithFormat:@"canvas == %@", [NSNumber numberWithInt:canvas]];
+    [deleteRequest setPredicate:predicate];
+    
+    NSError* error = nil;
+    NSArray* notesToDelete = [self.managedObjectContext executeFetchRequest:deleteRequest error:&error];
+    
+    for (Note* note in notesToDelete) {
+        [self.managedObjectContext deleteObject:note];
+    }
+    
+    NSError* saveError = nil;
+    [self.managedObjectContext save:&saveError];
+}
+
 -(Note*)createNote {
     
     Note* newNote = [NSEntityDescription insertNewObjectForEntityForName:@"Note" inManagedObjectContext:self.managedObjectContext];
@@ -114,7 +135,7 @@
     return [self getNotesWithRequest:request];
 }
 
--(NSArray*)deletedNotesInCanvas:(int)canvas {
+-(NSArray*)trashedNotesInCanvas:(int)canvas {
     NSFetchRequest *request = [[NSFetchRequest alloc] init];
     request.predicate = [NSPredicate predicateWithFormat:@"canvas == %@ AND trashed == %@", [NSNumber numberWithInt:canvas], [NSNumber numberWithBool:YES]];
     NSEntityDescription *entity = [NSEntityDescription entityForName:@"Note" inManagedObjectContext:self.managedObjectContext];

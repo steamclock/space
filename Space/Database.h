@@ -14,9 +14,10 @@
 +(Database*)sharedDatabase;
 
 -(void)save;
+-(void)deleteAllNotesInCanvas:(int)canvas;
 
 -(Note*)createNote;
 -(NSArray*)notesInCanvas:(int)canvas;
--(NSArray*)deletedNotesInCanvas:(int)canvas;
+-(NSArray*)trashedNotesInCanvas:(int)canvas;
 
 @end

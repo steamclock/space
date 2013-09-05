@@ -9,3 +9,4 @@
 #import <Foundation/Foundation.h>
 
 extern NSString* const Key_CanvasTitles;
+extern NSString* const Key_CanvasTitleIndices;

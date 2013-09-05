@@ -9,3 +9,4 @@
 #import "Constants.h"
 
 NSString* const Key_CanvasTitles = @"canvasTitles";
+NSString* const Key_CanvasTitleIndices = @"canvasTitleIndices";

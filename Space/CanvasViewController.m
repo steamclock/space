@@ -91,7 +91,7 @@
     NSArray* notes;
     
     if (self.isTrashMode) {
-        notes = [[Database sharedDatabase] deletedNotesInCanvas:self.currentCanvas];
+        notes = [[Database sharedDatabase] trashedNotesInCanvas:self.currentCanvas];
         NSLog(@"Number of deleted notes = %d", [notes count]);
     } else {
         notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
