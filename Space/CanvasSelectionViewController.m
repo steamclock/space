@@ -16,14 +16,14 @@
 @property UIToolbar* toolbar;
 @property NSArray* buttons;
 
-@property (strong, nonatomic) NSMutableArray* areaTitles;
+@property (strong, nonatomic) NSMutableArray* canvasTitles;
 
 @property (strong, nonatomic) UIButton* currentlyEditingButton;
 @property (strong, nonatomic) UILabel* currentlyEditingTitle;
 @property (strong, nonatomic) UIPopoverController* popoverController;
 
 // Cannot use a variable name that starts with "new"
-@property (strong, nonatomic) NSString* brandNewAreaTitle;
+@property (strong, nonatomic) NSString* brandNewCanvasTitle;
 
 @property (strong, nonatomic) NSUserDefaults* defaults;
 
@@ -42,11 +42,11 @@
         self.toolbar = [UIToolbar new];
         self.defaults = [NSUserDefaults standardUserDefaults];
 
-        if ([self.defaults objectForKey:Key_AreaTitles]) {
-            self.areaTitles = [self.defaults objectForKey:Key_AreaTitles];
-            [self setupToolbarWithAreaTitles:self.areaTitles];
+        if ([self.defaults objectForKey:Key_CanvasTitles]) {
+            self.canvasTitles = [self.defaults objectForKey:Key_CanvasTitles];
+            [self setupToolbarWithCanvasTitles:self.canvasTitles];
         } else {
-            [self setupToolbarWithAreaTitles:@[@"One", @"Two"]];
+            [self setupToolbarWithCanvasTitles:@[@"One", @"Two"]];
         }
         
         self.view = self.toolbar;
@@ -61,10 +61,10 @@
             
             __weak CanvasSelectionViewController* weakSelf = self;
             canvasTitlePopover.newTitleEntered = ^(NSString* title) {
-                weakSelf.brandNewAreaTitle = title;
-                NSLog(@"New title = %@", weakSelf.brandNewAreaTitle);
-                [self.areaTitles addObject:weakSelf.brandNewAreaTitle];
-                [self setupToolbarWithAreaTitles:self.areaTitles];
+                weakSelf.brandNewCanvasTitle = title;
+                NSLog(@"New title = %@", weakSelf.brandNewCanvasTitle);
+                [self.canvasTitles addObject:weakSelf.brandNewCanvasTitle];
+                [self setupToolbarWithCanvasTitles:self.canvasTitles];
             };
         }
     }
@@ -83,22 +83,22 @@
     [super didReceiveMemoryWarning];
 }
 
-- (void)setupToolbarWithAreaTitles:(NSArray*)areaTitles
+- (void)setupToolbarWithCanvasTitles:(NSArray*)canvasTitles
 {
     self.toolbar.items = nil;
     
-    self.areaTitles = [areaTitles mutableCopy];
-    [self.defaults setObject:self.areaTitles forKey:Key_AreaTitles];
+    self.canvasTitles = [canvasTitles mutableCopy];
+    [self.defaults setObject:self.canvasTitles forKey:Key_CanvasTitles];
     [self.defaults synchronize];
     
     NSMutableArray* items = [NSMutableArray new];
     NSMutableArray* buttons = [NSMutableArray new];
     
     // Used to help identify and locate the custom UIButton that's embedded in each of the BarButtonItems,
-    // corresponds to actual area title index that the button represents.
+    // corresponds to actual cavans title index that the button represents.
     int indexTag = 0;
     
-    for (NSString* name in areaTitles) {
+    for (NSString* name in canvasTitles) {
         [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil] ];
         
         CGRect rect = CGRectMake(0, 0, 100, 44);
@@ -161,13 +161,13 @@
     
     [self.currentlyEditingTitle setText:textField.text];
     
-    [self.areaTitles replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:textField.text];
+    [self.canvasTitles replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:textField.text];
     
     [self swapTextFieldWithTitleLabel];
     
     [textField resignFirstResponder];
     
-    [self setupToolbarWithAreaTitles:self.areaTitles];
+    [self setupToolbarWithCanvasTitles:self.canvasTitles];
     
     return YES;
 }

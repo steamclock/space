@@ -8,4 +8,4 @@
 
 #import <Foundation/Foundation.h>
 
-extern NSString* Key_AreaTitles;
+extern NSString* const Key_CanvasTitles;

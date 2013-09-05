@@ -8,4 +8,4 @@
 
 #import "Constants.h"
 
-NSString* Key_AreaTitles = @"areaTitles";
+NSString* const Key_CanvasTitles = @"canvasTitles";
