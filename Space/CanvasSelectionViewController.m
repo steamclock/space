@@ -9,20 +9,23 @@
 #import "CanvasSelectionViewController.h"
 #import "CanvasTitleEditPopover.h"
 #import "Notifications.h"
+#import "Constants.h"
 
 @interface CanvasSelectionViewController ()
 
 @property UIToolbar* toolbar;
 @property NSArray* buttons;
 
-@property (strong, nonatomic) NSMutableArray* canvasList;
+@property (strong, nonatomic) NSMutableArray* areaTitles;
 
 @property (strong, nonatomic) UIButton* currentlyEditingButton;
 @property (strong, nonatomic) UILabel* currentlyEditingTitle;
 @property (strong, nonatomic) UIPopoverController* popoverController;
 
 // Cannot use a variable name that starts with "new"
-@property (strong, nonatomic) NSString* brandNewTitle;
+@property (strong, nonatomic) NSString* brandNewAreaTitle;
+
+@property (strong, nonatomic) NSUserDefaults* defaults;
 
 @end
 
@@ -33,9 +36,19 @@
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    
     if (self) {
+        
         self.toolbar = [UIToolbar new];
-        [self setupToolbarWithCanvasNames:@[@"One", @"Two"]];
+        self.defaults = [NSUserDefaults standardUserDefaults];
+
+        if ([self.defaults objectForKey:Key_AreaTitles]) {
+            self.areaTitles = [self.defaults objectForKey:Key_AreaTitles];
+            [self setupToolbarWithAreaTitles:self.areaTitles];
+        } else {
+            [self setupToolbarWithAreaTitles:@[@"One", @"Two"]];
+        }
+        
         self.view = self.toolbar;
         
         Class popoverClass = NSClassFromString(@"UIPopoverController");
@@ -48,10 +61,10 @@
             
             __weak CanvasSelectionViewController* weakSelf = self;
             canvasTitlePopover.newTitleEntered = ^(NSString* title) {
-                weakSelf.brandNewTitle = title;
-                NSLog(@"New title = %@", weakSelf.brandNewTitle);
-                [self.canvasList addObject:weakSelf.brandNewTitle];
-                [self setupToolbarWithCanvasNames:self.canvasList];
+                weakSelf.brandNewAreaTitle = title;
+                NSLog(@"New title = %@", weakSelf.brandNewAreaTitle);
+                [self.areaTitles addObject:weakSelf.brandNewAreaTitle];
+                [self setupToolbarWithAreaTitles:self.areaTitles];
             };
         }
     }
@@ -70,20 +83,22 @@
     [super didReceiveMemoryWarning];
 }
 
-- (void)setupToolbarWithCanvasNames:(NSArray*)canvasNames
+- (void)setupToolbarWithAreaTitles:(NSArray*)areaTitles
 {
     self.toolbar.items = nil;
     
-    if ([self.canvasList count] <= 0) {
-        self.canvasList = [canvasNames mutableCopy];
-    }
+    self.areaTitles = [areaTitles mutableCopy];
+    [self.defaults setObject:self.areaTitles forKey:Key_AreaTitles];
+    [self.defaults synchronize];
     
     NSMutableArray* items = [NSMutableArray new];
     NSMutableArray* buttons = [NSMutableArray new];
     
-    int tag = 0; // Used to help identify and locate the custom UIButton that's embedded in each of the BarButtonItems
+    // Used to help identify and locate the custom UIButton that's embedded in each of the BarButtonItems,
+    // corresponds to actual area title index that the button represents.
+    int indexTag = 0;
     
-    for (NSString* name in canvasNames) {
+    for (NSString* name in areaTitles) {
         [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil] ];
         
         CGRect rect = CGRectMake(0, 0, 100, 44);
@@ -106,8 +121,8 @@
         UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(titleLongPress:)];
         [customBarButton addGestureRecognizer:longPress];
         
-        customBarButton.tag = tag;
-        tag++;
+        customBarButton.tag = indexTag;
+        indexTag++;
         
         UIBarButtonItem* button = [[UIBarButtonItem alloc] initWithCustomView:customBarButton];
         
@@ -146,9 +161,13 @@
     
     [self.currentlyEditingTitle setText:textField.text];
     
+    [self.areaTitles replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:textField.text];
+    
     [self swapTextFieldWithTitleLabel];
     
     [textField resignFirstResponder];
+    
+    [self setupToolbarWithAreaTitles:self.areaTitles];
     
     return YES;
 }
@@ -167,6 +186,8 @@
                 [self.currentlyEditingTitle setHidden:YES];
             }
             
+            continue;
+            
         } else if ([view isKindOfClass:[UITextField class]]) {
             
             UITextField* textField = (UITextField*)view;
@@ -179,6 +200,8 @@
             }
             
             [textField becomeFirstResponder];
+            
+            continue;
         }
     }
 }

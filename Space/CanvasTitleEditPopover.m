@@ -16,17 +16,6 @@
 
 @synthesize popoverController;
 
-- (BOOL)isInPopover {
-    
-    Class popoverClass = NSClassFromString(@"UIPopoverController");
-    
-    if (popoverClass != nil && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad && self.popoverController != nil) {
-        return YES;
-    } else {
-        return NO;
-    }
-}
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
