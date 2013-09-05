@@ -13,6 +13,7 @@
 #import "NoteView.h"
 #import "QBPopupMenu.h"
 #import "Notifications.h"
+#import "Constants.h"
 
 @interface CanvasViewController ()
 
@@ -75,7 +76,7 @@
     [self loadCurrentCanvas];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteDeletedNotification:) name:kNoteDeletedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteTrashedNotification::) name:kNoteTrashedNotification object:nil];
 }
 
 -(void)loadCurrentCanvas {
@@ -107,10 +108,10 @@
     [self loadCurrentCanvas];
 }
 
--(void)noteDeletedNotification:(NSNotification*)notification {
+-(void)noteTrashedNotification:(NSNotification*)notification {
     if (self.isTrashMode) {
-        Note* deletedNote = [notification.userInfo objectForKey:@"Key_DeletedNote"];
-        [self addViewForNote:deletedNote];
+        Note* trashedNote = [notification.userInfo objectForKey:Key_TrashedNotes];
+        [self addViewForNote:trashedNote];
     }
 }
 
@@ -146,10 +147,10 @@
     [self.viewForMenu removeFromSuperview];
     self.viewForMenu = nil;
     
-    NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[@"Key_DeletedNote"]];
+    NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
     
-    NSNotification* noteDeletedNotification = [[NSNotification alloc] initWithName:kNoteDeletedNotification object:self userInfo:deletedNoteInfo];
-    [[NSNotificationCenter defaultCenter] postNotification:noteDeletedNotification];
+    NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification object:self userInfo:deletedNoteInfo];
+    [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
 }
 
 -(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {

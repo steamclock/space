@@ -10,3 +10,4 @@
 
 NSString* const Key_CanvasTitles = @"canvasTitles";
 NSString* const Key_CanvasTitleIndices = @"canvasTitleIndices";
+NSString* const Key_TrashedNotes = @"trashedNotes";

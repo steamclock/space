@@ -7,4 +7,4 @@
 //
 
 NSString* kCanvasChangedNotification = @"spaceCanvasChanged";
-NSString* kNoteDeletedNotification = @"noteDeleted";
+NSString* kNoteTrashedNotification = @"noteTrashed";
