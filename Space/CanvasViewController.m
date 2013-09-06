@@ -76,7 +76,7 @@
     [self loadCurrentCanvas];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteTrashedNotification::) name:kNoteTrashedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteTrashedNotification:) name:kNoteTrashedNotification object:nil];
 }
 
 -(void)loadCurrentCanvas {

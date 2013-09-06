@@ -184,13 +184,27 @@
     
     [self.currentlyEditingTitle setText:textField.text];
     
+    int canvasToDelete = 0;
+    int canvasToSwitchTo = 0;
+    
     // Assumes delete when an empty string is provided, for now.
     if([textField.text isEqualToString:@""]) {
         
-        int canvasToDelete = [self.canvasTitleIndices[self.currentlyEditingButton.tag] intValue];
+        canvasToDelete = [self.canvasTitleIndices[self.currentlyEditingButton.tag] intValue];
         [[Database sharedDatabase] deleteAllNotesInCanvas:canvasToDelete];
         [self.canvasTitles removeObjectAtIndex:self.currentlyEditingButton.tag];
         [self.canvasTitleIndices removeObjectAtIndex:self.currentlyEditingButton.tag];
+        
+        int indexOfCanvasToSwitchTo = self.currentlyEditingButton.tag - 1;
+        if (indexOfCanvasToSwitchTo < 0) {
+            indexOfCanvasToSwitchTo = 0;
+        }
+        canvasToSwitchTo = [[self.canvasTitleIndices objectAtIndex:indexOfCanvasToSwitchTo] intValue];
+        if (canvasToSwitchTo < 0) {
+            canvasToSwitchTo = 0;
+        }
+        [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":[NSNumber numberWithInt:canvasToSwitchTo]}];
+        
     } else {
         [self.canvasTitles replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:textField.text];
         [self.canvasTitleIndices replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:textField.text];
