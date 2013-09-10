@@ -154,7 +154,7 @@
 }
 
 -(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {
-    self.gravity.gravityDirection = CGVectorMake(0, 1);
+    //self.gravity.gravityDirection = CGVectorMake(0, 1);
 }
 
 -(void)spaceTap:(UITapGestureRecognizer *)recognizer {
