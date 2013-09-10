@@ -62,7 +62,6 @@
     
     [self.animator addBehavior:self.gravity];
     [self.animator addBehavior:self.collision];
-    [self.animator addBehavior:self.activeDrag];
     [self.animator addBehavior:self.dynamicProperties];
 
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceTap:)];
@@ -185,6 +184,7 @@
     if(recognizer.state == UIGestureRecognizerStateBegan) {
         self.activeDrag = [[UIDynamicItemBehavior alloc] init];
         self.activeDrag.density = 1000000.0f;
+        [self.animator addBehavior:self.activeDrag];
         [self.activeDrag addItem:view];
         [self.gravity removeItem:view];
     }
