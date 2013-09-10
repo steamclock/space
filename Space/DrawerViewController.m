@@ -103,6 +103,16 @@
     self.view.frame = frame;
 }
 
+
+-(void)animateDrawerPosition:(float)positionY {
+    CGRect frame = self.view.frame;
+    frame.origin.y = positionY;
+
+    [UIView animateWithDuration:0.5 animations:^{
+        self.view.frame = frame;
+    }];
+}
+
 -(void)dragHandleMoved:(UIPanGestureRecognizer*)recognizer {
     
     CGPoint drag = [recognizer locationInView:self.view.superview];
@@ -118,8 +128,7 @@
     BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
 
     if (recognizer.state == UIGestureRecognizerStateEnded) {
-        //animate to the appropriate end position (FIXME not animating yet)
-        NSLog(@"pan end with velocity %@", NSStringFromCGPoint([recognizer velocityInView:self.view]));
+        //animate to the appropriate end position
 
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
 
@@ -130,6 +139,8 @@
         } else {
             newPosition = self.restY;
         }
+
+        [self animateDrawerPosition:newPosition];
     } else {
         //bound the drag based on the handle in use (it's not allowed to close past its rest position)
 
@@ -137,11 +148,9 @@
             newPosition = self.restY;
         }
 
+        [self setDrawerPosition:newPosition];
     }
 
-    [self setDrawerPosition:newPosition];
-    
-    NSLog(@"Scroll position = %f", self.view.frame.origin.y);
 }
 
 -(void)setTopDrawerContents:(UIViewController *)contents {
