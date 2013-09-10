@@ -49,10 +49,10 @@
     
     [self.view addSubview:self.bottomDragHandle];
 
-    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(topDragHandleMoved:)];
+    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.topDragHandle addGestureRecognizer:panGestureRecognizer];
 
-    panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(topDragHandleMoved:)];
+    panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
 }
 
@@ -103,7 +103,7 @@
     self.view.frame = frame;
 }
 
--(void)topDragHandleMoved:(UIPanGestureRecognizer*)recognizer {
+-(void)dragHandleMoved:(UIPanGestureRecognizer*)recognizer {
     
     CGPoint drag = [recognizer locationInView:self.view.superview];
     
@@ -114,26 +114,32 @@
     }
     
     float newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
-    
-    // Handle top drag handle behaviours
-    if ([recognizer.view isEqual:self.topDragHandle]) {
-        
-        // Prevents top canvas from scrolling too far up
-        if (newPosition < self.restY) {
-            [self setDrawerPosition:self.restY];
+
+    BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
+
+    if (recognizer.state == UIGestureRecognizerStateEnded) {
+        //animate to the appropriate end position (FIXME not animating yet)
+        NSLog(@"pan end with velocity %@", NSStringFromCGPoint([recognizer velocityInView:self.view]));
+
+        BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
+
+        if (fromTopHandle && velocityDownwards) {
+            newPosition = self.maxY;
+        } else if (!fromTopHandle && !velocityDownwards) {
+            newPosition = self.minY;
         } else {
-            [self setDrawerPosition:newPosition];
+            newPosition = self.restY;
         }
-        
-    } else { // Handle bottom drag handle behaviours
-        
-        // Prevents bottom canvas from scrolling too far down
-        if (newPosition > self.restY) {
-            [self setDrawerPosition:self.restY];
-        } else {
-            [self setDrawerPosition:newPosition];
+    } else {
+        //bound the drag based on the handle in use (it's not allowed to close past its rest position)
+
+        if ((fromTopHandle && newPosition < self.restY) || (!fromTopHandle && newPosition > self.restY)) {
+            newPosition = self.restY;
         }
+
     }
+
+    [self setDrawerPosition:newPosition];
     
     NSLog(@"Scroll position = %f", self.view.frame.origin.y);
 }
