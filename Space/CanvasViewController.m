@@ -127,9 +127,13 @@
         
         QBPopupMenu* menu = [[QBPopupMenu alloc] init];
         menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:@"Delete" target:self action:@selector(noteMenuDelete:)] ];
-        
-        // Bleech. Gnarly dependancy on view hierarchy above this view to present the menu in the top level view, need to clean this up
-        [menu showInView:self.view.superview.superview atPoint:CGPointMake(view.center.x, view.center.y + self.view.superview.frame.origin.y)];
+
+        //we need to use the top-level view so that clicking outside the popup dismisses it.
+        //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
+        UIView* topView = self.view.superview.superview;
+
+        CGPoint showAt = [view.superview convertPoint:view.center toView:topView];
+        [menu showInView:topView atPoint:showAt];
     }
 }
 
