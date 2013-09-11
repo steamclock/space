@@ -28,7 +28,7 @@
 
 @property (nonatomic) BOOL simulating;
 
-@property (nonatomic) NoteView* viewForMenu;
+@property (nonatomic) NoteView* notePendingDelete;
 
 @property (nonatomic) int currentCanvas;
 @property (nonatomic) BOOL isTrashMode;
@@ -99,6 +99,7 @@
         NSLog(@"Number of deleted notes = %d", [notes count]);
     } else {
         notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
+        NSLog(@"%d saved notes", [notes count]);
     }
     
     for(Note* note in notes) {
@@ -116,6 +117,7 @@
         Note* trashedNote = [notification.userInfo objectForKey:Key_TrashedNotes];
         trashedNote.positionY = 54; //just offscreen
         [self addViewForNote:trashedNote];
+        [[Database sharedDatabase] save];
     }
 }
 
@@ -132,10 +134,10 @@
 }
 
 -(void)askToDeleteNote:(NoteView*) view {
-    self.viewForMenu = view;
+    self.notePendingDelete = view;
 
     QBPopupMenu* menu = [[QBPopupMenu alloc] init];
-    menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:@"Delete" target:self action:@selector(noteMenuDelete:)] ];
+    menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:@"Delete" target:self action:@selector(deletePendingNote)] ];
 
     //we need to use the top-level view so that clicking outside the popup dismisses it.
     //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
@@ -145,33 +147,37 @@
     [menu showInView:topView atPoint:showAt];
 }
 
--(void)noteMenuDelete:(id)sender {
-    Note* note = self.viewForMenu.note;
+-(void)deletePendingNote {
+    Note* note = self.notePendingDelete.note;
     
     // [note removeFromDatabase];
     [note markAsTrashed];
-    [[Database sharedDatabase] save];
     
     //[self.gravity removeItem:self.viewForMenu];
-    [self.collision removeItem:self.viewForMenu];
-    [self.dynamicProperties removeItem:self.viewForMenu];
+    [self.collision removeItem:self.notePendingDelete];
+    [self.dynamicProperties removeItem:self.notePendingDelete];
 
-    UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.viewForMenu]];
+    UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.notePendingDelete]];
     trashDrop.gravityDirection = CGVectorMake(0, 1);
     [self.animator addBehavior:trashDrop];
 
     __weak CanvasViewController* weakSelf = self;
 
-    self.viewForMenu.onDropOffscreen = ^{
+    self.notePendingDelete.onDropOffscreen = ^{
         [weakSelf.animator removeBehavior:trashDrop];
-        [weakSelf.viewForMenu removeFromSuperview];
-        weakSelf.viewForMenu = nil;
+        [weakSelf.notePendingDelete removeFromSuperview];
+        weakSelf.notePendingDelete = nil;
 
         NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
 
         NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification object:weakSelf userInfo:deletedNoteInfo];
         [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
     };
+}
+
+-(void)deleteNoteWithoutAsking:(NoteView*) view {
+    self.notePendingDelete = view;
+    [self deletePendingNote];
 }
 
 -(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {
@@ -209,6 +215,15 @@
     view.center = CGPointMake(drag.x, drag.y);
     [self.animator updateItemUsingCurrentState:view];
 
+    if(recognizer.state == UIGestureRecognizerStateEnded) {
+        //clean up the drag operation
+        [view setBackgroundColor:[UIColor clearColor]];
+        //[self.gravity addItem:view];
+        [self.activeDrag removeItem:view];
+        [self.animator removeBehavior:self.activeDrag];
+        self.activeDrag = nil;
+    }
+
     if (!self.isTrashMode) {
         //edit/trash actions and feedback
         //TODO: make the feedback pretty.
@@ -218,29 +233,24 @@
 
         if (distance > trashDistance) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
-                [self askToDeleteNote:view];
+                [self deleteNoteWithoutAsking:view];
             } else {
                 [view setBackgroundColor:[UIColor redColor]];
             }
         } else if (distance > editDistance) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
+                [self returnNoteToBounds:view];
                 [self.focus focusOn:view.note];
             } else {
                 [view setBackgroundColor:[UIColor greenColor]];
             }
         } else {
-            [view setBackgroundColor:[UIColor clearColor]];
+            if(recognizer.state == UIGestureRecognizerStateEnded) {
+                [[Database sharedDatabase] save];
+            } else {
+                [view setBackgroundColor:[UIColor clearColor]];
+            }
         }
-    }
-
-    if(recognizer.state == UIGestureRecognizerStateEnded) {
-        [view setBackgroundColor:[UIColor clearColor]];
-        [self returnNoteToBounds:view];
-        //[self.gravity addItem:view];
-        [self.activeDrag removeItem:view];
-        [self.animator removeBehavior:self.activeDrag];
-        self.activeDrag = nil;
-        [[Database sharedDatabase] save];
     }
 }
 
@@ -259,12 +269,14 @@
         //NSLog(@"move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
         note.center = center;
         [self.animator updateItemUsingCurrentState:note];
+        [[Database sharedDatabase] save];
     }
 }
 
 -(void)addViewForNote:(Note*)note {
     NoteView* imageView = [[NoteView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
     imageView.center = CGPointMake(note.positionX, note.positionY);
+    NSLog(@"adding note at %@", NSStringFromCGPoint(imageView.center));
     
     imageView.userInteractionEnabled = YES;
     
