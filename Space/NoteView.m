@@ -69,7 +69,16 @@
 }
 
 -(void)setCenter:(CGPoint)center {
+    //FIXME I got this number experimentally in portrait, we should probably use something proper.
+    if (center.y > 1820) {
+        NSLog(@"dropped offscreen");
+        if (self.onDropOffscreen) {
+            self.onDropOffscreen();
+        }
+    }
+
     [super setCenter:center];
+    //NSLog(@"center! %@", NSStringFromCGPoint(center));
     
     self.note.positionX = center.x;
     self.note.positionY = center.y;

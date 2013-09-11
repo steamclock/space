@@ -18,7 +18,9 @@
 @interface CanvasViewController ()
 
 @property (nonatomic) UIDynamicAnimator* animator;
-@property (nonatomic) UIGravityBehavior* gravity;
+//this gravity is disabled because the drop-to-trash gravity was conflicting with it.
+//never put more than one UIGravityBehavior on the same animator. it gets confused.
+//@property (nonatomic) UIGravityBehavior* gravity;
 @property (nonatomic) UICollisionBehavior* collision;
 @property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
 
@@ -53,14 +55,14 @@
 
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
     
-    self.gravity = [[UIGravityBehavior alloc] init];
-    self.gravity.gravityDirection = CGVectorMake(0, 0);
+    /*self.gravity = [[UIGravityBehavior alloc] init];
+    self.gravity.gravityDirection = CGVectorMake(0, 0);*/
     self.collision = [[UICollisionBehavior alloc] init];
     self.collision.translatesReferenceBoundsIntoBoundary = YES;
     self.dynamicProperties = [[UIDynamicItemBehavior alloc] init];
     self.dynamicProperties.allowsRotation = NO;
     
-    [self.animator addBehavior:self.gravity];
+    //[self.animator addBehavior:self.gravity];
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
 
@@ -81,7 +83,7 @@
 -(void)loadCurrentCanvas {
     
     for(UIView* view in self.view.subviews) {
-        [self.gravity removeItem:view];
+        //[self.gravity removeItem:view];
         [self.collision removeItem:view];
         [self.dynamicProperties removeItem:view];
     }
@@ -144,17 +146,26 @@
     [note markAsTrashed];
     [[Database sharedDatabase] save];
     
-    [self.gravity removeItem:self.viewForMenu];
+    //[self.gravity removeItem:self.viewForMenu];
     [self.collision removeItem:self.viewForMenu];
     [self.dynamicProperties removeItem:self.viewForMenu];
-    
-    [self.viewForMenu removeFromSuperview];
-    self.viewForMenu = nil;
-    
-    NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
-    
-    NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification object:self userInfo:deletedNoteInfo];
-    [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
+
+    UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.viewForMenu]];
+    trashDrop.gravityDirection = CGVectorMake(0, 1);
+    [self.animator addBehavior:trashDrop];
+
+    __weak CanvasViewController* weakSelf = self;
+
+    self.viewForMenu.onDropOffscreen = ^{
+        [weakSelf.animator removeBehavior:trashDrop];
+        [weakSelf.viewForMenu removeFromSuperview];
+        weakSelf.viewForMenu = nil;
+
+        NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
+
+        NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification object:weakSelf userInfo:deletedNoteInfo];
+        [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
+    };
 }
 
 -(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {
@@ -186,7 +197,7 @@
         self.activeDrag.density = 1000000.0f;
         [self.animator addBehavior:self.activeDrag];
         [self.activeDrag addItem:view];
-        [self.gravity removeItem:view];
+        //[self.gravity removeItem:view];
     }
     
     view.center = CGPointMake(drag.x, drag.y);
@@ -198,7 +209,7 @@
     note.positionY = drag.y;
 
     if(recognizer.state == UIGestureRecognizerStateEnded) {
-        [self.gravity addItem:view];
+        //[self.gravity addItem:view];
         [self.activeDrag removeItem:view];
         self.activeDrag = nil;
         [[Database sharedDatabase] save];
@@ -221,7 +232,7 @@
     [imageView addGestureRecognizer:longPress];
 
     [self.view addSubview:imageView];
-    [self.gravity addItem:imageView];
+    //[self.gravity addItem:imageView];
     [self.collision addItem:imageView];
     [self.dynamicProperties addItem:imageView];
 

@@ -14,4 +14,7 @@
 
 @property Note* note;
 
+//block for when the note drops offscreen (into the trash)
+@property (nonatomic, copy) void (^onDropOffscreen)();
+
 @end
