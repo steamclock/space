@@ -39,7 +39,7 @@
     self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
     
     self.focus = [[UIView alloc] initWithFrame:CGRectMake(234, 362, 300, 300)];
-    self.focus.backgroundColor = [UIColor greenColor];
+    self.focus.backgroundColor = [UIColor grayColor];
     
     self.titleField = [[UITextField alloc] initWithFrame:CGRectMake(20, 20, 260, 40)];
     self.titleField.backgroundColor = [UIColor whiteColor];

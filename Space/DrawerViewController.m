@@ -39,13 +39,13 @@
     
     self.topDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 100, 20)];
     self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
-    self.topDragHandle.backgroundColor = [UIColor redColor];
+    self.topDragHandle.backgroundColor = [UIColor grayColor];
 
     [self.view addSubview:self.topDragHandle];
 
     self.bottomDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragBottom + 40, 100, 20)];
     self.bottomDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
-    self.bottomDragHandle.backgroundColor = [UIColor redColor];
+    self.bottomDragHandle.backgroundColor = [UIColor grayColor];
     
     [self.view addSubview:self.bottomDragHandle];
 
