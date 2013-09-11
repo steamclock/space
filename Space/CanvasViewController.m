@@ -77,7 +77,9 @@
     [self loadCurrentCanvas];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteTrashedNotification:) name:kNoteTrashedNotification object:nil];
+    if (self.isTrashMode) {
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteTrashedNotification:) name:kNoteTrashedNotification object:nil];
+    }
 }
 
 -(void)loadCurrentCanvas {
@@ -228,9 +230,12 @@
     
     UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(noteDrag:)];
     [imageView addGestureRecognizer:panGestureRecognizer];
-    
-    UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(noteLongPress:)];
-    [imageView addGestureRecognizer:longPress];
+
+    if (! self.isTrashMode) {
+        //enable delete
+        UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(noteLongPress:)];
+        [imageView addGestureRecognizer:longPress];
+    }
 
     [self.view addSubview:imageView];
     //[self.gravity addItem:imageView];
