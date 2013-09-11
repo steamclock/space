@@ -224,7 +224,12 @@
         self.activeDrag = nil;
     }
 
-    if (!self.isTrashMode) {
+    if (self.isTrashMode) {
+        //TODO maybe an un-trash action?
+        if(recognizer.state == UIGestureRecognizerStateEnded) {
+            [[Database sharedDatabase] save];
+        }
+    } else {
         //edit/trash actions and feedback
         //TODO: make the feedback pretty.
         float distance = view.center.y - self.view.bounds.size.height;
