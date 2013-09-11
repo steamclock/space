@@ -127,18 +127,22 @@
 -(void)noteLongPress: (UITapGestureRecognizer *)recognizer {
     if(recognizer.state == UIGestureRecognizerStateBegan) {
         NoteView* view = (NoteView*)recognizer.view;
-        self.viewForMenu = view;
-        
-        QBPopupMenu* menu = [[QBPopupMenu alloc] init];
-        menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:@"Delete" target:self action:@selector(noteMenuDelete:)] ];
-
-        //we need to use the top-level view so that clicking outside the popup dismisses it.
-        //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
-        UIView* topView = self.view.superview.superview;
-
-        CGPoint showAt = [view.superview convertPoint:view.center toView:topView];
-        [menu showInView:topView atPoint:showAt];
+        [self askToDeleteNote:view];
     }
+}
+
+-(void)askToDeleteNote:(NoteView*) view {
+    self.viewForMenu = view;
+
+    QBPopupMenu* menu = [[QBPopupMenu alloc] init];
+    menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:@"Delete" target:self action:@selector(noteMenuDelete:)] ];
+
+    //we need to use the top-level view so that clicking outside the popup dismisses it.
+    //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
+    UIView* topView = self.view.superview.superview;
+
+    CGPoint showAt = [view.superview convertPoint:view.center toView:topView];
+    [menu showInView:topView atPoint:showAt];
 }
 
 -(void)noteMenuDelete:(id)sender {
@@ -205,8 +209,33 @@
     view.center = CGPointMake(drag.x, drag.y);
     [self.animator updateItemUsingCurrentState:view];
 
+    if (!self.isTrashMode) {
+        //edit/trash actions and feedback
+        //TODO: make the feedback pretty.
+        float distance = view.center.y - self.view.bounds.size.height;
+        float editDistance = 0;
+        float trashDistance = 700; //FIXME I just guessed at this. should use the drawer instead.
+
+        if (distance > trashDistance) {
+            if(recognizer.state == UIGestureRecognizerStateEnded) {
+                [self askToDeleteNote:view];
+            } else {
+                [view setBackgroundColor:[UIColor redColor]];
+            }
+        } else if (distance > editDistance) {
+            if(recognizer.state == UIGestureRecognizerStateEnded) {
+                [self.focus focusOn:view.note];
+            } else {
+                [view setBackgroundColor:[UIColor greenColor]];
+            }
+        } else {
+            [view setBackgroundColor:[UIColor clearColor]];
+        }
+    }
+
     if(recognizer.state == UIGestureRecognizerStateEnded) {
-        [self noteDropped:view];
+        [view setBackgroundColor:[UIColor clearColor]];
+        [self returnNoteToBounds:view];
         //[self.gravity addItem:view];
         [self.activeDrag removeItem:view];
         [self.animator removeBehavior:self.activeDrag];
@@ -215,12 +244,10 @@
     }
 }
 
--(void)noteDropped:(NoteView*)note {
+-(void)returnNoteToBounds:(NoteView*)note {
     //force it back into the canvas if necessary.
-    //TODO: later, drops outside should trigger edit/delete.
 
     if (! CGRectContainsRect(self.view.bounds, note.frame)) {
-        //NSLog(@"escaped note! capturing...");
         //assume that x is okay, and fix y to the nearest valid value
         CGPoint center = note.center;
         float radius = note.frame.size.height / 2;
