@@ -66,20 +66,23 @@
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
 
-    UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceTap:)];
-    [self.view addGestureRecognizer:tapGestureRecognizer];
-    
-    UITapGestureRecognizer *doubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceDoubleTap:)];
-    doubleTapGestureRecognizer.numberOfTapsRequired = 2;
-    [self.view addGestureRecognizer:doubleTapGestureRecognizer];
+    if (self.isTrashMode) {
+        //catch the trash
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteTrashedNotification:) name:kNoteTrashedNotification object:nil];
+    } else {
+        //allow new notes
+        UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceTap:)];
+        [self.view addGestureRecognizer:tapGestureRecognizer];
+
+        UITapGestureRecognizer *doubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceDoubleTap:)];
+        doubleTapGestureRecognizer.numberOfTapsRequired = 2;
+        [self.view addGestureRecognizer:doubleTapGestureRecognizer];
+    }
     
     self.currentCanvas = 0;
     [self loadCurrentCanvas];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
-    if (self.isTrashMode) {
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteTrashedNotification:) name:kNoteTrashedNotification object:nil];
-    }
 }
 
 -(void)loadCurrentCanvas {
