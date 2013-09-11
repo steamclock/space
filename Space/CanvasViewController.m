@@ -112,7 +112,7 @@
 -(void)noteTrashedNotification:(NSNotification*)notification {
     if (self.isTrashMode) {
         Note* trashedNote = [notification.userInfo objectForKey:Key_TrashedNotes];
-        trashedNote.positionY = 0;
+        trashedNote.positionY = 54; //just offscreen
         [self addViewForNote:trashedNote];
     }
 }
