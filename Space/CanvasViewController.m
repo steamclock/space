@@ -211,11 +211,32 @@
     note.positionY = drag.y;
 
     if(recognizer.state == UIGestureRecognizerStateEnded) {
+        [self noteDropped:view];
         //[self.gravity addItem:view];
         [self.activeDrag removeItem:view];
         [self.animator removeBehavior:self.activeDrag];
         self.activeDrag = nil;
         [[Database sharedDatabase] save];
+    }
+}
+
+-(void)noteDropped:(NoteView*)note {
+    //force it back into the canvas if necessary.
+    //TODO: later, drops outside should trigger edit/delete.
+
+    if (! CGRectContainsRect(self.view.bounds, note.frame)) {
+        //NSLog(@"escaped note! capturing...");
+        //assume that x is okay, and fix y to the nearest valid value
+        CGPoint center = note.center;
+        float radius = note.frame.size.height / 2;
+        if (note.frame.origin.y < 0) {
+            center.y = radius;
+        } else {
+            center.y = self.view.bounds.size.height - radius;
+        }
+        //NSLog(@"move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
+        note.center = center;
+        [self.animator updateItemUsingCurrentState:note];
     }
 }
 
