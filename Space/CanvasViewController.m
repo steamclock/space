@@ -211,6 +211,7 @@
     if(recognizer.state == UIGestureRecognizerStateEnded) {
         //[self.gravity addItem:view];
         [self.activeDrag removeItem:view];
+        [self.animator removeBehavior:self.activeDrag];
         self.activeDrag = nil;
         [[Database sharedDatabase] save];
     }
