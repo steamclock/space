@@ -76,6 +76,14 @@
     self.titleField.text = self.note.title;
     self.contentField.text = self.note.content;
 
+    if ([note.title length]) {
+        //title exists; edit the content
+        [self.contentField becomeFirstResponder];
+    } else {
+        //edit the title
+        [self.titleField becomeFirstResponder];
+    }
+
     self.view.hidden = NO;
 }
 @end
