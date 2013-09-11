@@ -203,12 +203,7 @@
     }
     
     view.center = CGPointMake(drag.x, drag.y);
-    
     [self.animator updateItemUsingCurrentState:view];
-    
-    Note* note = view.note;
-    note.positionX = drag.x;
-    note.positionY = drag.y;
 
     if(recognizer.state == UIGestureRecognizerStateEnded) {
         [self noteDropped:view];
