@@ -33,7 +33,7 @@
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    float dragTop = 1024 + 175;
+    float dragTop = 1024 + 275;
     float dragLeft = (self.view.bounds.size.width / 2) - 50;
     float dragBottom = 1024 + 924;
     
@@ -66,7 +66,7 @@
     //CGRect bounds = self.view.superview.bounds;
     
     self.restY = -1024;
-    self.maxY = -224;
+    self.maxY = -324;
     self.minY = -1824;
 }
 
@@ -159,7 +159,7 @@
     _topDrawerContents = contents;
     
     if(_topDrawerContents) {
-        _topDrawerContents.view.frame = CGRectMake(0, 1024 - 824, 768, 1024);
+        _topDrawerContents.view.frame = CGRectMake(0, 1024 - 724, 768, 1024);
         [self addChildViewController:_topDrawerContents];
         [self.view addSubview:_topDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
