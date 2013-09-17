@@ -47,8 +47,8 @@
 
 /* Begin PBXFileReference section */
 		1842E80713F540AB860880DC /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		A62D413117BD795F0073DDB4 /* Database.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Database.h; path = ../../space/Space/Database.h; sourceTree = "<group>"; };
-		A62D413217BD795F0073DDB4 /* Database.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Database.m; path = ../../space/Space/Database.m; sourceTree = "<group>"; };
+		A62D413117BD795F0073DDB4 /* Database.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Database.h; sourceTree = "<group>"; };
+		A62D413217BD795F0073DDB4 /* Database.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Database.m; sourceTree = "<group>"; };
 		A62D413717BD7BE80073DDB4 /* Note.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Note.h; sourceTree = "<group>"; };
 		A62D413817BD7BE80073DDB4 /* Note.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Note.m; sourceTree = "<group>"; };
 		A62D413A17BD7D850073DDB4 /* CanvasViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CanvasViewController.h; sourceTree = "<group>"; };
@@ -151,16 +151,10 @@
 		A6F553F617BD737200728B8C /* Space */ = {
 			isa = PBXGroup;
 			children = (
-				A699F2FB17CC18FB0001E6B0 /* Notifications.h */,
-				A699F2FC17CC18FB0001E6B0 /* Notifications.m */,
-				B83D42D317D8F5E800409BBF /* Constants.h */,
-				B83D42D417D8F5E800409BBF /* Constants.m */,
+				E4DD05C617E90A5800ED525D /* backend */,
+				E4DD05C717E90A7B00ED525D /* constants */,
 				A6F553FF17BD737200728B8C /* AppDelegate.h */,
 				A6F5540017BD737200728B8C /* AppDelegate.m */,
-				A62D413117BD795F0073DDB4 /* Database.h */,
-				A62D413217BD795F0073DDB4 /* Database.m */,
-				A62D413717BD7BE80073DDB4 /* Note.h */,
-				A62D413817BD7BE80073DDB4 /* Note.m */,
 				A6EF0DE317C56310005EF2A0 /* NoteView.h */,
 				A6EF0DE417C56310005EF2A0 /* NoteView.m */,
 				A6EF0DDD17C41173005EF2A0 /* DrawerViewController.h */,
@@ -207,6 +201,28 @@
 				A6F5541617BD737200728B8C /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		E4DD05C617E90A5800ED525D /* backend */ = {
+			isa = PBXGroup;
+			children = (
+				A62D413117BD795F0073DDB4 /* Database.h */,
+				A62D413217BD795F0073DDB4 /* Database.m */,
+				A62D413717BD7BE80073DDB4 /* Note.h */,
+				A62D413817BD7BE80073DDB4 /* Note.m */,
+			);
+			name = backend;
+			sourceTree = "<group>";
+		};
+		E4DD05C717E90A7B00ED525D /* constants */ = {
+			isa = PBXGroup;
+			children = (
+				A699F2FB17CC18FB0001E6B0 /* Notifications.h */,
+				A699F2FC17CC18FB0001E6B0 /* Notifications.m */,
+				B83D42D317D8F5E800409BBF /* Constants.h */,
+				B83D42D417D8F5E800409BBF /* Constants.m */,
+			);
+			name = constants;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
