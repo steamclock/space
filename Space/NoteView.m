@@ -20,6 +20,7 @@
 @implementation NoteView
 
 - (id)initWithFrame:(CGRect)frame {
+    
     self = [super initWithFrame:frame];
     if (self) {
         [self commonSetup];
@@ -28,6 +29,7 @@
 }
 
 - (id)initWithImage:(UIImage *)image {
+    
     self = [super initWithImage:image];
     if (self) {
         [self commonSetup];
@@ -40,8 +42,11 @@
 }
 
 -(void)commonSetup {
+    
+    int portraitSize = 44;
+    
     self.contentMode = UIViewContentModeScaleToFill;
-    self.frame = CGRectMake(0, 0, 24, 24);
+    self.frame = CGRectMake(0, 0, portraitSize, portraitSize);
 
     self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.center.x - 32, self.frame.size.height, 64, 20)];
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
@@ -52,12 +57,14 @@
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    
     if([keyPath isEqualToString:@"title"]) {
         self.titleLabel.text = self.note.title;
     }
 }
 
 -(void)setNote:(Note *)note {
+    
     [_note removeObserver:self forKeyPath:@"title"];
     _note = note;
     self.titleLabel.text = note.title;
