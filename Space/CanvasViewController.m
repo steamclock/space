@@ -23,8 +23,8 @@
 //@property (nonatomic) UIGravityBehavior* gravity;
 @property (nonatomic) UICollisionBehavior* collision;
 @property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
-
 @property (nonatomic) UIDynamicItemBehavior* activeDrag;
+@property (nonatomic) UIDynamicItemBehavior* throwable;
 
 @property (nonatomic) BOOL simulating;
 
@@ -219,9 +219,16 @@
     [self.animator updateItemUsingCurrentState:view];
 
     if(recognizer.state == UIGestureRecognizerStateEnded) {
+        
+        CGPoint velocity = [recognizer velocityInView:self.view];
+        self.throwable = [[UIDynamicItemBehavior alloc] init];
+        [self.animator addBehavior:self.throwable];
+        [self.throwable addItem:view];
+        [self.throwable setResistance:8];
+        [self.throwable addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
+        
         //clean up the drag operation
         [view setBackgroundColor:[UIColor clearColor]];
-        //[self.gravity addItem:view];
         [self.activeDrag removeItem:view];
         [self.animator removeBehavior:self.activeDrag];
         self.activeDrag = nil;
