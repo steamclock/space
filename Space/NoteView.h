@@ -16,5 +16,6 @@
 
 //block for when the note drops offscreen (into the trash)
 @property (nonatomic, copy) void (^onDropOffscreen)();
+@property (nonatomic) int offscreenYDistance;
 
 @end

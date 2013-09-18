@@ -26,6 +26,8 @@
     self.window.backgroundColor = [UIColor darkGrayColor];
     
     CanvasViewController* canvas = [CanvasViewController new];
+    //FIXME these ought to be based on the drawer geometry...
+    [canvas setYValuesForEdit:0 trash:700 offscreen:1820];
     CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvas];
     
     DrawerViewController* drawer = [DrawerViewController new];

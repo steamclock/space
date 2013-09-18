@@ -82,12 +82,9 @@
     self.note.positionX = center.x;
     self.note.positionY = center.y;
 
-    //FIXME I got this number experimentally in portrait, we should probably use something proper.
-    if (center.y > 1820) {
+    if (self.onDropOffscreen && center.y > self.offscreenYDistance) {
         NSLog(@"dropped offscreen");
-        if (self.onDropOffscreen) {
-            self.onDropOffscreen();
-        }
+        self.onDropOffscreen();
     }
 }
 

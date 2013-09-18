@@ -16,4 +16,7 @@
 
 -(id)initAsTrashCanvas;
 
+//set up various almost-constants
+-(void)setYValuesForEdit:(int)editY trash:(int)trash offscreen:(int)offscreen;
+
 @end

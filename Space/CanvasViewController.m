@@ -33,6 +33,11 @@
 @property (nonatomic) int currentCanvas;
 @property (nonatomic) BOOL isTrashMode;
 
+//almost-constant values that depend on the orientation and how the drawers are designed.
+@property (nonatomic) int editY;
+@property (nonatomic) int trashY;
+@property (nonatomic) int offscreenY;
+
 @end
 
 @implementation CanvasViewController
@@ -44,6 +49,12 @@
     }
     
     return self;
+}
+
+-(void)setYValuesForEdit:(int)editY trash:(int)trashY offscreen:(int)offscreenY {
+    self.editY = editY;
+    self.trashY = trashY;
+    self.offscreenY = offscreenY;
 }
 
 -(void)viewDidLoad
@@ -166,6 +177,7 @@
 
     __weak CanvasViewController* weakSelf = self;
 
+    self.notePendingDelete.offscreenYDistance = self.offscreenY;
     self.notePendingDelete.onDropOffscreen = ^{
         [weakSelf.animator removeBehavior:trashDrop];
         [weakSelf.notePendingDelete removeFromSuperview];
@@ -243,16 +255,14 @@
         //edit/trash actions and feedback
         //TODO: make the feedback pretty.
         float distance = view.center.y - self.view.bounds.size.height;
-        float editDistance = 0;
-        float trashDistance = 700; //FIXME I just guessed at this. should use the drawer instead.
 
-        if (distance > trashDistance) {
+        if (distance > self.trashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self deleteNoteWithoutAsking:view];
             } else {
                 [view setBackgroundColor:[UIColor redColor]];
             }
-        } else if (distance > editDistance) {
+        } else if (distance > self.editY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self returnNoteToBounds:view];
                 [self.focus focusOn:view.note];
