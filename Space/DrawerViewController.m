@@ -21,8 +21,8 @@ static const int SpaceBetweenDrawers = 684;
 static const int TopPadding = 300; //space between the top of the frame and the top canvas
 static const int BottomPadding = 40; //space between the bottom of the frame and the bottom canvas
 
-//numbers relative to ... something else. 0 inside the view = -2048 here, I think.
-//FIXME when we're done cleanup, minY ought to map to 0 inside the view
+//numbers relative to the superview.
+//FIXME when we're done cleanup, maxY ought to be 0
 static const int restY = -1024;
 static const int minY = -1824;
 static const int maxY = -324;
