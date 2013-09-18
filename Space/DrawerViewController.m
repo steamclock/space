@@ -17,18 +17,15 @@ static const int ScreenWidth = 768;
 static const int TopDrawerHeight = 1024;
 static const int BottomDrawerHeight = 1024;
 static const int SpaceBetweenDrawers = 724;
-//FIXME: zero these asap.
-static const int TopPadding = 300; //space between the top of the frame and the top canvas
-static const int BottomPadding = 40; //space between the bottom of the frame and the bottom canvas
 
 //numbers relative to the superview.
 //FIXME when we're done cleanup, maxY ought to be 0
-static const int restY = -1024;
-static const int minY = -1824;
-static const int maxY = -324;
+static const int restY = -1024 + 300;
+static const int minY = -1824 + 300;
+static const int maxY = -324 + 300;
 
 //generated numbers
-static const int BottomDrawerStart = TopPadding + TopDrawerHeight + SpaceBetweenDrawers;
+static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
 
 
 @interface DrawerViewController () {
@@ -52,13 +49,13 @@ static const int BottomDrawerStart = TopPadding + TopDrawerHeight + SpaceBetween
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    int viewHeight = TopPadding + TopDrawerHeight + SpaceBetweenDrawers + BottomDrawerHeight + BottomPadding;
+    int viewHeight = TopDrawerHeight + SpaceBetweenDrawers + BottomDrawerHeight;
     self.view.frame = CGRectMake(0, restY, ScreenWidth, viewHeight);
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
     int dragHeight = 20;
-    float dragTop = TopPadding + TopDrawerHeight - dragHeight - 5;
+    float dragTop = TopDrawerHeight - dragHeight - 5;
     float dragLeft = (self.view.bounds.size.width / 2) - 50;
     float dragBottom = BottomDrawerStart - dragHeight - 50;
     
@@ -184,7 +181,7 @@ static const int BottomDrawerStart = TopPadding + TopDrawerHeight + SpaceBetween
     _topDrawerContents = contents;
     
     if(_topDrawerContents) {
-        _topDrawerContents.view.frame = CGRectMake(0, TopPadding, ScreenWidth, TopDrawerHeight);
+        _topDrawerContents.view.frame = CGRectMake(0, 0, ScreenWidth, TopDrawerHeight);
         [self addChildViewController:_topDrawerContents];
         [self.view addSubview:_topDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
