@@ -27,7 +27,7 @@
     
     CanvasViewController* canvas = [CanvasViewController new];
     //FIXME these ought to be based on the drawer geometry...
-    [canvas setYValuesForEdit:0 trash:700 offscreen:1820];
+    [canvas setYValuesForEdit:0 trash:600 offscreen:1720];
     CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvas];
     
     DrawerViewController* drawer = [DrawerViewController new];
