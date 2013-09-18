@@ -9,6 +9,9 @@
 #import "FocusViewController.h"
 #import "Database.h"
 #import "Note.h"
+#import <QuartzCore/QuartzCore.h>
+
+#define FOCUS_SIZE 400
 
 @interface FocusViewController ()
 
@@ -34,16 +37,20 @@
 {
     [super viewDidLoad];
     
-
     self.view.frame = CGRectMake(0, 0, 768, 1024);
     self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
     
-    self.focus = [[UIView alloc] initWithFrame:CGRectMake(234, 362, 300, 300)];
-    self.focus.backgroundColor = [UIColor grayColor];
+    self.focus = [[UIView alloc] initWithFrame:CGRectMake(234 - FOCUS_SIZE/8, 325, FOCUS_SIZE, FOCUS_SIZE)];
+    self.focus.backgroundColor = [UIColor lightGrayColor];
+    self.focus.layer.cornerRadius = FOCUS_SIZE / 2;
     
-    self.titleField = [[UITextField alloc] initWithFrame:CGRectMake(20, 20, 260, 40)];
-    self.titleField.backgroundColor = [UIColor whiteColor];
-    self.contentField = [[UITextView alloc] initWithFrame:CGRectMake(20, 80, 260, 200)];
+    self.titleField = [[UITextField alloc] initWithFrame:CGRectMake(20 + FOCUS_SIZE/8, 70, 260, 40)];
+    self.titleField.placeholder = @"Title";
+    [self.titleField setTextAlignment:NSTextAlignmentCenter];
+    
+    self.contentField = [[UITextView alloc] initWithFrame:CGRectMake(20 + FOCUS_SIZE/8, 130, 260, 200)];
+    self.contentField.backgroundColor = [UIColor colorWithWhite:1 alpha:0.8];
+    self.contentField.layer.cornerRadius = 15;
     
     [self.view addSubview:self.focus];
     [self.focus addSubview:self.titleField];
