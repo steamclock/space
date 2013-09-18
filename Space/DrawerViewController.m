@@ -16,7 +16,7 @@ static const int ScreenWidth = 768;
 //numbers relative to the view
 static const int TopDrawerHeight = 1024;
 static const int BottomDrawerHeight = 1024;
-static const int SpaceBetweenDrawers = 684;
+static const int SpaceBetweenDrawers = 724;
 //FIXME: zero these asap.
 static const int TopPadding = 300; //space between the top of the frame and the top canvas
 static const int BottomPadding = 40; //space between the bottom of the frame and the bottom canvas
@@ -60,7 +60,7 @@ static const int BottomDrawerStart = TopPadding + TopDrawerHeight + SpaceBetween
     int dragHeight = 20;
     float dragTop = TopPadding + TopDrawerHeight - dragHeight - 5;
     float dragLeft = (self.view.bounds.size.width / 2) - 50;
-    float dragBottom = BottomDrawerStart - dragHeight;
+    float dragBottom = BottomDrawerStart - dragHeight - 50;
     
     self.topDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 100, dragHeight)];
     self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
