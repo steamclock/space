@@ -10,6 +10,7 @@
 #import "Database.h"
 #import "Note.h"
 #import <QuartzCore/QuartzCore.h>
+#import "Coordinate.h"
 
 #define FOCUS_SIZE 400
 
@@ -24,31 +25,37 @@
 
 @implementation FocusViewController
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
-{
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
-}
-
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    self.view.frame = CGRectMake(0, 0, 768, 1024);
+    self.view.frame = self.view.bounds;
     self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
     
-    self.focus = [[UIView alloc] initWithFrame:CGRectMake(234 - FOCUS_SIZE/8, 325, FOCUS_SIZE, FOCUS_SIZE)];
+    self.focus = [[UIView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
+                                                                    centerYByFactor:0.5
+                                                                              width:FOCUS_SIZE
+                                                                             height:FOCUS_SIZE
+                                                                withReferenceBounds:self.view.bounds]];
+    
     self.focus.backgroundColor = [UIColor lightGrayColor];
     self.focus.layer.cornerRadius = FOCUS_SIZE / 2;
     
-    self.titleField = [[UITextField alloc] initWithFrame:CGRectMake(20 + FOCUS_SIZE/8, 70, 260, 40)];
+    self.titleField = [[UITextField alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
+                                                                              centerYByFactor:0.15
+                                                                                        width:250
+                                                                                       height:50
+                                                                          withReferenceBounds:self.focus.bounds]];
+    
     self.titleField.placeholder = @"Title";
     [self.titleField setTextAlignment:NSTextAlignmentCenter];
     
-    self.contentField = [[UITextView alloc] initWithFrame:CGRectMake(20 + FOCUS_SIZE/8, 130, 260, 200)];
+    self.contentField = [[UITextView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
+                                                                               centerYByFactor:0.55
+                                                                                         width:280
+                                                                                        height:200
+                                                                           withReferenceBounds:self.focus.bounds]];
+    
     self.contentField.backgroundColor = [UIColor colorWithWhite:1 alpha:0.8];
     self.contentField.layer.cornerRadius = 15;
     
@@ -59,7 +66,22 @@
     [self.view addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOutside:)]];
 }
 
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    
+    if (toInterfaceOrientation == UIInterfaceOrientationLandscapeLeft || toInterfaceOrientation == UIInterfaceOrientationLandscapeRight) {
+     
+        self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                             centerYByFactor:0.25
+                                                       width:FOCUS_SIZE
+                                                      height:FOCUS_SIZE
+                                         withReferenceBounds:self.view.bounds];
+    } else {
+        [self updateFocusViewFrame];
+    }
+}
+
 -(void)tapOutside:(UITapGestureRecognizer*)guesture {
+    
     [self.titleField resignFirstResponder];
     [self.contentField resignFirstResponder];
     
@@ -71,13 +93,10 @@
     self.view.hidden = true;
 }
 
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
 -(void)focusOn:(Note *)note {
+    
+    [self updateFocusViewFrame];
+    
     self.note = note;
     
     self.titleField.text = self.note.title;
@@ -93,4 +112,20 @@
 
     self.view.hidden = NO;
 }
+
+- (void)updateFocusViewFrame {
+    
+    self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                            centerYByFactor:0.5
+                                                      width:FOCUS_SIZE
+                                                     height:FOCUS_SIZE
+                                        withReferenceBounds:self.view.bounds];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
 @end
