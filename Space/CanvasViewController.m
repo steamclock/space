@@ -36,7 +36,6 @@
 //almost-constant values that depend on the orientation and how the drawers are designed.
 @property (nonatomic) int editY;
 @property (nonatomic) int trashY;
-@property (nonatomic) int offscreenY;
 
 @end
 
@@ -51,10 +50,10 @@
     return self;
 }
 
--(void)setYValuesForEdit:(int)editY trash:(int)trashY offscreen:(int)offscreenY {
-    self.editY = editY;
-    self.trashY = trashY;
-    self.offscreenY = offscreenY;
+-(void)setYValuesWithTrashOffset:(int)trashY {
+    //trash offset is relative to superview
+    self.editY = self.view.bounds.size.height;
+    self.trashY = trashY - self.view.frame.origin.y - 100;
 }
 
 -(void)viewDidLoad
@@ -177,7 +176,11 @@
 
     __weak CanvasViewController* weakSelf = self;
 
-    self.notePendingDelete.offscreenYDistance = self.offscreenY;
+    CGPoint windowBottom = CGPointMake(0, self.view.window.frame.size.height);
+    NSLog(@"window size %@", NSStringFromCGPoint(windowBottom));
+    CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:self.view.window];
+    NSLog(@"dist %f", windowRelativeBottom.y);
+    self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y;
     self.notePendingDelete.onDropOffscreen = ^{
         [weakSelf.animator removeBehavior:trashDrop];
         [weakSelf.notePendingDelete removeFromSuperview];
@@ -254,15 +257,14 @@
     } else {
         //edit/trash actions and feedback
         //TODO: make the feedback pretty.
-        float distance = view.center.y - self.view.bounds.size.height;
 
-        if (distance > self.trashY) {
+        if (view.center.y > self.trashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self deleteNoteWithoutAsking:view];
             } else {
                 [view setBackgroundColor:[UIColor redColor]];
             }
-        } else if (distance > self.editY) {
+        } else if (view.center.y > self.editY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self returnNoteToBounds:view];
                 [self.focus focusOn:view.note];
