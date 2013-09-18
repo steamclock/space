@@ -14,15 +14,14 @@ static const int ScreenHeight = 1024;
 static const int ScreenWidth = 768;
 
 //numbers relative to the view
-static const int TopDrawerHeight = 1024;
-static const int BottomDrawerHeight = 1024;
-static const int SpaceBetweenDrawers = 724;
+static const int TopDrawerHeight = 1000;
+static const int BottomDrawerHeight = 800;
+static const int SpaceBetweenDrawers = 748;
 
 //numbers relative to the superview.
-//FIXME when we're done cleanup, maxY ought to be 0
-static const int restY = -1024 + 300;
-static const int minY = -1824 + 300;
-static const int maxY = -324 + 300;
+static const int restY = -724;
+static const int minY = -1524;
+static const int maxY = 0;
 
 //generated numbers
 static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
