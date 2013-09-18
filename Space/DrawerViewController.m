@@ -8,6 +8,29 @@
 
 #import "DrawerViewController.h"
 
+//a bunch of constants to centralize and simplify the drawer geometry
+//FIXME plenty of these should stop being consts soon.
+static const int ScreenHeight = 1024;
+static const int ScreenWidth = 768;
+
+//numbers relative to the view
+static const int TopDrawerHeight = 1024;
+static const int BottomDrawerHeight = 1024;
+static const int SpaceBetweenDrawers = 684;
+//FIXME: zero these asap.
+static const int TopPadding = 300; //space between the top of the frame and the top canvas
+static const int BottomPadding = 40; //space between the bottom of the frame and the bottom canvas
+
+//numbers relative to ... something else. 0 inside the view = -2048 here, I think.
+//FIXME when we're done cleanup, minY ought to map to 0 inside the view
+static const int restY = -1024;
+static const int minY = -1824;
+static const int maxY = -324;
+
+//generated numbers
+static const int BottomDrawerStart = TopPadding + TopDrawerHeight + SpaceBetweenDrawers;
+
+
 @interface DrawerViewController () {
     UIViewController* _topDrawerContents;
     UIViewController* _bottomDrawerContents;
@@ -29,21 +52,23 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
 
-    self.view.frame = CGRectMake(0, -1024, 768, 1024 * 3);
+    int viewHeight = TopPadding + TopDrawerHeight + SpaceBetweenDrawers + BottomDrawerHeight + BottomPadding;
+    self.view.frame = CGRectMake(0, restY, ScreenWidth, viewHeight);
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    
-    float dragTop = 1024 + 275;
+
+    int dragHeight = 20;
+    float dragTop = TopPadding + TopDrawerHeight - dragHeight - 5;
     float dragLeft = (self.view.bounds.size.width / 2) - 50;
-    float dragBottom = 1024 + 924;
+    float dragBottom = BottomDrawerStart - dragHeight;
     
-    self.topDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 100, 20)];
+    self.topDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 100, dragHeight)];
     self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
     self.topDragHandle.backgroundColor = [UIColor grayColor];
 
     [self.view addSubview:self.topDragHandle];
 
-    self.bottomDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragBottom + 40, 100, 20)];
+    self.bottomDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragBottom, 100, dragHeight)];
     self.bottomDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
     self.bottomDragHandle.backgroundColor = [UIColor grayColor];
     
@@ -64,10 +89,10 @@
 
 -(void)calculateDrawerExtents {
     //CGRect bounds = self.view.superview.bounds;
-    
-    self.restY = -1024;
-    self.maxY = -324;
-    self.minY = -1824;
+
+    self.restY = restY;
+    self.maxY = maxY;
+    self.minY = minY;
 }
 
 -(void)viewWillAppear:(BOOL)animated {
@@ -159,7 +184,7 @@
     _topDrawerContents = contents;
     
     if(_topDrawerContents) {
-        _topDrawerContents.view.frame = CGRectMake(0, 1024 - 724, 768, 1024);
+        _topDrawerContents.view.frame = CGRectMake(0, TopPadding, ScreenWidth, TopDrawerHeight);
         [self addChildViewController:_topDrawerContents];
         [self.view addSubview:_topDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
@@ -177,7 +202,7 @@
     _bottomDrawerContents = contents;
     
     if(_bottomDrawerContents) {
-        _bottomDrawerContents.view.frame = CGRectMake(0, (1024 * 2) - 40, 768, 1024);
+        _bottomDrawerContents.view.frame = CGRectMake(0, BottomDrawerStart, ScreenWidth, BottomDrawerHeight);
         [self addChildViewController:_bottomDrawerContents];
         [self.view addSubview:_bottomDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
