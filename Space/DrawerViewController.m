@@ -211,6 +211,6 @@ static const int BottomDrawerStart = TopPadding + TopDrawerHeight + SpaceBetween
 }
 
 -(UIViewController*)bottomDrawerContents {
-    return _topDrawerContents;
+    return _bottomDrawerContents;
 }
 @end
