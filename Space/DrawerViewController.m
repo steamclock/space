@@ -13,18 +13,6 @@
 static const int ScreenHeight = 1024;
 static const int ScreenWidth = 768;
 
-//numbers relative to the view
-static const int TopDrawerHeight = ScreenHeight - 24;
-static const int BottomDrawerHeight = ScreenHeight - 224;
-
-//numbers relative to the superview.
-static const int maxY = 0;
-static const int restY = 300 - ScreenHeight;
-static const int minY = restY - BottomDrawerHeight;
-
-//and this has to start wherever the bottom of the screen is
-static const int BottomDrawerStart = ScreenHeight - restY;
-
 
 @interface DrawerViewController () {
     UIViewController* _topDrawerContents;
@@ -35,32 +23,45 @@ static const int BottomDrawerStart = ScreenHeight - restY;
 @property (nonatomic) UIView* bottomDragHandle;
 @property (nonatomic) CGPoint dragStart;
 @property (nonatomic) float initialFrameY;
-@property (nonatomic) float minY;
-@property (nonatomic) float restY;
-@property (nonatomic) float maxY;
 @property (nonatomic) BOOL haveLayedOut;
 
 @property (nonatomic) BOOL allowDrag;
 @property (nonatomic) float allowedDragStartY;
 @property (nonatomic) BOOL allowedDragStartYAssigned;
 
+@property (nonatomic) float maxY;
+@property (nonatomic) float restY;
+@property (nonatomic) float minY;
+
+@property (nonatomic) float topDrawerHeight;
+@property (nonatomic) float bottomDrawerHeight;
+@property (nonatomic) float bottomDrawerStart;
+
 @end
 
 @implementation DrawerViewController
+
+-(id)init {
+    if (self = [super init]) {
+        [self calculateDrawerExtents];
+    }
+    return self;
+}
 
 - (void)viewDidLoad {
     
     [super viewDidLoad];
 
-    int viewHeight = BottomDrawerStart + BottomDrawerHeight;
-    self.view.frame = CGRectMake(0, restY, ScreenWidth, viewHeight);
+    int viewHeight = self.bottomDrawerStart + self.bottomDrawerHeight;
+    self.view.frame = CGRectMake(0, self.restY, ScreenWidth, viewHeight);
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
     int dragHeight = 40;
-    float dragTop = TopDrawerHeight - dragHeight - 5;
+    float dragTop = self.topDrawerHeight - dragHeight - 5;
     float dragLeft = (self.view.bounds.size.width / 2) - 100;
-    float dragBottom = BottomDrawerStart - dragHeight - 50;
+    float dragBottom = self.bottomDrawerStart - dragHeight - 50;
+
     
     self.topDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 200, dragHeight)];
     self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
@@ -90,19 +91,27 @@ static const int BottomDrawerStart = ScreenHeight - restY;
     
     panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
+
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
     [self calculateDrawerExtents];
+    //[self updateCanvasExtents];
 }
 
 -(void)calculateDrawerExtents {
-    //CGRect bounds = self.view.superview.bounds;
+    //numbers relative to the view
+    self.topDrawerHeight = ScreenHeight - 24;
+    self.bottomDrawerHeight = ScreenHeight - 224;
 
-    self.restY = restY;
-    self.maxY = maxY;
-    self.minY = minY;
+    //numbers relative to the superview.
+    self.maxY = 0;
+    self.restY = 300 - ScreenHeight;
+    self.minY = self.restY - self.bottomDrawerHeight;
+
+    //and this has to start wherever the bottom of the screen is
+    self.bottomDrawerStart = ScreenHeight - self.restY;
 }
 
 -(void)viewDidLayoutSubviews {
@@ -147,7 +156,6 @@ static const int BottomDrawerStart = ScreenHeight - restY;
     if(recognizer.state == UIGestureRecognizerStateBegan) {
         self.dragStart = drag;
         self.initialFrameY = self.view.frame.origin.y;
-        [self calculateDrawerExtents];
     }
     
     float newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
@@ -213,8 +221,6 @@ static const int BottomDrawerStart = ScreenHeight - restY;
     if(recognizer.state == UIGestureRecognizerStateBegan) {
         self.dragStart = touchPointRelativeToWindow;
         self.initialFrameY = self.view.frame.origin.y;
-        
-        [self calculateDrawerExtents];
     }
     
     if (self.allowDrag) {
@@ -258,7 +264,7 @@ static const int BottomDrawerStart = ScreenHeight - restY;
     _topDrawerContents = contents;
     
     if(_topDrawerContents) {
-        _topDrawerContents.view.frame = CGRectMake(0, 0, ScreenWidth, TopDrawerHeight);
+        _topDrawerContents.view.frame = CGRectMake(0, 0, ScreenWidth, self.topDrawerHeight);
         [self addChildViewController:_topDrawerContents];
         [self.view addSubview:_topDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
@@ -276,7 +282,7 @@ static const int BottomDrawerStart = ScreenHeight - restY;
     _bottomDrawerContents = contents;
     
     if(_bottomDrawerContents) {
-        _bottomDrawerContents.view.frame = CGRectMake(0, BottomDrawerStart, ScreenWidth, BottomDrawerHeight);
+        _bottomDrawerContents.view.frame = CGRectMake(0, self.bottomDrawerStart, ScreenWidth, self.bottomDrawerHeight);
         [self addChildViewController:_bottomDrawerContents];
         [self.view addSubview:_bottomDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
