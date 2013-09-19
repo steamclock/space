@@ -41,11 +41,16 @@ static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
 @property (nonatomic) float maxY;
 @property (nonatomic) BOOL haveLayedOut;
 
+@property (nonatomic) BOOL allowDrag;
+@property (nonatomic) float allowedDragStartY;
+@property (nonatomic) BOOL allowedDragStartYAssigned;
+
 @end
 
 @implementation DrawerViewController
 
 - (void)viewDidLoad {
+    
     [super viewDidLoad];
 
     int viewHeight = TopDrawerHeight + SpaceBetweenDrawers + BottomDrawerHeight;
@@ -53,26 +58,37 @@ static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
-    int dragHeight = 20;
+    int dragHeight = 40;
     float dragTop = TopDrawerHeight - dragHeight - 5;
-    float dragLeft = (self.view.bounds.size.width / 2) - 50;
+    float dragLeft = (self.view.bounds.size.width / 2) - 100;
     float dragBottom = BottomDrawerStart - dragHeight - 50;
     
-    self.topDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 100, dragHeight)];
+    self.topDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 200, dragHeight)];
     self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
     self.topDragHandle.backgroundColor = [UIColor grayColor];
 
     [self.view addSubview:self.topDragHandle];
 
-    self.bottomDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragBottom, 100, dragHeight)];
+    self.bottomDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragBottom, 200, dragHeight)];
     self.bottomDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
     self.bottomDragHandle.backgroundColor = [UIColor grayColor];
     
     [self.view addSubview:self.bottomDragHandle];
+}
 
-    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
+-(void)viewDidAppear:(BOOL)animated {
+    
+    [super viewDidAppear:animated];
+    
+    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panningDrawer:)];
+    [_topDrawerContents.view addGestureRecognizer:panGestureRecognizer];
+    
+    panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panningDrawer:)];
+    [_bottomDrawerContents.view addGestureRecognizer:panGestureRecognizer];
+    
+    panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.topDragHandle addGestureRecognizer:panGestureRecognizer];
-
+    
     panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
 }
@@ -89,14 +105,6 @@ static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
     self.restY = restY;
     self.maxY = maxY;
     self.minY = minY;
-}
-
--(void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-}
-
--(void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
 }
 
 -(void)viewDidLayoutSubviews {
@@ -145,14 +153,14 @@ static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
     }
     
     float newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
-
+    
     BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
-
+    
     if (recognizer.state == UIGestureRecognizerStateEnded) {
+        
         //animate to the appropriate end position
-
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
-
+        
         if (fromTopHandle && velocityDownwards) {
             newPosition = self.maxY;
         } else if (!fromTopHandle && !velocityDownwards) {
@@ -160,18 +168,90 @@ static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
         } else {
             newPosition = self.restY;
         }
-
+        
         [self animateDrawerPosition:newPosition];
+        
     } else {
+        
         //bound the drag based on the handle in use (it's not allowed to close past its rest position)
-
         if ((fromTopHandle && newPosition < self.restY) || (!fromTopHandle && newPosition > self.restY)) {
             newPosition = self.restY;
         }
-
+        
         [self setDrawerPosition:newPosition];
     }
+}
 
+-(void)panningDrawer:(UIPanGestureRecognizer*)recognizer {
+    
+    CGPoint touchPointRelativeToWindow = [recognizer locationInView:self.view.superview];
+    CGPoint touchPointRelativeToDrawer = [recognizer locationInView:self.view];
+    
+    UIView* hitView = [self.view hitTest:touchPointRelativeToDrawer withEvent:nil];
+    
+    UIView* targetView;
+    
+    if ([recognizer.view isEqual:_topDrawerContents.view]) {
+        targetView = self.topDragHandle;
+    } else if ([recognizer.view isEqual:_bottomDrawerContents.view]) {
+        targetView = self.bottomDragHandle;
+    } else {
+        targetView = nil;
+    }
+    
+    if (hitView == targetView) {
+        
+        if (self.allowedDragStartYAssigned == NO) {
+            self.allowedDragStartY = touchPointRelativeToWindow.y;
+            self.allowedDragStartYAssigned = YES;
+        }
+        
+        self.allowDrag = YES;
+    }
+    
+    float newPosition;
+    BOOL fromTopDrawer;
+    
+    if(recognizer.state == UIGestureRecognizerStateBegan) {
+        self.dragStart = touchPointRelativeToWindow;
+        self.initialFrameY = self.view.frame.origin.y;
+        
+        [self calculateDrawerExtents];
+    }
+    
+    if (self.allowDrag) {
+        newPosition = self.initialFrameY + (touchPointRelativeToWindow.y - self.allowedDragStartY);
+    } else {
+        newPosition = self.initialFrameY;
+    }
+    
+    fromTopDrawer = [recognizer.view isEqual:_topDrawerContents.view];
+    
+    if (recognizer.state == UIGestureRecognizerStateEnded) {
+        
+        self.allowDrag = NO;
+        self.allowedDragStartYAssigned = NO;
+        
+        BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
+        
+        if (fromTopDrawer && velocityDownwards) {
+            newPosition = self.maxY;
+        } else if (!fromTopDrawer && !velocityDownwards) {
+            newPosition = self.minY;
+        } else {
+            newPosition = self.restY;
+        }
+        
+        [self animateDrawerPosition:newPosition];
+        
+    } else {
+        
+        if ((fromTopDrawer && newPosition < self.restY) || (!fromTopDrawer && newPosition > self.restY)) {
+            newPosition = self.restY;
+        }
+        
+        [self setDrawerPosition:newPosition];
+    }
 }
 
 -(void)setTopDrawerContents:(UIViewController *)contents {
