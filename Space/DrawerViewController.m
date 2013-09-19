@@ -9,8 +9,8 @@
 #import "DrawerViewController.h"
 
 @interface DrawerViewController () {
-    UIViewController* _topDrawerContents;
-    UIViewController* _bottomDrawerContents;
+    CanvasViewController* _topDrawerContents;
+    CanvasViewController* _bottomDrawerContents;
 }
 
 @property (nonatomic) UIView* topDragHandle;
@@ -138,11 +138,16 @@
 }
 
 -(void)updateCanvasSizes {
+    [self updateTopCanvasSize];
+    [self updateBottomCanvasSize];
+}
+-(void)updateTopCanvasSize {
     self.topDrawerContents.view.frame = CGRectMake(0, 0, self.realScreenSize.width, self.topDrawerHeight);
+    [self.topDrawerContents updateNotesForBoundsChange];
+}
+-(void)updateBottomCanvasSize {
     self.bottomDrawerContents.view.frame = CGRectMake(0, self.bottomDrawerStart, self.realScreenSize.width, self.bottomDrawerHeight);
-
-    NSLog(@"top rect %@", NSStringFromCGRect(self.topDrawerContents.view.frame));
-    NSLog(@"bottom rect %@", NSStringFromCGRect(self.bottomDrawerContents.view.frame));
+    [self.bottomDrawerContents updateNotesForBoundsChange];
 }
 
 -(void)viewDidLayoutSubviews {
@@ -289,13 +294,13 @@
     }
 }
 
--(void)setTopDrawerContents:(UIViewController *)contents {
+-(void)setTopDrawerContents:(CanvasViewController *)contents {
     [_topDrawerContents removeFromParentViewController];
     [_topDrawerContents.view removeFromSuperview];
     _topDrawerContents = contents;
     
     if(_topDrawerContents) {
-        _topDrawerContents.view.frame = CGRectMake(0, 0, self.realScreenSize.width, self.topDrawerHeight);
+        [self updateTopCanvasSize];
         [self addChildViewController:_topDrawerContents];
         [self.view addSubview:_topDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
@@ -303,17 +308,17 @@
     }
 }
 
--(UIViewController*)topDrawerContents {
+-(CanvasViewController*)topDrawerContents {
     return _topDrawerContents;
 }
 
--(void)setBottomDrawerContents:(UIViewController *)contents {
+-(void)setBottomDrawerContents:(CanvasViewController *)contents {
     [_bottomDrawerContents removeFromParentViewController];
     [_bottomDrawerContents.view removeFromSuperview];
     _bottomDrawerContents = contents;
     
     if(_bottomDrawerContents) {
-        _bottomDrawerContents.view.frame = CGRectMake(0, self.bottomDrawerStart, self.realScreenSize.width, self.bottomDrawerHeight);
+        [self updateBottomCanvasSize];
         [self addChildViewController:_bottomDrawerContents];
         [self.view addSubview:_bottomDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
@@ -321,7 +326,7 @@
     }
 }
 
--(UIViewController*)bottomDrawerContents {
+-(CanvasViewController*)bottomDrawerContents {
     return _bottomDrawerContents;
 }
 @end

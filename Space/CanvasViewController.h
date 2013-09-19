@@ -19,4 +19,6 @@
 //set up various almost-constants
 -(void)setYValuesWithTrashOffset:(int)trashY;
 
+-(void)updateNotesForBoundsChange;
+
 @end

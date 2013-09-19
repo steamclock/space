@@ -7,10 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "CanvasViewController.h"
 
 @interface DrawerViewController : UIViewController
 
-@property (nonatomic) UIViewController* topDrawerContents;
-@property (nonatomic) UIViewController* bottomDrawerContents;
+@property (nonatomic) CanvasViewController* topDrawerContents;
+@property (nonatomic) CanvasViewController* bottomDrawerContents;
 
 @end

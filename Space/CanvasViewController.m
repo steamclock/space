@@ -91,7 +91,7 @@
     
     self.currentCanvas = 0;
     [self loadCurrentCanvas];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
 }
 
@@ -285,25 +285,41 @@
     //force it back into the canvas if necessary.
 
     if (! CGRectContainsRect(self.view.bounds, note.frame)) {
-        //assume that x is okay, and fix y to the nearest valid value
         CGPoint center = note.center;
         float radius = note.frame.size.height / 2;
+
         if (note.frame.origin.y < 0) {
             center.y = radius;
-        } else {
+        } else if (CGRectGetMaxY(note.frame) > self.view.bounds.size.height) {
             center.y = self.view.bounds.size.height - radius;
         }
-        //NSLog(@"move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
+
+        if (note.frame.origin.x < 0) {
+            center.x = radius;
+        } else if (CGRectGetMaxX(note.frame) > self.view.bounds.size.width) {
+            center.x = self.view.bounds.size.width - radius;
+        }
+
+        NSLog(@"move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
         note.center = center;
         [self.animator updateItemUsingCurrentState:note];
         [[Database sharedDatabase] save];
     }
 }
 
+-(void)updateNotesForBoundsChange {
+    NSLog(@"bounds %@", NSStringFromCGRect(self.view.bounds));
+    for (UIView* subview in self.view.subviews) {
+        if ([subview isKindOfClass:[NoteView class]]) {
+            [self returnNoteToBounds:(NoteView*)subview];
+        }
+    }
+}
+
 -(void)addViewForNote:(Note*)note {
     NoteView* imageView = [[NoteView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
     imageView.center = CGPointMake(note.positionX, note.positionY);
-    NSLog(@"adding note at %@", NSStringFromCGPoint(imageView.center));
+    //NSLog(@"adding note at %@", NSStringFromCGPoint(imageView.center));
     
     imageView.userInteractionEnabled = YES;
     
