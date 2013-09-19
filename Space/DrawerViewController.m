@@ -8,12 +8,6 @@
 
 #import "DrawerViewController.h"
 
-//a bunch of constants to centralize and simplify the drawer geometry
-//FIXME plenty of these should stop being consts soon.
-static const int ScreenHeight = 1024;
-static const int ScreenWidth = 768;
-
-
 @interface DrawerViewController () {
     UIViewController* _topDrawerContents;
     UIViewController* _bottomDrawerContents;
@@ -28,6 +22,9 @@ static const int ScreenWidth = 768;
 @property (nonatomic) BOOL allowDrag;
 @property (nonatomic) float allowedDragStartY;
 @property (nonatomic) BOOL allowedDragStartYAssigned;
+
+//ipad is crazy here, so I'm caching the un-crazied numbers.
+@property (nonatomic) CGSize realScreenSize;
 
 @property (nonatomic) float maxY;
 @property (nonatomic) float restY;
@@ -52,24 +49,20 @@ static const int ScreenWidth = 768;
     
     [super viewDidLoad];
 
-    int viewHeight = self.bottomDrawerStart + self.bottomDrawerHeight;
-    self.view.frame = CGRectMake(0, self.restY, ScreenWidth, viewHeight);
+    self.topDragHandle = [[UIView alloc] init];
+    self.bottomDragHandle = [[UIView alloc] init];
+
+    [self updateViewSizes];
+
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
-    int dragHeight = 40;
-    float dragTop = self.topDrawerHeight - dragHeight - 5;
-    float dragLeft = (self.view.bounds.size.width / 2) - 100;
-    float dragBottom = self.bottomDrawerStart - dragHeight - 50;
 
-    
-    self.topDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragTop, 200, dragHeight)];
     self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
     self.topDragHandle.backgroundColor = [UIColor grayColor];
 
     [self.view addSubview:self.topDragHandle];
 
-    self.bottomDragHandle = [[UIView alloc] initWithFrame:CGRectMake(dragLeft, dragBottom, 200, dragHeight)];
     self.bottomDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
     self.bottomDragHandle.backgroundColor = [UIColor grayColor];
     
@@ -97,21 +90,59 @@ static const int ScreenWidth = 768;
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
     [self calculateDrawerExtents];
-    //[self updateCanvasExtents];
+    [self updateViewSizes];
+    [self updateCanvasSizes];
 }
 
 -(void)calculateDrawerExtents {
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    CGSize screenSize = [[UIScreen mainScreen] bounds].size;
+
+    if (orientation == UIInterfaceOrientationLandscapeRight || orientation == UIInterfaceOrientationLandscapeLeft){
+        //fix the orientation because ipad is crazy
+        float tmp = screenSize.height;
+        screenSize.height = screenSize.width;
+        screenSize.width = tmp;
+    }
+    self.realScreenSize = screenSize;
+
+    NSLog(@"orientation: %d screen: %@", orientation, NSStringFromCGSize(screenSize));
+
     //numbers relative to the view
-    self.topDrawerHeight = ScreenHeight - 24;
-    self.bottomDrawerHeight = ScreenHeight - 224;
+    self.topDrawerHeight = screenSize.height - 24;
+    self.bottomDrawerHeight = screenSize.height - 224;
 
     //numbers relative to the superview.
     self.maxY = 0;
-    self.restY = 300 - ScreenHeight;
+    self.restY = 300 - screenSize.height;
     self.minY = self.restY - self.bottomDrawerHeight;
 
     //and this has to start wherever the bottom of the screen is
-    self.bottomDrawerStart = ScreenHeight - self.restY;
+    self.bottomDrawerStart = screenSize.height - self.restY;
+
+    NSLog(@"restY %f miny %f topDrawerHeight %f bottomDrawerHeight %f bottomDrawerStart %f", self.restY, self.minY, self.topDrawerHeight, self.bottomDrawerHeight, self.bottomDrawerStart);
+}
+
+-(void)updateViewSizes {
+    int viewHeight = self.bottomDrawerStart + self.bottomDrawerHeight;
+    self.view.frame = CGRectMake(0, self.restY, self.realScreenSize.width, viewHeight);
+
+    int dragHeight = 40;
+    int dragWidth = 200;
+    float dragTop = self.topDrawerHeight - dragHeight - 5;
+    float dragLeft = (self.view.bounds.size.width / 2) - 100;
+    float dragBottom = self.bottomDrawerStart - dragHeight - 50;
+
+    self.topDragHandle.frame = CGRectMake(dragLeft, dragTop, dragWidth, dragHeight);
+    self.bottomDragHandle.frame = CGRectMake(dragLeft, dragBottom, dragWidth, dragHeight);
+}
+
+-(void)updateCanvasSizes {
+    self.topDrawerContents.view.frame = CGRectMake(0, 0, self.realScreenSize.width, self.topDrawerHeight);
+    self.bottomDrawerContents.view.frame = CGRectMake(0, self.bottomDrawerStart, self.realScreenSize.width, self.bottomDrawerHeight);
+
+    NSLog(@"top rect %@", NSStringFromCGRect(self.topDrawerContents.view.frame));
+    NSLog(@"bottom rect %@", NSStringFromCGRect(self.bottomDrawerContents.view.frame));
 }
 
 -(void)viewDidLayoutSubviews {
@@ -264,7 +295,7 @@ static const int ScreenWidth = 768;
     _topDrawerContents = contents;
     
     if(_topDrawerContents) {
-        _topDrawerContents.view.frame = CGRectMake(0, 0, ScreenWidth, self.topDrawerHeight);
+        _topDrawerContents.view.frame = CGRectMake(0, 0, self.realScreenSize.width, self.topDrawerHeight);
         [self addChildViewController:_topDrawerContents];
         [self.view addSubview:_topDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
@@ -282,7 +313,7 @@ static const int ScreenWidth = 768;
     _bottomDrawerContents = contents;
     
     if(_bottomDrawerContents) {
-        _bottomDrawerContents.view.frame = CGRectMake(0, self.bottomDrawerStart, ScreenWidth, self.bottomDrawerHeight);
+        _bottomDrawerContents.view.frame = CGRectMake(0, self.bottomDrawerStart, self.realScreenSize.width, self.bottomDrawerHeight);
         [self addChildViewController:_bottomDrawerContents];
         [self.view addSubview:_bottomDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
