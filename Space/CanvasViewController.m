@@ -24,7 +24,6 @@
 @property (nonatomic) UICollisionBehavior* collision;
 @property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
 @property (nonatomic) UIDynamicItemBehavior* activeDrag;
-@property (nonatomic) UIDynamicItemBehavior* throwable;
 
 @property (nonatomic) BOOL simulating;
 
@@ -71,7 +70,8 @@
     self.collision.translatesReferenceBoundsIntoBoundary = YES;
     self.dynamicProperties = [[UIDynamicItemBehavior alloc] init];
     self.dynamicProperties.allowsRotation = NO;
-    
+    self.dynamicProperties.resistance = 8;
+
     //[self.animator addBehavior:self.gravity];
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
@@ -236,16 +236,8 @@
     view.center = CGPointMake(drag.x, drag.y);
     [self.animator updateItemUsingCurrentState:view];
 
+    //clean up the drag operation (and ONLY the drag operation. do all other ending actions below the isTrashMode check)
     if(recognizer.state == UIGestureRecognizerStateEnded) {
-        
-        CGPoint velocity = [recognizer velocityInView:self.view];
-        self.throwable = [[UIDynamicItemBehavior alloc] init];
-        [self.animator addBehavior:self.throwable];
-        [self.throwable addItem:view];
-        [self.throwable setResistance:8];
-        [self.throwable addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
-        
-        //clean up the drag operation
         [view setBackgroundColor:[UIColor clearColor]];
         [self.activeDrag removeItem:view];
         [self.animator removeBehavior:self.activeDrag];
@@ -256,6 +248,8 @@
         //TODO maybe an un-trash action?
         if(recognizer.state == UIGestureRecognizerStateEnded) {
             [[Database sharedDatabase] save];
+            CGPoint velocity = [recognizer velocityInView:self.view];
+            [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
         }
     } else {
         //edit/trash actions and feedback
@@ -277,6 +271,8 @@
         } else {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [[Database sharedDatabase] save];
+                CGPoint velocity = [recognizer velocityInView:self.view];
+                [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
             } else {
                 [view setBackgroundColor:[UIColor clearColor]];
             }
