@@ -38,21 +38,12 @@
 
 @implementation DrawerViewController
 
--(id)init {
-    if (self = [super init]) {
-        [self calculateDrawerExtents];
-    }
-    return self;
-}
-
 - (void)viewDidLoad {
     
     [super viewDidLoad];
 
     self.topDragHandle = [[UIView alloc] init];
     self.bottomDragHandle = [[UIView alloc] init];
-
-    [self updateViewSizes];
 
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -87,14 +78,9 @@
 
 }
 
--(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
-    [self calculateDrawerExtents];
-    [self updateViewSizes];
-    [self updateCanvasSizes];
-}
+-(void)viewWillLayoutSubviews {
+    //fix all our numbers for the current orientation, if necessary.
 
--(void)calculateDrawerExtents {
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     CGSize screenSize = [[UIScreen mainScreen] bounds].size;
 
@@ -104,9 +90,18 @@
         screenSize.height = screenSize.width;
         screenSize.width = tmp;
     }
-    self.realScreenSize = screenSize;
 
     NSLog(@"orientation: %d screen: %@", orientation, NSStringFromCGSize(screenSize));
+    if (screenSize.height != self.realScreenSize.height) {
+        [self updateExtentsForScreenSize:screenSize];
+        [self updateViewSizes];
+        [self updateCanvasSizes];
+    }
+}
+
+-(void) updateExtentsForScreenSize:(CGSize)screenSize {
+    self.realScreenSize = screenSize;
+
 
     //numbers relative to the view
     self.topDrawerHeight = screenSize.height - 24;
@@ -301,7 +296,6 @@
     _topDrawerContents = contents;
     
     if(_topDrawerContents) {
-        [self updateTopCanvasSize];
         [self addChildViewController:_topDrawerContents];
         [self.view addSubview:_topDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
@@ -319,7 +313,6 @@
     _bottomDrawerContents = contents;
     
     if(_bottomDrawerContents) {
-        [self updateBottomCanvasSize];
         [self addChildViewController:_bottomDrawerContents];
         [self.view addSubview:_bottomDrawerContents.view];
         [self.view bringSubviewToFront:self.topDragHandle];
