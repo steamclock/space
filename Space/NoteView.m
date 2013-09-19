@@ -88,5 +88,12 @@
     }
 }
 
+-(void)setHighlighted:(BOOL)highlighted {
+    if (highlighted) {
+        [self setBackgroundColor:[UIColor blueColor]];
+    } else {
+        [self setBackgroundColor:[UIColor clearColor]];
+    }
+}
 
 @end

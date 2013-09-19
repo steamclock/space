@@ -8,7 +8,7 @@
 
 #import "FocusViewController.h"
 #import "Database.h"
-#import "Note.h"
+#import "NoteView.h"
 #import <QuartzCore/QuartzCore.h>
 #import "Coordinate.h"
 
@@ -17,6 +17,7 @@
 @interface FocusViewController ()
 
 @property (nonatomic) Note* note;
+@property (nonatomic) NoteView* noteView;
 @property (nonatomic) UIView* focus;
 @property (nonatomic) UITextField* titleField;
 @property (nonatomic) UITextView* contentField;
@@ -89,20 +90,24 @@
     self.note.content = self.contentField.text;
     
     [[Database sharedDatabase] save];
+
+    [self.noteView setHighlighted:NO];
     
     self.view.hidden = true;
 }
 
--(void)focusOn:(Note *)note {
+-(void)focusOn:(NoteView *)view {
+    self.noteView = view;
+    [self.noteView setHighlighted:YES];
     
     [self updateFocusViewFrame];
     
-    self.note = note;
+    self.note = view.note;
     
     self.titleField.text = self.note.title;
     self.contentField.text = self.note.content;
 
-    if ([note.title length]) {
+    if ([view.note.title length]) {
         //title exists; edit the content
         [self.contentField becomeFirstResponder];
     } else {

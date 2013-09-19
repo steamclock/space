@@ -8,10 +8,10 @@
 
 #import <UIKit/UIKit.h>
 
-@class Note;
+@class NoteView;
 
 @interface FocusViewController : UIViewController
 
--(void)focusOn:(Note*)note;
+-(void)focusOn:(NoteView*)note;
 
 @end

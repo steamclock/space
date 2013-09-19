@@ -18,4 +18,6 @@
 @property (nonatomic, copy) void (^onDropOffscreen)();
 @property (nonatomic) int offscreenYDistance;
 
+-(void)setHighlighted:(BOOL)highlighted;
+
 @end

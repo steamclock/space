@@ -136,7 +136,7 @@
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
     NoteView* view = (NoteView*)recognizer.view;
-    [self.focus focusOn:view.note];
+    [self.focus focusOn:view];
 }
 
 -(void)noteLongPress: (UITapGestureRecognizer *)recognizer {
@@ -267,7 +267,7 @@
         } else if (view.center.y > self.editY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self returnNoteToBounds:view];
-                [self.focus focusOn:view.note];
+                [self.focus focusOn:view];
             } else {
                 [view setBackgroundColor:[UIColor greenColor]];
             }
