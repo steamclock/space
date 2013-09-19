@@ -14,17 +14,16 @@ static const int ScreenHeight = 1024;
 static const int ScreenWidth = 768;
 
 //numbers relative to the view
-static const int TopDrawerHeight = 1000;
-static const int BottomDrawerHeight = 800;
-static const int SpaceBetweenDrawers = 748;
+static const int TopDrawerHeight = ScreenHeight - 24;
+static const int BottomDrawerHeight = ScreenHeight - 224;
 
 //numbers relative to the superview.
-static const int restY = -724;
-static const int minY = -1524;
 static const int maxY = 0;
+static const int restY = 300 - ScreenHeight;
+static const int minY = restY - BottomDrawerHeight;
 
-//generated numbers
-static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
+//and this has to start wherever the bottom of the screen is
+static const int BottomDrawerStart = ScreenHeight - restY;
 
 
 @interface DrawerViewController () {
@@ -53,7 +52,7 @@ static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
     
     [super viewDidLoad];
 
-    int viewHeight = TopDrawerHeight + SpaceBetweenDrawers + BottomDrawerHeight;
+    int viewHeight = BottomDrawerStart + BottomDrawerHeight;
     self.view.frame = CGRectMake(0, restY, ScreenWidth, viewHeight);
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -96,7 +95,6 @@ static const int BottomDrawerStart = TopDrawerHeight + SpaceBetweenDrawers;
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
     [self calculateDrawerExtents];
-    [self setDrawerPosition:self.view.frame.origin.y];
 }
 
 -(void)calculateDrawerExtents {
