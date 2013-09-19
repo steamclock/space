@@ -125,7 +125,7 @@
     int dragHeight = 40;
     int dragWidth = 200;
     float dragTop = self.topDrawerHeight - dragHeight - 5;
-    float dragLeft = (self.view.bounds.size.width / 2) - 100;
+    float dragLeft = (self.view.bounds.size.width - dragWidth) / 2;
     float dragBottom = self.bottomDrawerStart - dragHeight - 50;
 
     self.topDragHandle.frame = CGRectMake(dragLeft, dragTop, dragWidth, dragHeight);
