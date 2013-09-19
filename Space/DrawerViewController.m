@@ -144,6 +144,7 @@
 -(void)updateTopCanvasSize {
     self.topDrawerContents.view.frame = CGRectMake(0, 0, self.realScreenSize.width, self.topDrawerHeight);
     [self.topDrawerContents updateNotesForBoundsChange];
+    [self.topDrawerContents setYValuesWithTrashOffset:self.bottomDrawerStart];
 }
 -(void)updateBottomCanvasSize {
     self.bottomDrawerContents.view.frame = CGRectMake(0, self.bottomDrawerStart, self.realScreenSize.width, self.bottomDrawerHeight);

@@ -31,7 +31,6 @@
     DrawerViewController* drawer = [DrawerViewController new];
     drawer.topDrawerContents = canvas;
     drawer.bottomDrawerContents = trash;
-    [self calculateCanvasValues:canvas fromDrawer:drawer];
     
     UIViewController* container = [UIViewController new];
     
@@ -54,12 +53,6 @@
     self.window.rootViewController = container;
 
     return YES;
-}
-
-//FIXME this might not be the right place for this logic, but it's convenient for now
--(void) calculateCanvasValues: (CanvasViewController*)canvas fromDrawer: (DrawerViewController*) drawer {
-    int trashCanvasStart = drawer.bottomDrawerContents.view.frame.origin.y;
-    [canvas setYValuesWithTrashOffset:trashCanvasStart];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application
