@@ -126,7 +126,7 @@
 -(void)noteTrashedNotification:(NSNotification*)notification {
     if (self.isTrashMode) {
         Note* trashedNote = [notification.userInfo objectForKey:Key_TrashedNotes];
-        trashedNote.positionY = 0;
+        trashedNote.positionY = NOTE_RADIUS;
         [self addViewForNote:trashedNote];
         [[Database sharedDatabase] save];
     }
@@ -182,7 +182,7 @@
         CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:self.topLevelView];
         //NSLog(@"dist %f", windowRelativeBottom.y);
 
-        self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y;
+        self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y + NOTE_RADIUS;
         self.notePendingDelete.onDropOffscreen = ^{
             [weakSelf.animator removeBehavior:trashDrop];
             [weakSelf.notePendingDelete removeFromSuperview];
