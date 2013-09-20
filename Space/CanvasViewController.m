@@ -176,10 +176,13 @@
 
     __weak CanvasViewController* weakSelf = self;
 
-    CGPoint windowBottom = CGPointMake(0, self.view.window.frame.size.height);
+    //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
+    UIView* topView = self.view.superview.superview;
+    CGPoint windowBottom = CGPointMake(0, topView.frame.size.height);
     NSLog(@"window size %@", NSStringFromCGPoint(windowBottom));
-    CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:self.view.window];
+    CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:topView];
     NSLog(@"dist %f", windowRelativeBottom.y);
+
     self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y;
     self.notePendingDelete.onDropOffscreen = ^{
         [weakSelf.animator removeBehavior:trashDrop];
