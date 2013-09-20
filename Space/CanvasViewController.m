@@ -280,18 +280,17 @@
 
     if (! CGRectContainsRect(self.view.bounds, note.frame)) {
         CGPoint center = note.center;
-        float radius = note.frame.size.height / 2;
 
         if (note.frame.origin.y < 0) {
-            center.y = radius;
+            center.y = NOTE_RADIUS;
         } else if (CGRectGetMaxY(note.frame) > self.view.bounds.size.height) {
-            center.y = self.view.bounds.size.height - radius;
+            center.y = self.view.bounds.size.height - NOTE_RADIUS;
         }
 
         if (note.frame.origin.x < 0) {
-            center.x = radius;
+            center.x = NOTE_RADIUS;
         } else if (CGRectGetMaxX(note.frame) > self.view.bounds.size.width) {
-            center.x = self.view.bounds.size.width - radius;
+            center.x = self.view.bounds.size.width - NOTE_RADIUS;
         }
 
         NSLog(@"move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));

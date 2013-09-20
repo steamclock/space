@@ -8,6 +8,8 @@
 
 #import <UIKit/UIKit.h>
 
+extern const int NOTE_RADIUS;
+
 @class Note;
 
 @interface NoteView : UIImageView

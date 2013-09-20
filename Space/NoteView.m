@@ -9,6 +9,8 @@
 #import "NoteView.h"
 #import "Note.h"
 
+const int NOTE_RADIUS = 22;
+
 @interface NoteView () {
     Note* _note;
 }
@@ -42,8 +44,7 @@
 }
 
 -(void)commonSetup {
-    
-    int portraitSize = 44;
+    int portraitSize = NOTE_RADIUS * 2;
     
     self.contentMode = UIViewContentModeScaleToFill;
     self.frame = CGRectMake(0, 0, portraitSize, portraitSize);
