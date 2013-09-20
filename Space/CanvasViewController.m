@@ -139,7 +139,8 @@
     self.notePendingDelete = view;
 
     QBPopupMenu* menu = [[QBPopupMenu alloc] init];
-    menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:@"Delete" target:self action:@selector(deletePendingNote)] ];
+    NSString* title = self.isTrashMode ? @"Delete forever" : @"Send to trash";
+    menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:title target:self action:@selector(deletePendingNote)] ];
 
     //we need to use the top-level view so that clicking outside the popup dismisses it.
     //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
@@ -151,37 +152,44 @@
 
 -(void)deletePendingNote {
     Note* note = self.notePendingDelete.note;
-    
-    // [note removeFromDatabase];
-    [note markAsTrashed];
 
     [self.collision removeItem:self.notePendingDelete];
     [self.dynamicProperties removeItem:self.notePendingDelete];
 
-    UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.notePendingDelete]];
-    trashDrop.gravityDirection = CGVectorMake(0, 1);
-    [self.animator addBehavior:trashDrop];
+    if (self.isTrashMode) {
+        [self.notePendingDelete removeFromSuperview];
+        self.notePendingDelete = nil;
 
-    __weak CanvasViewController* weakSelf = self;
+        [note removeFromDatabase];
+        [[Database sharedDatabase] save];
+    } else {
+        [note markAsTrashed];
 
-    //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
-    UIView* topView = self.view.superview.superview;
-    CGPoint windowBottom = CGPointMake(0, topView.frame.size.height);
-    NSLog(@"window size %@", NSStringFromCGPoint(windowBottom));
-    CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:topView];
-    NSLog(@"dist %f", windowRelativeBottom.y);
+        UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.notePendingDelete]];
+        trashDrop.gravityDirection = CGVectorMake(0, 1);
+        [self.animator addBehavior:trashDrop];
 
-    self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y;
-    self.notePendingDelete.onDropOffscreen = ^{
-        [weakSelf.animator removeBehavior:trashDrop];
-        [weakSelf.notePendingDelete removeFromSuperview];
-        weakSelf.notePendingDelete = nil;
+        __weak CanvasViewController* weakSelf = self;
 
-        NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
+        //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
+        UIView* topView = self.view.superview.superview;
+        CGPoint windowBottom = CGPointMake(0, topView.frame.size.height);
+        NSLog(@"window size %@", NSStringFromCGPoint(windowBottom));
+        CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:topView];
+        NSLog(@"dist %f", windowRelativeBottom.y);
 
-        NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification object:weakSelf userInfo:deletedNoteInfo];
-        [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
-    };
+        self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y;
+        self.notePendingDelete.onDropOffscreen = ^{
+            [weakSelf.animator removeBehavior:trashDrop];
+            [weakSelf.notePendingDelete removeFromSuperview];
+            weakSelf.notePendingDelete = nil;
+
+            NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
+
+            NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification object:weakSelf userInfo:deletedNoteInfo];
+            [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
+        };
+    }
 }
 
 -(void)deleteNoteWithoutAsking:(NoteView*) view {
@@ -311,11 +319,8 @@
     UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(noteDrag:)];
     [imageView addGestureRecognizer:panGestureRecognizer];
 
-    if (! self.isTrashMode) {
-        //enable delete
-        UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(noteLongPress:)];
-        [imageView addGestureRecognizer:longPress];
-    }
+    UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(noteLongPress:)];
+    [imageView addGestureRecognizer:longPress];
 
     [self.view addSubview:imageView];
     [self.collision addItem:imageView];
