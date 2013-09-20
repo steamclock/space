@@ -18,9 +18,6 @@
 @interface CanvasViewController ()
 
 @property (nonatomic) UIDynamicAnimator* animator;
-//this gravity is disabled because the drop-to-trash gravity was conflicting with it.
-//never put more than one UIGravityBehavior on the same animator. it gets confused.
-//@property (nonatomic) UIGravityBehavior* gravity;
 @property (nonatomic) UICollisionBehavior* collision;
 @property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
 @property (nonatomic) UIDynamicItemBehavior* activeDrag;
@@ -63,16 +60,13 @@
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
-    
-    /*self.gravity = [[UIGravityBehavior alloc] init];
-    self.gravity.gravityDirection = CGVectorMake(0, 0);*/
+
     self.collision = [[UICollisionBehavior alloc] init];
     self.collision.translatesReferenceBoundsIntoBoundary = YES;
     self.dynamicProperties = [[UIDynamicItemBehavior alloc] init];
     self.dynamicProperties.allowsRotation = NO;
     self.dynamicProperties.resistance = 8;
 
-    //[self.animator addBehavior:self.gravity];
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
 
@@ -83,10 +77,6 @@
         //allow new notes
         UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceTap:)];
         [self.view addGestureRecognizer:tapGestureRecognizer];
-
-        UITapGestureRecognizer *doubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceDoubleTap:)];
-        doubleTapGestureRecognizer.numberOfTapsRequired = 2;
-        [self.view addGestureRecognizer:doubleTapGestureRecognizer];
     }
     
     self.currentCanvas = 0;
@@ -98,7 +88,6 @@
 -(void)loadCurrentCanvas {
     
     for(UIView* view in self.view.subviews) {
-        //[self.gravity removeItem:view];
         [self.collision removeItem:view];
         [self.dynamicProperties removeItem:view];
     }
@@ -165,8 +154,7 @@
     
     // [note removeFromDatabase];
     [note markAsTrashed];
-    
-    //[self.gravity removeItem:self.viewForMenu];
+
     [self.collision removeItem:self.notePendingDelete];
     [self.dynamicProperties removeItem:self.notePendingDelete];
 
@@ -201,10 +189,6 @@
     [self deletePendingNote];
 }
 
--(void)spaceDoubleTap:(UITapGestureRecognizer *)recognizer {
-    //self.gravity.gravityDirection = CGVectorMake(0, 1);
-}
-
 -(void)spaceTap:(UITapGestureRecognizer *)recognizer {
     Note* note = [[Database sharedDatabase] createNote];
     
@@ -230,7 +214,6 @@
         self.activeDrag.density = 1000000.0f;
         [self.animator addBehavior:self.activeDrag];
         [self.activeDrag addItem:view];
-        //[self.gravity removeItem:view];
     }
     
     view.center = CGPointMake(drag.x, drag.y);
@@ -335,7 +318,6 @@
     }
 
     [self.view addSubview:imageView];
-    //[self.gravity addItem:imageView];
     [self.collision addItem:imageView];
     [self.dynamicProperties addItem:imageView];
 
