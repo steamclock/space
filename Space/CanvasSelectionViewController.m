@@ -92,10 +92,11 @@
 }
 
 -(void)viewWillAppear:(BOOL)animated {
+    
     [super viewWillAppear:animated];
     
     self.view.frame = CGRectMake(0, 0, self.view.superview.bounds.size.width, 50);
-    self.view.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin;
+    self.view.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleWidth;
 }
 
 - (void)didReceiveMemoryWarning
