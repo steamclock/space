@@ -24,15 +24,15 @@
     [self.window makeKeyAndVisible];
     
     self.window.backgroundColor = [UIColor darkGrayColor];
+
+    UIViewController* container = [UIViewController new];
     
-    CanvasViewController* canvas = [CanvasViewController new];
+    CanvasViewController* canvas = [[CanvasViewController alloc] initWithTopLevelView:container.view];
     CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvas];
     
     DrawerViewController* drawer = [DrawerViewController new];
     drawer.topDrawerContents = canvas;
     drawer.bottomDrawerContents = trash;
-    
-    UIViewController* container = [UIViewController new];
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     

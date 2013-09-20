@@ -33,9 +33,18 @@
 @property (nonatomic) int editY;
 @property (nonatomic) int trashY;
 
+@property (nonatomic) UIView* topLevelView;
+
 @end
 
 @implementation CanvasViewController
+
+-(id)initWithTopLevelView:(UIView*)view {
+    if (self = [super init]) {
+        self.topLevelView = view;
+    }
+    return self;
+}
 
 -(id)initAsTrashCanvas {
 
@@ -143,11 +152,8 @@
     menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:title target:self action:@selector(deletePendingNote)] ];
 
     //we need to use the top-level view so that clicking outside the popup dismisses it.
-    //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
-    UIView* topView = self.view.superview.superview;
-
-    CGPoint showAt = [view.superview convertPoint:view.center toView:topView];
-    [menu showInView:topView atPoint:showAt];
+    CGPoint showAt = [view.superview convertPoint:view.center toView:self.topLevelView];
+    [menu showInView:self.topLevelView atPoint:showAt];
 }
 
 -(void)deletePendingNote {
@@ -171,12 +177,10 @@
 
         __weak CanvasViewController* weakSelf = self;
 
-        //FIXME referring to the super-super-view is fragile and bad. maybe we could have the top level view passed in instead?
-        UIView* topView = self.view.superview.superview;
-        CGPoint windowBottom = CGPointMake(0, topView.frame.size.height);
-        NSLog(@"window size %@", NSStringFromCGPoint(windowBottom));
-        CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:topView];
-        NSLog(@"dist %f", windowRelativeBottom.y);
+        CGPoint windowBottom = CGPointMake(0, self.topLevelView.frame.size.height);
+        //NSLog(@"window size %@", NSStringFromCGPoint(windowBottom));
+        CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:self.topLevelView];
+        //NSLog(@"dist %f", windowRelativeBottom.y);
 
         self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y;
         self.notePendingDelete.onDropOffscreen = ^{

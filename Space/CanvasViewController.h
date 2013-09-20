@@ -14,6 +14,7 @@
 
 @property (nonatomic) FocusViewController* focus;
 
+-(id)initWithTopLevelView:(UIView*)view;
 -(id)initAsTrashCanvas;
 
 //set up various almost-constants
