@@ -9,6 +9,7 @@
 #import "NoteView.h"
 #import "Note.h"
 #import "Coordinate.h"
+#import "Database.h"
 
 const int NOTE_RADIUS = 22;
 
@@ -77,6 +78,10 @@ const int NOTE_RADIUS = 22;
     return _note;
 }
 
+-(void)setCenter:(CGPoint)center {
+    [self setCenter:center withReferenceBounds:self.superview.bounds];
+}
+
 -(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds {
     
     [super setCenter:center];
@@ -88,6 +93,7 @@ const int NOTE_RADIUS = 22;
         NSLog(@"dropped offscreen");
         self.onDropOffscreen();
     }
+    [[Database sharedDatabase] save];
 }
 
 -(void)setHighlighted:(BOOL)highlighted {
