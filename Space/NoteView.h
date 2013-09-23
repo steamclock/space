@@ -16,9 +16,12 @@ extern const int NOTE_RADIUS;
 
 @property Note* note;
 
-//block for when the note drops offscreen (into the trash)
+// Block for when the note drops offscreen (into the trash)
 @property (nonatomic, copy) void (^onDropOffscreen)();
 @property (nonatomic) int offscreenYDistance;
+
+// Used to help update item coordinates in setCenter:withReferenceBounds:
+@property (nonatomic, weak) UIDynamicAnimator* animator;
 
 -(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds;
 -(void)setHighlighted:(BOOL)highlighted;

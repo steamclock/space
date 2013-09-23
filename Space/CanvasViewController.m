@@ -152,6 +152,7 @@
 -(void)addViewForNote:(Note*)note {
     
     NoteView* imageView = [[NoteView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
+    imageView.animator = self.animator;
     CGPoint unnomralizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
     [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
     
@@ -368,9 +369,7 @@
     
     CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
     [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
-    NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
-    
-    [self.animator updateItemUsingCurrentState:noteView];
+    NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));    
 }
 
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {

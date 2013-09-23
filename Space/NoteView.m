@@ -89,6 +89,8 @@ const int NOTE_RADIUS = 22;
         NSLog(@"dropped offscreen");
         self.onDropOffscreen();
     }
+    
+    [self.animator updateItemUsingCurrentState:self];
     [[Database sharedDatabase] save];
 }
 
