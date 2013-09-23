@@ -38,7 +38,9 @@
 
 @end
 
-@implementation CanvasViewController
+@implementation CanvasViewController;
+
+#pragma mark - Canvas Handling
 
 -(id)initWithTopLevelView:(UIView*)view {
     if (self = [super init]) {
@@ -48,7 +50,6 @@
 }
 
 -(id)initAsTrashCanvas {
-
     if (self = [super init]) {
         self.isTrashMode = YES;
     }
@@ -124,83 +125,7 @@
     [self loadCurrentCanvas];
 }
 
--(void)noteTrashedNotification:(NSNotification*)notification {
-    if (self.isTrashMode) {
-        Note* trashedNote = [notification.userInfo objectForKey:Key_TrashedNotes];
-        trashedNote.positionY = NOTE_RADIUS;
-        [self addViewForNote:trashedNote];
-        [[Database sharedDatabase] save];
-    }
-}
-
--(void)noteTap: (UITapGestureRecognizer *)recognizer {
-    NoteView* view = (NoteView*)recognizer.view;
-    [self.focus focusOn:view];
-}
-
--(void)noteLongPress: (UITapGestureRecognizer *)recognizer {
-    if(recognizer.state == UIGestureRecognizerStateBegan) {
-        NoteView* view = (NoteView*)recognizer.view;
-        [self askToDeleteNote:view];
-    }
-}
-
--(void)askToDeleteNote:(NoteView*) view {
-    self.notePendingDelete = view;
-
-    QBPopupMenu* menu = [[QBPopupMenu alloc] init];
-    NSString* title = self.isTrashMode ? @"Delete forever" : @"Send to trash";
-    menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:title target:self action:@selector(deletePendingNote)] ];
-
-    //we need to use the top-level view so that clicking outside the popup dismisses it.
-    CGPoint showAt = [view.superview convertPoint:view.center toView:self.topLevelView];
-    [menu showInView:self.topLevelView atPoint:showAt];
-}
-
--(void)deletePendingNote {
-    Note* note = self.notePendingDelete.note;
-
-    [self.collision removeItem:self.notePendingDelete];
-    [self.dynamicProperties removeItem:self.notePendingDelete];
-
-    if (self.isTrashMode) {
-        [self.notePendingDelete removeFromSuperview];
-        self.notePendingDelete = nil;
-
-        [note removeFromDatabase];
-        [[Database sharedDatabase] save];
-    } else {
-        [note markAsTrashed];
-
-        UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.notePendingDelete]];
-        trashDrop.gravityDirection = CGVectorMake(0, 1);
-        [self.animator addBehavior:trashDrop];
-
-        __weak CanvasViewController* weakSelf = self;
-
-        CGPoint windowBottom = CGPointMake(0, self.topLevelView.frame.size.height);
-        //NSLog(@"window size %@", NSStringFromCGPoint(windowBottom));
-        CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:self.topLevelView];
-        //NSLog(@"dist %f", windowRelativeBottom.y);
-
-        self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y + NOTE_RADIUS;
-        self.notePendingDelete.onDropOffscreen = ^{
-            [weakSelf.animator removeBehavior:trashDrop];
-            [weakSelf.notePendingDelete removeFromSuperview];
-            weakSelf.notePendingDelete = nil;
-
-            NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
-
-            NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification object:weakSelf userInfo:deletedNoteInfo];
-            [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
-        };
-    }
-}
-
--(void)deleteNoteWithoutAsking:(NoteView*) view {
-    self.notePendingDelete = view;
-    [self deletePendingNote];
-}
+#pragma mark - Add Notes
 
 -(void)spaceTap:(UITapGestureRecognizer *)recognizer {
     
@@ -217,133 +142,10 @@
     NSLog(@"Normalized Y coord = %f", [Coordinate normalizeYCoord:position.y withReferenceBounds:self.view.bounds]);
     
     NSLog(@"Unnormalized coord = %@", NSStringFromCGPoint([Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds]));
-
+    
     [self addViewForNote:note];
     
     [[Database sharedDatabase] save];
-}
-
-
--(void)noteDrag:(UIPanGestureRecognizer*)recognizer {
-    
-    NoteView* view = (NoteView*)recognizer.view;
-    CGPoint drag = [recognizer locationInView:self.view];
-
-    if(recognizer.state == UIGestureRecognizerStateBegan) {
-        self.activeDrag = [[UIDynamicItemBehavior alloc] init];
-        self.activeDrag.density = 1000000.0f;
-        [self.animator addBehavior:self.activeDrag];
-        [self.activeDrag addItem:view];
-    }
-    
-    [view setCenter:drag withReferenceBounds:self.view.bounds];
-    [self.animator updateItemUsingCurrentState:view];
-
-    //clean up the drag operation (and ONLY the drag operation. do all other ending actions below the isTrashMode check)
-    if(recognizer.state == UIGestureRecognizerStateEnded) {
-        [view setBackgroundColor:[UIColor clearColor]];
-        [self.activeDrag removeItem:view];
-        [self.animator removeBehavior:self.activeDrag];
-        self.activeDrag = nil;
-    }
-
-    if (self.isTrashMode) {
-        //TODO maybe an un-trash action?
-        if(recognizer.state == UIGestureRecognizerStateEnded) {
-            [[Database sharedDatabase] save];
-            CGPoint velocity = [recognizer velocityInView:self.view];
-            [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
-        }
-    } else {
-        //edit/trash actions and feedback
-        //TODO: make the feedback pretty.
-
-        if (view.center.y > self.trashY) {
-            if(recognizer.state == UIGestureRecognizerStateEnded) {
-                [self deleteNoteWithoutAsking:view];
-            } else {
-                [view setBackgroundColor:[UIColor redColor]];
-            }
-        } else if (view.center.y > self.editY) {
-            if(recognizer.state == UIGestureRecognizerStateEnded) {
-                [self returnNoteToBounds:view];
-                [self.focus focusOn:view];
-            } else {
-                [view setBackgroundColor:[UIColor greenColor]];
-            }
-        } else {
-            if(recognizer.state == UIGestureRecognizerStateEnded) {
-                [[Database sharedDatabase] save];
-                CGPoint velocity = [recognizer velocityInView:self.view];
-                [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
-            } else {
-                [view setBackgroundColor:[UIColor clearColor]];
-            }
-        }
-    }
-}
-
--(void)returnNoteToBounds:(NoteView*)note {
-    //force it back into the canvas if necessary.
-
-    if (! CGRectContainsRect(self.view.bounds, note.frame)) {
-        CGPoint center = note.center;
-
-        if (note.frame.origin.y < 0) {
-            center.y = NOTE_RADIUS;
-        } else if (CGRectGetMaxY(note.frame) > self.view.bounds.size.height) {
-            center.y = self.view.bounds.size.height - NOTE_RADIUS;
-        }
-
-        if (note.frame.origin.x < 0) {
-            center.x = NOTE_RADIUS;
-        } else if (CGRectGetMaxX(note.frame) > self.view.bounds.size.width) {
-            center.x = self.view.bounds.size.width - NOTE_RADIUS;
-        }
-
-        NSLog(@"move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
-        note.center = center;
-        [self.animator updateItemUsingCurrentState:note];
-        [[Database sharedDatabase] save];
-    }
-}
-
--(void)updateLocationForNoteView:(NoteView*)noteView {
-    
-    CGPoint relativePosition = CGPointMake(noteView.note.positionX, noteView.note.positionY);
-    NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
-    
-    CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
-    [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
-    NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));    
-}
-
--(void)updateNotesForBoundsChange {
-    
-    NSLog(@"New bounds = %@", NSStringFromCGRect(self.view.bounds));
-    
-    for (UIView* subview in self.view.subviews) {
-        
-        if ([subview isKindOfClass:[NoteView class]]) {
-            [self returnNoteToBounds:(NoteView*)subview];
-            [self updateLocationForNoteView:(NoteView*)subview];
-        }
-    }
-}
-
--(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    
-    // Remove behaviours to prevent the animator from setting the incorrect center positions for noteViews after we've already
-    // calculated and set them. We're not sure why the animator does this, but we're doing a lot of custom view positioning,
-    // and it could be a result of some custom view handling logic that don't play well with the animator.
-    [self.animator removeAllBehaviors];
-}
-
--(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    
-    // Restore the behaviours after orientation changes and calculations are completed.
-    [self.animator addBehavior:self.collision];
-    [self.animator addBehavior:self.dynamicProperties];
 }
 
 -(void)addViewForNote:(Note*)note {
@@ -374,4 +176,213 @@
 
     imageView.note = note;
 }
+
+#pragma mark - Delete Notes
+
+-(void)noteLongPress: (UITapGestureRecognizer *)recognizer {
+    if(recognizer.state == UIGestureRecognizerStateBegan) {
+        NoteView* view = (NoteView*)recognizer.view;
+        [self askToDeleteNote:view];
+    }
+}
+
+-(void)askToDeleteNote:(NoteView*) view {
+    self.notePendingDelete = view;
+    
+    QBPopupMenu* menu = [[QBPopupMenu alloc] init];
+    NSString* title = self.isTrashMode ? @"Delete forever" : @"Send to trash";
+    menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:title target:self action:@selector(deletePendingNote)] ];
+    
+    // we need to use the top-level view so that clicking outside the popup dismisses it.
+    CGPoint showAt = [view.superview convertPoint:view.center toView:self.topLevelView];
+    [menu showInView:self.topLevelView atPoint:showAt];
+}
+
+-(void)deletePendingNote {
+    Note* note = self.notePendingDelete.note;
+    
+    [self.collision removeItem:self.notePendingDelete];
+    [self.dynamicProperties removeItem:self.notePendingDelete];
+    
+    if (self.isTrashMode) {
+        [self.notePendingDelete removeFromSuperview];
+        self.notePendingDelete = nil;
+        
+        [note removeFromDatabase];
+        [[Database sharedDatabase] save];
+    } else {
+        [note markAsTrashed];
+        
+        UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.notePendingDelete]];
+        trashDrop.gravityDirection = CGVectorMake(0, 1);
+        [self.animator addBehavior:trashDrop];
+        
+        __weak CanvasViewController* weakSelf = self;
+        
+        CGPoint windowBottom = CGPointMake(0, self.topLevelView.frame.size.height);
+        // NSLog(@"window size %@", NSStringFromCGPoint(windowBottom));
+        CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:self.topLevelView];
+        // NSLog(@"dist %f", windowRelativeBottom.y);
+        
+        self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y + NOTE_RADIUS;
+        self.notePendingDelete.onDropOffscreen = ^{
+            [weakSelf.animator removeBehavior:trashDrop];
+            [weakSelf.notePendingDelete removeFromSuperview];
+            weakSelf.notePendingDelete = nil;
+            
+            NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
+            
+            NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification object:weakSelf userInfo:deletedNoteInfo];
+            [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
+        };
+    }
+}
+
+-(void)deleteNoteWithoutAsking:(NoteView*) view {
+    self.notePendingDelete = view;
+    [self deletePendingNote];
+}
+
+-(void)noteTrashedNotification:(NSNotification*)notification {
+    if (self.isTrashMode) {
+        Note* trashedNote = [notification.userInfo objectForKey:Key_TrashedNotes];
+        trashedNote.positionY = NOTE_RADIUS;
+        [self addViewForNote:trashedNote];
+        [[Database sharedDatabase] save];
+    }
+}
+
+#pragma mark - Focus Notes
+
+-(void)noteTap: (UITapGestureRecognizer *)recognizer {
+    NoteView* view = (NoteView*)recognizer.view;
+    [self.focus focusOn:view];
+}
+
+#pragma mark - Drag Notes
+
+-(void)noteDrag:(UIPanGestureRecognizer*)recognizer {
+    
+    NoteView* view = (NoteView*)recognizer.view;
+    CGPoint drag = [recognizer locationInView:self.view];
+    
+    if(recognizer.state == UIGestureRecognizerStateBegan) {
+        self.activeDrag = [[UIDynamicItemBehavior alloc] init];
+        self.activeDrag.density = 1000000.0f;
+        [self.animator addBehavior:self.activeDrag];
+        [self.activeDrag addItem:view];
+    }
+    
+    [view setCenter:drag withReferenceBounds:self.view.bounds];
+    [self.animator updateItemUsingCurrentState:view];
+    
+    //clean up the drag operation (and ONLY the drag operation. do all other ending actions below the isTrashMode check)
+    if(recognizer.state == UIGestureRecognizerStateEnded) {
+        [view setBackgroundColor:[UIColor clearColor]];
+        [self.activeDrag removeItem:view];
+        [self.animator removeBehavior:self.activeDrag];
+        self.activeDrag = nil;
+    }
+    
+    if (self.isTrashMode) {
+        //TODO maybe an un-trash action?
+        if(recognizer.state == UIGestureRecognizerStateEnded) {
+            [[Database sharedDatabase] save];
+            CGPoint velocity = [recognizer velocityInView:self.view];
+            [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
+        }
+    } else {
+        //edit/trash actions and feedback
+        //TODO: make the feedback pretty.
+        
+        if (view.center.y > self.trashY) {
+            if(recognizer.state == UIGestureRecognizerStateEnded) {
+                [self deleteNoteWithoutAsking:view];
+            } else {
+                [view setBackgroundColor:[UIColor redColor]];
+            }
+        } else if (view.center.y > self.editY) {
+            if(recognizer.state == UIGestureRecognizerStateEnded) {
+                [self returnNoteToBounds:view];
+                [self.focus focusOn:view];
+            } else {
+                [view setBackgroundColor:[UIColor greenColor]];
+            }
+        } else {
+            if(recognizer.state == UIGestureRecognizerStateEnded) {
+                [[Database sharedDatabase] save];
+                CGPoint velocity = [recognizer velocityInView:self.view];
+                [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
+            } else {
+                [view setBackgroundColor:[UIColor clearColor]];
+            }
+        }
+    }
+}
+
+#pragma mark - Orientation Changes Handling
+
+-(void)updateNotesForBoundsChange {
+    
+    NSLog(@"New bounds = %@", NSStringFromCGRect(self.view.bounds));
+    
+    for (UIView* subview in self.view.subviews) {
+        
+        if ([subview isKindOfClass:[NoteView class]]) {
+            [self returnNoteToBounds:(NoteView*)subview];
+            [self updateLocationForNoteView:(NoteView*)subview];
+        }
+    }
+}
+
+// Used to force notes back into the canvas
+-(void)returnNoteToBounds:(NoteView*)note {
+  
+    if (! CGRectContainsRect(self.view.bounds, note.frame)) {
+        CGPoint center = note.center;
+        
+        if (note.frame.origin.y < 0) {
+            center.y = NOTE_RADIUS;
+        } else if (CGRectGetMaxY(note.frame) > self.view.bounds.size.height) {
+            center.y = self.view.bounds.size.height - NOTE_RADIUS;
+        }
+        
+        if (note.frame.origin.x < 0) {
+            center.x = NOTE_RADIUS;
+        } else if (CGRectGetMaxX(note.frame) > self.view.bounds.size.width) {
+            center.x = self.view.bounds.size.width - NOTE_RADIUS;
+        }
+        
+        NSLog(@"move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
+        note.center = center;
+        [self.animator updateItemUsingCurrentState:note];
+        [[Database sharedDatabase] save];
+    }
+}
+
+-(void)updateLocationForNoteView:(NoteView*)noteView {
+    
+    CGPoint relativePosition = CGPointMake(noteView.note.positionX, noteView.note.positionY);
+    NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
+    
+    CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
+    [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+    NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
+}
+
+-(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    
+    // Remove behaviours to prevent the animator from setting the incorrect center positions for noteViews after we've already
+    // calculated and set them. We're not sure why the animator does this, but we're doing a lot of custom view positioning,
+    // and it could be a result of some custom view handling logic that don't play well with the animator.
+    [self.animator removeAllBehaviors];
+}
+
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    
+    // Restore the behaviours after orientation changes and calculations are completed.
+    [self.animator addBehavior:self.collision];
+    [self.animator addBehavior:self.dynamicProperties];
+}
+
 @end
