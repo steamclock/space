@@ -71,6 +71,7 @@
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
+    self.animator.delegate = self;
 
     self.collision = [[UICollisionBehavior alloc] init];
     self.collision.translatesReferenceBoundsIntoBoundary = YES;
@@ -368,6 +369,8 @@
     CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
     [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
     NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
+    
+    [self.animator updateItemUsingCurrentState:noteView];
 }
 
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
@@ -383,6 +386,27 @@
     // Restore the behaviours after orientation changes and calculations are completed.
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
+}
+
+#pragma mark - Animator Delegate Methods
+
+// Saves the new x, y coordinates after a throw
+- (void)dynamicAnimatorDidPause:(UIDynamicAnimator *)animator {
+    
+    for (UIView* subview in self.view.subviews) {
+        
+        if ([subview isKindOfClass:[NoteView class]]) {
+            
+            NoteView* noteView = (NoteView*)subview;
+            
+            noteView.note.positionX = [Coordinate normalizeXCoord:noteView.center.x withReferenceBounds:self.view.bounds];
+            noteView.note.positionY = [Coordinate normalizeYCoord:noteView.center.y withReferenceBounds:self.view.bounds];
+        }
+    }
+}
+
+- (void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {
+    
 }
 
 @end

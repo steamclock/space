@@ -10,7 +10,7 @@
 
 @class FocusViewController;
 
-@interface CanvasViewController : UIViewController
+@interface CanvasViewController : UIViewController <UIDynamicAnimatorDelegate>
 
 @property (nonatomic) FocusViewController* focus;
 

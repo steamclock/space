@@ -78,10 +78,6 @@ const int NOTE_RADIUS = 22;
     return _note;
 }
 
--(void)setCenter:(CGPoint)center {
-    [self setCenter:center withReferenceBounds:self.superview.bounds];
-}
-
 -(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds {
     
     [super setCenter:center];
