@@ -75,7 +75,6 @@
     
     panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
-
 }
 
 -(void)viewWillLayoutSubviews {
@@ -97,11 +96,11 @@
         [self updateViewSizes];
         [self updateCanvasSizes];
     }
+    
 }
 
 -(void) updateExtentsForScreenSize:(CGSize)screenSize {
     self.realScreenSize = screenSize;
-
 
     //numbers relative to the view
     self.topDrawerHeight = screenSize.height - 24;

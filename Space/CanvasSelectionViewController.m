@@ -164,8 +164,8 @@
 -(IBAction)buttonPress:(id)sender {
     UIButton* pressedButton = (UIButton*)sender;
     
-    NSLog(@"Button number = %@", [NSNumber numberWithInt:pressedButton.tag]);
-    NSLog(@"Canvas number = %@", self.canvasTitleIndices[pressedButton.tag]);
+    // NSLog(@"Button number = %@", [NSNumber numberWithInt:pressedButton.tag]);
+    // NSLog(@"Canvas number = %@", self.canvasTitleIndices[pressedButton.tag]);
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":self.canvasTitleIndices[pressedButton.tag]}];
 }

@@ -8,6 +8,7 @@
 
 #import "NoteView.h"
 #import "Note.h"
+#import "Coordinate.h"
 
 const int NOTE_RADIUS = 22;
 
@@ -76,12 +77,12 @@ const int NOTE_RADIUS = 22;
     return _note;
 }
 
--(void)setCenter:(CGPoint)center {
-    [super setCenter:center];
-    //NSLog(@"center for '%@': %@", self.note.title, NSStringFromCGPoint(center));
+-(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds {
     
-    self.note.positionX = center.x;
-    self.note.positionY = center.y;
+    [super setCenter:center];
+    
+    self.note.positionX = [Coordinate normalizeXCoord:center.x withReferenceBounds:bounds];
+    self.note.positionY = [Coordinate normalizeYCoord:center.y withReferenceBounds:bounds];
 
     if (self.onDropOffscreen && center.y > self.offscreenYDistance) {
         NSLog(@"dropped offscreen");

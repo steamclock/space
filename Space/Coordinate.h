@@ -18,5 +18,8 @@
 
 + (CGFloat)xCoordByFactor:(CGFloat)factor;
 + (CGFloat)yCoordByFactor:(CGFloat)factor;
++ (CGFloat)normalizeXCoord:(CGFloat)xCoord withReferenceBounds:(CGRect)bounds;
++ (CGFloat)normalizeYCoord:(CGFloat)yCoord withReferenceBounds:(CGRect)bounds;
++ (CGPoint)unnormalizePoint:(CGPoint)pointToUnnormalize withReferenceBounds:(CGRect)bounds;
 
 @end

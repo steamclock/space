@@ -14,6 +14,7 @@
 #import "QBPopupMenu.h"
 #import "Notifications.h"
 #import "Constants.h"
+#import "Coordinate.h"
 
 @interface CanvasViewController ()
 
@@ -202,13 +203,20 @@
 }
 
 -(void)spaceTap:(UITapGestureRecognizer *)recognizer {
+    
     Note* note = [[Database sharedDatabase] createNote];
     
     CGPoint position = [recognizer locationInView:self.view];
+    NSLog(@"Creating a note at %@", NSStringFromCGPoint(position));
     
     note.canvas = self.currentCanvas;
-    note.positionX = position.x;
-    note.positionY = position.y;
+    note.positionX = [Coordinate normalizeXCoord:position.x withReferenceBounds:self.view.bounds]; // position.x;
+    note.positionY = [Coordinate normalizeYCoord:position.y withReferenceBounds:self.view.bounds]; // position.y;
+    
+    NSLog(@"Normalized X coord = %f", [Coordinate normalizeXCoord:position.x withReferenceBounds:self.view.bounds]);
+    NSLog(@"Normalized Y coord = %f", [Coordinate normalizeYCoord:position.y withReferenceBounds:self.view.bounds]);
+    
+    NSLog(@"Unnormalized coord = %@", NSStringFromCGPoint([Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds]));
 
     [self addViewForNote:note];
     
@@ -228,7 +236,7 @@
         [self.activeDrag addItem:view];
     }
     
-    view.center = CGPointMake(drag.x, drag.y);
+    [view setCenter:drag withReferenceBounds:self.view.bounds];
     [self.animator updateItemUsingCurrentState:view];
 
     //clean up the drag operation (and ONLY the drag operation. do all other ending actions below the isTrashMode check)
@@ -300,19 +308,54 @@
     }
 }
 
+-(void)updateLocationForNoteView:(NoteView*)noteView {
+    
+    CGPoint relativePosition = CGPointMake(noteView.note.positionX, noteView.note.positionY);
+    NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
+    
+    CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
+    [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+    NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));    
+}
+
 -(void)updateNotesForBoundsChange {
-    NSLog(@"bounds %@", NSStringFromCGRect(self.view.bounds));
+    
+    NSLog(@"New bounds = %@", NSStringFromCGRect(self.view.bounds));
+    
     for (UIView* subview in self.view.subviews) {
+        
         if ([subview isKindOfClass:[NoteView class]]) {
             [self returnNoteToBounds:(NoteView*)subview];
+            [self updateLocationForNoteView:(NoteView*)subview];
         }
     }
 }
 
+-(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    
+    // Remove behaviours to prevent the animator from setting the incorrect center positions for noteViews after we've already
+    // calculated and set them. We're not sure why the animator does this, but we're doing a lot of custom view positioning,
+    // and it could be a result of some custom view handling logic that don't play well with the animator.
+    [self.animator removeAllBehaviors];
+}
+
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    
+    // Restore the behaviours after orientation changes and calculations are completed.
+    [self.animator addBehavior:self.collision];
+    [self.animator addBehavior:self.dynamicProperties];
+}
+
 -(void)addViewForNote:(Note*)note {
+    
     NoteView* imageView = [[NoteView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
-    imageView.center = CGPointMake(note.positionX, note.positionY);
-    //NSLog(@"adding note at %@", NSStringFromCGPoint(imageView.center));
+    CGPoint unnomralizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
+    [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+    
+    // NSLog(@"Note position X = %f", note.positionX);
+    // NSLog(@"Note position Y = %f", note.positionY);
+    
+    // NSLog(@"Adding note at %@", NSStringFromCGPoint(imageView.center));
     
     imageView.userInteractionEnabled = YES;
     

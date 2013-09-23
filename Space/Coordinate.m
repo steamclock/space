@@ -38,4 +38,19 @@ static float height;
     return height * factor;
 }
 
++ (CGFloat)normalizeXCoord:(CGFloat)xCoord withReferenceBounds:(CGRect)bounds {
+    
+    return xCoord / bounds.size.width;
+}
+
++ (CGFloat)normalizeYCoord:(CGFloat)yCoord withReferenceBounds:(CGRect)bounds {
+    
+    return yCoord / bounds.size.height;
+}
+
++ (CGPoint)unnormalizePoint:(CGPoint)pointToUnnormalize withReferenceBounds:(CGRect)bounds {
+    
+    return CGPointMake(pointToUnnormalize.x * bounds.size.width, pointToUnnormalize.y * bounds.size.height);
+}
+
 @end

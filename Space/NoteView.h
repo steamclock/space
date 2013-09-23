@@ -20,6 +20,7 @@ extern const int NOTE_RADIUS;
 @property (nonatomic, copy) void (^onDropOffscreen)();
 @property (nonatomic) int offscreenYDistance;
 
+-(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds;
 -(void)setHighlighted:(BOOL)highlighted;
 
 @end
