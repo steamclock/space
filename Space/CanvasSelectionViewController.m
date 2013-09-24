@@ -30,6 +30,7 @@
 @property (strong, nonatomic) NSUserDefaults* defaults;
 
 @property (strong, nonatomic) UIActionSheet* drawerLayoutSelection;
+@property (strong, nonatomic) UIActionSheet* focusModeSelection;
 
 @end
 
@@ -124,9 +125,14 @@
     int indexTag = 0;
     
     // Allows switching between different drawer layout to help with prototyping
-    [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit
-                                                                   target:self
-                                                                   action:@selector(showDrawerLayoutSelection)]];
+    [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Layout"
+                                                      style:UIBarButtonItemStyleBordered
+                                                     target:self
+                                                     action:@selector(showDrawerLayoutSelection)]];
+    
+    [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Focus"
+                                                      style:UIBarButtonItemStyleBordered
+                                                     target:self action:@selector(showFocusModeSelection)]];
     
     for (NSString* name in canvasTitles) {
         [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil] ];
@@ -263,12 +269,12 @@
 
 #pragma mark - Tool Bar Button Actions
 
--(IBAction)showPopover:(id)sender {
+- (IBAction)showPopover:(id)sender {
     
     [self.popoverController presentPopoverFromBarButtonItem:sender permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
 }
 
--(void)showDrawerLayoutSelection {
+- (void)showDrawerLayoutSelection {
     
     self.drawerLayoutSelection = [[UIActionSheet alloc] initWithTitle:@"Choose a Drawer Layout"
                                                              delegate:(id<UIActionSheetDelegate>)self
@@ -278,12 +284,35 @@
     [self.drawerLayoutSelection showFromToolbar:self.toolbar];
 }
 
+- (void)showFocusModeSelection {
+    
+    self.focusModeSelection = [[UIActionSheet alloc] initWithTitle:@"Choose a Focus Mode"
+                                                             delegate:(id<UIActionSheetDelegate>)self
+                                                    cancelButtonTitle:@"Cancel"
+                                               destructiveButtonTitle:nil
+                                                    otherButtonTitles:@"Dimming", @"Slide Out", nil];
+    [self.focusModeSelection showFromToolbar:self.toolbar];
+}
+
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
     
-    if (buttonIndex == 0) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadOriginalDrawerNotification object:nil];
+    if (actionSheet == self.drawerLayoutSelection) {
+    
+        if (buttonIndex == 0) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadOriginalDrawerNotification object:nil];
+        } else {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
+        }
+        
     } else {
-        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
+        
+        if (buttonIndex == 0) {
+            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"dim", @"focusMode", nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
+        } else {
+            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"slide", @"focusMode", nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
+        }
     }
 }
 

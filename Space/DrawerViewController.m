@@ -38,11 +38,77 @@
 @property (nonatomic) BOOL layoutChangeRequested;
 @property (nonatomic) BOOL isOriginalLayout;
 
+@property (nonatomic) BOOL focusModeChangeRequested;
+@property (nonatomic) BOOL isFocusDim;
+
+@property (nonatomic) CGRect topCanvasFrame;
+@property (nonatomic) CGRect botCanvasFrame;
+
 @end
 
 @implementation DrawerViewController
 
 #pragma mark - Initial Setup
+
+- (void)slideOutCanvases {
+    
+    // NSLog(@"Checking focus mode to see if drawer should slide out.");
+    
+    if (self.isFocusDim == NO && self.focusModeChangeRequested == YES) {
+        
+        NSLog(@"Focus mode is set to slide, slide out drawer now.");
+        
+        self.topCanvasFrame = self.topDrawerContents.view.frame;
+        
+        CGRect destination = self.topDrawerContents.view.frame;
+        
+        if (self.view.frame.origin.y == 0) {
+            destination.origin.y = -(self.realScreenSize.height);
+        } else {
+            destination.origin.y = -(self.restY + self.realScreenSize.height);
+        }
+        
+        [UIView animateWithDuration:1 animations:^{
+            self.topDrawerContents.view.frame = destination;
+            self.topDragHandle.alpha = 0;
+        }];
+        
+    } else {
+        
+        NSLog(@"Focus mode is set to dim, don't slide out drawer.");
+        
+    }
+}
+
+- (void)slideBackCanvases {
+   
+    if (self.isFocusDim == NO && !CGRectEqualToRect(self.topDrawerContents.view.frame, self.topCanvasFrame)) {
+        
+        [UIView animateWithDuration:1 animations:^{
+            self.topDrawerContents.view.frame = self.topCanvasFrame;
+            self.topDragHandle.alpha = 1;
+        }];
+        
+    }
+}
+
+- (void)setFocusMode:(NSNotification *)notification {
+    
+    if ([[notification.userInfo objectForKey:@"focusMode"] isEqualToString:@"dim"]) {
+        
+        self.isFocusDim = YES;
+        self.focusModeChangeRequested = YES;
+        
+        NSLog(@"Setting focus mode to dim.");
+        
+    } else {
+        
+        self.isFocusDim = NO;
+        self.focusModeChangeRequested = YES;
+        
+        NSLog(@"Setting focus mode to slide.");
+    }
+}
 
 - (void)viewDidLoad {
     
@@ -51,9 +117,14 @@
     [self setEdgesForExtendedLayout:UIRectEdgeNone];
     
     self.isOriginalLayout = YES;
+    self.isFocusDim = YES;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadOriginalDrawer) name:kLoadOriginalDrawerNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadAlternativeDrawer) name:kLoadAlternativeDrawerNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideOutCanvases) name:kFocusNoteNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideBackCanvases) name:kFocusDismissedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(setFocusMode:) name:kChangeFocusModeNotification object:nil];
 
     self.topDragHandle = [[UIView alloc] init];
     self.bottomDragHandle = [[UIView alloc] init];
@@ -182,7 +253,8 @@
         self.bottomDrawerStart = screenSize.height;
     }
     
-    NSLog(@"restY = %f minY = %f topDrawerHeight = %f bottomDrawerHeight = %f bottomDrawerStart = %f", self.restY, self.minY, self.topDrawerHeight, self.bottomDrawerHeight, self.bottomDrawerStart);
+    NSLog(@"restY = %f minY = %f topDrawerHeight = %f bottomDrawerHeight = %f bottomDrawerStart = %f",
+          self.restY, self.minY, self.topDrawerHeight, self.bottomDrawerHeight, self.bottomDrawerStart);
 }
 
 -(void)updateViewSizes {

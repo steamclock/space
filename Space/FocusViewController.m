@@ -11,6 +11,7 @@
 #import "NoteView.h"
 #import <QuartzCore/QuartzCore.h>
 #import "Coordinate.h"
+#import "Notifications.h"
 
 #define FOCUS_SIZE 400
 
@@ -94,6 +95,8 @@
     [self.noteView setHighlighted:NO];
     
     self.view.hidden = true;
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kFocusDismissedNotification object:self];
 }
 
 -(void)focusOn:(NoteView *)view {

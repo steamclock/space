@@ -8,5 +8,10 @@
 
 extern NSString* kCanvasChangedNotification;
 extern NSString* kNoteTrashedNotification;
+
 extern NSString* kLoadOriginalDrawerNotification;
 extern NSString* kLoadAlternativeDrawerNotification;
+
+extern NSString* kFocusNoteNotification;
+extern NSString* kChangeFocusModeNotification;
+extern NSString* kFocusDismissedNotification;

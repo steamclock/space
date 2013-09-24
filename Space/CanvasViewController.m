@@ -273,6 +273,8 @@
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
     NoteView* view = (NoteView*)recognizer.view;
     [self.focus focusOn:view];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
 }
 
 #pragma mark - Drag Notes
