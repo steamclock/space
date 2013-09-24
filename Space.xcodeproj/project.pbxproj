@@ -154,8 +154,8 @@
 		A6F553F617BD737200728B8C /* Space */ = {
 			isa = PBXGroup;
 			children = (
-				E4DD05C617E90A5800ED525D /* backend */,
-				E4DD05C717E90A7B00ED525D /* constants */,
+				E4DD05C617E90A5800ED525D /* CoreData */,
+				E4DD05C717E90A7B00ED525D /* Constants */,
 				A6F553FF17BD737200728B8C /* AppDelegate.h */,
 				A6F5540017BD737200728B8C /* AppDelegate.m */,
 				A6EF0DE317C56310005EF2A0 /* NoteView.h */,
@@ -208,7 +208,7 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		E4DD05C617E90A5800ED525D /* backend */ = {
+		E4DD05C617E90A5800ED525D /* CoreData */ = {
 			isa = PBXGroup;
 			children = (
 				A62D413117BD795F0073DDB4 /* Database.h */,
@@ -216,10 +216,10 @@
 				A62D413717BD7BE80073DDB4 /* Note.h */,
 				A62D413817BD7BE80073DDB4 /* Note.m */,
 			);
-			name = backend;
+			name = CoreData;
 			sourceTree = "<group>";
 		};
-		E4DD05C717E90A7B00ED525D /* constants */ = {
+		E4DD05C717E90A7B00ED525D /* Constants */ = {
 			isa = PBXGroup;
 			children = (
 				A699F2FB17CC18FB0001E6B0 /* Notifications.h */,
@@ -227,7 +227,7 @@
 				B83D42D317D8F5E800409BBF /* Constants.h */,
 				B83D42D417D8F5E800409BBF /* Constants.m */,
 			);
-			name = constants;
+			name = Constants;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

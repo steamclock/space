@@ -29,6 +29,8 @@
 
 @property (strong, nonatomic) NSUserDefaults* defaults;
 
+@property (strong, nonatomic) UIActionSheet* drawerLayoutSelection;
+
 @end
 
 @implementation CanvasSelectionViewController
@@ -41,7 +43,7 @@
     
     if (self) {
         
-        self.toolbar = [UIToolbar new];
+        self.toolbar = [[UIToolbar alloc] init];
         self.defaults = [NSUserDefaults standardUserDefaults];
 
         if ([self.defaults objectForKey:Key_CanvasTitles] && [self.defaults objectForKey:Key_CanvasTitleIndices]) {
@@ -114,12 +116,17 @@
     [self.defaults setObject:self.canvasTitleIndices forKey:Key_CanvasTitleIndices];
     [self.defaults synchronize];
     
-    NSMutableArray* items = [NSMutableArray new];
-    NSMutableArray* buttons = [NSMutableArray new];
+    NSMutableArray* items = [[NSMutableArray alloc] init];
+    NSMutableArray* buttons = [[NSMutableArray alloc] init];
     
     // Used to help identify and locate the custom UIButton that's embedded in each of the BarButtonItems,
     // corresponds to actual canvas title array's index that the button represents.
     int indexTag = 0;
+    
+    // Allows switching between different drawer layout to help with prototyping
+    [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit
+                                                                   target:self
+                                                                   action:@selector(showDrawerLayoutSelection)]];
     
     for (NSString* name in canvasTitles) {
         [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil] ];
@@ -153,8 +160,8 @@
         [items addObject: button];
         [buttons addObject:button];
     }
-
-    [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil] ];
+    
+    [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil]];
     [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(showPopover:)]];
     
     self.toolbar.items = items;
@@ -254,8 +261,30 @@
     }
 }
 
+#pragma mark - Tool Bar Button Actions
+
 -(IBAction)showPopover:(id)sender {
+    
     [self.popoverController presentPopoverFromBarButtonItem:sender permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
+}
+
+-(void)showDrawerLayoutSelection {
+    
+    self.drawerLayoutSelection = [[UIActionSheet alloc] initWithTitle:@"Choose a Drawer Layout"
+                                                             delegate:(id<UIActionSheetDelegate>)self
+                                                    cancelButtonTitle:@"Cancel"
+                                               destructiveButtonTitle:nil
+                                                    otherButtonTitles:@"Original", @"Alternative", nil];
+    [self.drawerLayoutSelection showFromToolbar:self.toolbar];
+}
+
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+    
+    if (buttonIndex == 0) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadOriginalDrawerNotification object:nil];
+    } else {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
+    }
 }
 
 @end

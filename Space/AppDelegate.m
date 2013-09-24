@@ -25,12 +25,12 @@
     
     self.window.backgroundColor = [UIColor darkGrayColor];
 
-    UIViewController* container = [UIViewController new];
+    UIViewController* container = [[UIViewController alloc] init];
     
     CanvasViewController* canvas = [[CanvasViewController alloc] initWithTopLevelView:container.view];
     CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvas];
     
-    DrawerViewController* drawer = [DrawerViewController new];
+    DrawerViewController* drawer = [[DrawerViewController alloc] init];
     drawer.topDrawerContents = canvas;
     drawer.bottomDrawerContents = trash;
     
@@ -39,11 +39,11 @@
     [container addChildViewController:drawer];
     [container.view addSubview:drawer.view];
     
-    CanvasSelectionViewController* canvasSelect = [CanvasSelectionViewController new];
+    CanvasSelectionViewController* canvasSelect = [[CanvasSelectionViewController alloc] init];
     [container addChildViewController:canvasSelect];
     [container.view addSubview:canvasSelect.view];
 
-    FocusViewController* focus = [FocusViewController new];
+    FocusViewController* focus = [[FocusViewController alloc] init];
     canvas.focus = focus;
     
     [container addChildViewController:focus];
@@ -51,7 +51,7 @@
     focus.view.hidden = YES;
     
     self.window.rootViewController = container;
-
+    
     return YES;
 }
 

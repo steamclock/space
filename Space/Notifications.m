@@ -8,3 +8,5 @@
 
 NSString* kCanvasChangedNotification = @"spaceCanvasChanged";
 NSString* kNoteTrashedNotification = @"noteTrashed";
+NSString* kLoadOriginalDrawerNotification = @"loadOriginalDrawer";
+NSString* kLoadAlternativeDrawerNotification = @"loadAlternativeDrawer";

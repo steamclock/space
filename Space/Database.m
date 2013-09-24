@@ -25,7 +25,7 @@
     
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        sharedInstance = [Database new];
+        sharedInstance = [[Database alloc] init];
     });
     
     return sharedInstance;

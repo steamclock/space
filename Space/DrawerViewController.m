@@ -7,6 +7,7 @@
 //
 
 #import "DrawerViewController.h"
+#import "Notifications.h"
 
 @interface DrawerViewController () {
     CanvasViewController* _topDrawerContents;
@@ -23,7 +24,7 @@
 @property (nonatomic) float allowedDragStartY;
 @property (nonatomic) BOOL allowedDragStartYAssigned;
 
-//ipad is crazy here, so I'm caching the un-crazied numbers.
+// iPad reports faulty screen size after orientation changes, so this stores the correct values.
 @property (nonatomic) CGSize realScreenSize;
 
 @property (nonatomic) float maxY;
@@ -34,20 +35,31 @@
 @property (nonatomic) float bottomDrawerHeight;
 @property (nonatomic) float bottomDrawerStart;
 
+@property (nonatomic) BOOL layoutChangeRequested;
+@property (nonatomic) BOOL isOriginalLayout;
+
 @end
 
 @implementation DrawerViewController
 
+#pragma mark - Initial Setup
+
 - (void)viewDidLoad {
     
     [super viewDidLoad];
+    
+    [self setEdgesForExtendedLayout:UIRectEdgeNone];
+    
+    self.isOriginalLayout = YES;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadOriginalDrawer) name:kLoadOriginalDrawerNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadAlternativeDrawer) name:kLoadAlternativeDrawerNotification object:nil];
 
     self.topDragHandle = [[UIView alloc] init];
     self.bottomDragHandle = [[UIView alloc] init];
 
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-
 
     self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
     self.topDragHandle.backgroundColor = [UIColor grayColor];
@@ -78,49 +90,107 @@
 }
 
 -(void)viewWillLayoutSubviews {
-    //fix all our numbers for the current orientation, if necessary.
+    [self drawCanvasLayout];
+}
 
+#pragma mark - Request Layout Change
+
+- (void)loadOriginalDrawer {
+    NSLog(@"Load original drawer.");
+    
+    self.layoutChangeRequested = YES;
+    self.isOriginalLayout = YES;
+    
+    [self drawCanvasLayout];
+}
+
+- (void)loadAlternativeDrawer {
+    NSLog(@"Load alternative drawer.");
+    
+    self.layoutChangeRequested = YES;
+    self.isOriginalLayout = NO;
+    
+    [self drawCanvasLayout];
+}
+
+#pragma mark - Render Layout
+
+-(void)drawCanvasLayout {
+    
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     CGSize screenSize = [[UIScreen mainScreen] bounds].size;
-
+    
     if (orientation == UIInterfaceOrientationLandscapeRight || orientation == UIInterfaceOrientationLandscapeLeft){
-        //fix the orientation because ipad is crazy
+        // Fix the iPad faulty screen size numbers due to a system bug in changing orientations
         float tmp = screenSize.height;
         screenSize.height = screenSize.width;
         screenSize.width = tmp;
     }
-
-    NSLog(@"orientation: %d screen: %@", orientation, NSStringFromCGSize(screenSize));
-    if (screenSize.height != self.realScreenSize.height) {
+    
+    NSLog(@"Orientation: %d Screen: %@", orientation, NSStringFromCGSize(screenSize));
+    
+    // Redraw the layout if orientation has changed, or if a layout change is requested by the user
+    if (screenSize.height != self.realScreenSize.height || self.layoutChangeRequested) {
         [self updateExtentsForScreenSize:screenSize];
         [self updateViewSizes];
         [self updateCanvasSizes];
+        
+        self.layoutChangeRequested = NO;
     }
-    
 }
 
--(void) updateExtentsForScreenSize:(CGSize)screenSize {
+-(void)updateExtentsForScreenSize:(CGSize)screenSize {
+    
+    // Store the actual screen size so we can reference it later to fix an iPad system bug where it'll report the wrong
+    // size after changes in orientation
     self.realScreenSize = screenSize;
 
-    //numbers relative to the view
+    // Size of top and bottom canvas
     self.topDrawerHeight = screenSize.height - 24;
     self.bottomDrawerHeight = screenSize.height - 224;
 
-    //numbers relative to the superview.
+    // When the drawer is pulled down all the way with the top canvas fully revealed, it will be resting and (0, 0)
     self.maxY = 0;
-    self.restY = 300 - screenSize.height;
+    
+    // Resting position or initial position is when the top left corner of the drawer is up and outside the screen,
+    // so that's why it's a negative value
+    self.restY = 324 - screenSize.height;
+    
+    // When the drawer reveals the trash canvas, it is pulled up and outside the screen even more, and this represents
+    // how far the drawer can be pulled up
     self.minY = self.restY - self.bottomDrawerHeight;
-
-    //and this has to start wherever the bottom of the screen is
+    
+    // This has to start where the bottom of the screen is
     self.bottomDrawerStart = screenSize.height - self.restY;
-
-    NSLog(@"restY %f miny %f topDrawerHeight %f bottomDrawerHeight %f bottomDrawerStart %f", self.restY, self.minY, self.topDrawerHeight, self.bottomDrawerHeight, self.bottomDrawerStart);
+    
+    // Update values for alternative layout
+    if (self.isOriginalLayout == NO) {
+        
+        // The empty space between the top canvas and the bottom of the screen at resting position
+        int bottomSpace = 100;
+        
+        // Alternative layout requires a different height for the top canvas, or else notes can get fly out of sight
+        self.topDrawerHeight = screenSize.height - bottomSpace;
+        
+        // Resting position is with the canvas pulled all the way down
+        self.restY = self.maxY;
+        
+        // Reupdate minY using new restY value so we can pull up the trash canvas to the proper height
+        self.minY = self.restY - self.bottomDrawerHeight;
+        
+        // Bottom drawer starts right at the bottom of the screen in alternative layout
+        self.bottomDrawerStart = screenSize.height;
+    }
+    
+    NSLog(@"restY = %f minY = %f topDrawerHeight = %f bottomDrawerHeight = %f bottomDrawerStart = %f", self.restY, self.minY, self.topDrawerHeight, self.bottomDrawerHeight, self.bottomDrawerStart);
 }
 
 -(void)updateViewSizes {
+    
+    // Frames for original layout
     int viewHeight = self.bottomDrawerStart + self.bottomDrawerHeight;
     self.view.frame = CGRectMake(0, self.restY, self.realScreenSize.width, viewHeight);
-
+    
     int dragHeight = 40;
     int dragWidth = 200;
     float dragTop = self.topDrawerHeight - dragHeight - 5;
@@ -129,17 +199,26 @@
 
     self.topDragHandle.frame = CGRectMake(dragLeft, dragTop, dragWidth, dragHeight);
     self.bottomDragHandle.frame = CGRectMake(dragLeft, dragBottom, dragWidth, dragHeight);
+    
+    // Update some frames for alternative layout
+    if (self.isOriginalLayout == NO) {
+        
+        // Remove the top drag handle as it is not needed in the alternative layout
+        self.topDragHandle.frame = CGRectZero;
+    }
 }
 
 -(void)updateCanvasSizes {
     [self updateTopCanvasSize];
     [self updateBottomCanvasSize];
 }
+
 -(void)updateTopCanvasSize {
     self.topDrawerContents.view.frame = CGRectMake(0, 0, self.realScreenSize.width, self.topDrawerHeight);
     [self.topDrawerContents updateNotesForBoundsChange];
     [self.topDrawerContents setYValuesWithTrashOffset:self.bottomDrawerStart];
 }
+
 -(void)updateBottomCanvasSize {
     self.bottomDrawerContents.view.frame = CGRectMake(0, self.bottomDrawerStart, self.realScreenSize.width, self.bottomDrawerHeight);
     [self.bottomDrawerContents updateNotesForBoundsChange];
@@ -155,6 +234,8 @@
     }
 }
 
+#pragma mark - Drag Animations
+
 -(void)setDrawerPosition:(float)positionY {
     
     CGRect frame = self.view.frame;
@@ -168,8 +249,9 @@
     }
     
     self.view.frame = frame;
+    
+    // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
 }
-
 
 -(void)animateDrawerPosition:(float)positionY {
     CGRect frame = self.view.frame;
@@ -219,6 +301,7 @@
     }
 }
 
+// Allows "catching" of the handle if a pan gesture started outside the handle
 -(void)panningDrawer:(UIPanGestureRecognizer*)recognizer {
     
     CGPoint touchPointRelativeToWindow = [recognizer locationInView:self.view.superview];
@@ -322,4 +405,5 @@
 -(CanvasViewController*)bottomDrawerContents {
     return _bottomDrawerContents;
 }
+
 @end
