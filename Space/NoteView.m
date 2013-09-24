@@ -78,17 +78,22 @@ const int NOTE_RADIUS = 22;
     return _note;
 }
 
+-(void)setCenter:(CGPoint)center {
+    
+    [super setCenter:center];
+    
+    if (self.onDropOffscreen && center.y > self.offscreenYDistance) {
+        NSLog(@"Trashed note has dropped offscreen");
+        self.onDropOffscreen();
+    }
+}
+
 -(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds {
     
     [super setCenter:center];
     
     self.note.positionX = [Coordinate normalizeXCoord:center.x withReferenceBounds:bounds];
     self.note.positionY = [Coordinate normalizeYCoord:center.y withReferenceBounds:bounds];
-
-    if (self.onDropOffscreen && center.y > self.offscreenYDistance) {
-        NSLog(@"dropped offscreen");
-        self.onDropOffscreen();
-    }
     
     [self.animator updateItemUsingCurrentState:self];
     [[Database sharedDatabase] save];

@@ -14,6 +14,7 @@
 
 @property (nonatomic) int canvas;
 @property (nonatomic) BOOL trashed;
+@property (nonatomic) BOOL draggedToTrash;
 
 @property (nonatomic) float positionX;
 @property (nonatomic) float positionY;

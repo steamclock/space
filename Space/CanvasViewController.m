@@ -158,8 +158,18 @@
     
     // NSLog(@"Note position X = %f", note.positionX);
     // NSLog(@"Note position Y = %f", note.positionY);
-    
     // NSLog(@"Adding note at %@", NSStringFromCGPoint(imageView.center));
+    
+    // If this is a trashed note, "flip" its y-coordinate so that for example, if it was originally 80% down the y-coordinate in the top canvas,
+    // it should only be roughly 20% down in the bottom canvas.
+    if (note.trashed == YES && note.draggedToTrash != YES) {
+        unnomralizedCenter.y = self.view.bounds.size.height - unnomralizedCenter.y;
+        [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+    } else if (note.draggedToTrash == YES) {
+        // If this note was manually dragged to trash, place it near the top
+        unnomralizedCenter.y = NOTE_RADIUS;
+        [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+    }
     
     imageView.userInteractionEnabled = YES;
     
@@ -227,6 +237,7 @@
         // NSLog(@"dist %f", windowRelativeBottom.y);
         
         self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y + NOTE_RADIUS;
+        
         self.notePendingDelete.onDropOffscreen = ^{
             [weakSelf.animator removeBehavior:trashDrop];
             [weakSelf.notePendingDelete removeFromSuperview];
@@ -242,13 +253,16 @@
 
 -(void)deleteNoteWithoutAsking:(NoteView*) view {
     self.notePendingDelete = view;
+    
+    self.notePendingDelete.note.draggedToTrash = YES;
+    
     [self deletePendingNote];
 }
 
 -(void)noteTrashedNotification:(NSNotification*)notification {
     if (self.isTrashMode) {
         Note* trashedNote = [notification.userInfo objectForKey:Key_TrashedNotes];
-        trashedNote.positionY = NOTE_RADIUS;
+        // trashedNote.positionY = [Coordinate normalizeYCoord:NOTE_RADIUS withReferenceBounds:self.view.bounds];
         [self addViewForNote:trashedNote];
         [[Database sharedDatabase] save];
     }
@@ -276,7 +290,6 @@
     }
     
     [view setCenter:drag withReferenceBounds:self.view.bounds];
-    [self.animator updateItemUsingCurrentState:view];
     
     //clean up the drag operation (and ONLY the drag operation. do all other ending actions below the isTrashMode check)
     if(recognizer.state == UIGestureRecognizerStateEnded) {
