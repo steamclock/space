@@ -123,11 +123,19 @@
 
 - (void)updateFocusViewFrame {
     
-    self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
-                                            centerYByFactor:0.5
-                                                      width:FOCUS_SIZE
-                                                     height:FOCUS_SIZE
-                                        withReferenceBounds:self.view.bounds];
+    if([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortrait) {
+        self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                                centerYByFactor:0.5
+                                                          width:FOCUS_SIZE
+                                                         height:FOCUS_SIZE
+                                            withReferenceBounds:self.view.bounds];
+    } else {
+        self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                                centerYByFactor:0.25
+                                                          width:FOCUS_SIZE
+                                                         height:FOCUS_SIZE
+                                            withReferenceBounds:self.view.bounds];
+    }
 }
 
 - (void)didReceiveMemoryWarning
