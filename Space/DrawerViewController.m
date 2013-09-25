@@ -39,76 +39,16 @@
 @property (nonatomic) BOOL isOriginalLayout;
 
 @property (nonatomic) BOOL focusModeChangeRequested;
-@property (nonatomic) BOOL isFocusDim;
+@property (nonatomic) BOOL isFocusModeDim;
+@property (nonatomic) BOOL canvasesAreSlidOut;
 
-@property (nonatomic) CGRect topCanvasFrame;
-@property (nonatomic) CGRect botCanvasFrame;
+@property (nonatomic) CGRect topCanvasFrameBeforeSlidingOut;
 
 @end
 
 @implementation DrawerViewController
 
 #pragma mark - Initial Setup
-
-- (void)slideOutCanvases {
-    
-    // NSLog(@"Checking focus mode to see if drawer should slide out.");
-    
-    if (self.isFocusDim == NO && self.focusModeChangeRequested == YES) {
-        
-        NSLog(@"Focus mode is set to slide, slide out drawer now.");
-        
-        self.topCanvasFrame = self.topDrawerContents.view.frame;
-        
-        CGRect destination = self.topDrawerContents.view.frame;
-        
-        if (self.view.frame.origin.y == 0) {
-            destination.origin.y = -(self.realScreenSize.height);
-        } else {
-            destination.origin.y = -(self.restY + self.realScreenSize.height);
-        }
-        
-        [UIView animateWithDuration:1 animations:^{
-            self.topDrawerContents.view.frame = destination;
-            self.topDragHandle.alpha = 0;
-        }];
-        
-    } else {
-        
-        NSLog(@"Focus mode is set to dim, don't slide out drawer.");
-        
-    }
-}
-
-- (void)slideBackCanvases {
-   
-    if (self.isFocusDim == NO && !CGRectEqualToRect(self.topDrawerContents.view.frame, self.topCanvasFrame)) {
-        
-        [UIView animateWithDuration:1 animations:^{
-            self.topDrawerContents.view.frame = self.topCanvasFrame;
-            self.topDragHandle.alpha = 1;
-        }];
-        
-    }
-}
-
-- (void)setFocusMode:(NSNotification *)notification {
-    
-    if ([[notification.userInfo objectForKey:@"focusMode"] isEqualToString:@"dim"]) {
-        
-        self.isFocusDim = YES;
-        self.focusModeChangeRequested = YES;
-        
-        NSLog(@"Setting focus mode to dim.");
-        
-    } else {
-        
-        self.isFocusDim = NO;
-        self.focusModeChangeRequested = YES;
-        
-        NSLog(@"Setting focus mode to slide.");
-    }
-}
 
 - (void)viewDidLoad {
     
@@ -117,7 +57,7 @@
     [self setEdgesForExtendedLayout:UIRectEdgeNone];
     
     self.isOriginalLayout = YES;
-    self.isFocusDim = YES;
+    self.isFocusModeDim = YES;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadOriginalDrawer) name:kLoadOriginalDrawerNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadAlternativeDrawer) name:kLoadAlternativeDrawerNotification object:nil];
@@ -162,6 +102,24 @@
 
 -(void)viewWillLayoutSubviews {
     [self drawCanvasLayout];
+}
+
+- (void)setFocusMode:(NSNotification *)notification {
+    
+    if ([[notification.userInfo objectForKey:@"focusMode"] isEqualToString:@"dim"]) {
+        
+        self.isFocusModeDim = YES;
+        self.focusModeChangeRequested = YES;
+        
+        NSLog(@"Setting focus mode to dim.");
+        
+    } else {
+        
+        self.isFocusModeDim = NO;
+        self.focusModeChangeRequested = YES;
+        
+        NSLog(@"Setting focus mode to slide.");
+    }
 }
 
 #pragma mark - Request Layout Change
@@ -476,6 +434,83 @@
 
 -(CanvasViewController*)bottomDrawerContents {
     return _bottomDrawerContents;
+}
+
+#pragma mark - Alternate Layout Sliding Logic
+
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    
+    // Hide the ugly and unnecessary animations when the slid-out canvas is updating its frames to fit the new orientations
+    if (self.isFocusModeDim == NO && self.canvasesAreSlidOut == YES) {
+        
+        self.topDrawerContents.view.alpha = 0;
+    }
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    
+    // Update the frames of the slid-out canvas after a change in orientation to allow us to slide it back properly
+    if (self.isFocusModeDim == NO && self.canvasesAreSlidOut == YES) {
+        
+        self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
+        
+        self.topDrawerContents.view.alpha = 1;
+        
+        CGRect destination = self.topDrawerContents.view.frame;
+        
+        if (self.view.frame.origin.y == 0) {
+            destination.origin.y = -(self.realScreenSize.height);
+        } else {
+            destination.origin.y = -(self.restY + self.realScreenSize.height);
+        }
+        
+        self.topDrawerContents.view.frame = destination;
+    }
+}
+
+- (void)slideOutCanvases {
+    
+    // NSLog(@"Checking focus mode to see if drawer should slide out.");
+    
+    if (self.isFocusModeDim == NO && self.focusModeChangeRequested == YES) {
+        
+        NSLog(@"Focus mode is set to slide, slide out canvases now.");
+        
+        self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
+        
+        CGRect destination = self.topDrawerContents.view.frame;
+        
+        if (self.view.frame.origin.y == 0) {
+            destination.origin.y = -(self.realScreenSize.height);
+        } else {
+            destination.origin.y = -(self.restY + self.realScreenSize.height);
+        }
+        
+        [UIView animateWithDuration:1 animations:^{
+            self.topDrawerContents.view.frame = destination;
+            self.topDragHandle.alpha = 0;
+        }];
+        
+        self.canvasesAreSlidOut = YES;
+        
+    } else {
+        
+        NSLog(@"Focus mode is set to dim, don't slide out canvases.");
+        
+    }
+}
+
+- (void)slideBackCanvases {
+    
+    if (self.isFocusModeDim == NO && !CGRectEqualToRect(self.topDrawerContents.view.frame, self.topCanvasFrameBeforeSlidingOut)) {
+        
+        [UIView animateWithDuration:1 animations:^{
+            self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;
+            self.topDragHandle.alpha = 1;
+        }];
+        
+        self.canvasesAreSlidOut = NO;
+    }
 }
 
 @end
