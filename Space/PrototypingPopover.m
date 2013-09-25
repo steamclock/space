@@ -80,7 +80,7 @@
         if (buttonIndex == 0) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kLoadOriginalDrawerNotification object:nil];
             [self.layoutLabel setText:@"Original"];
-        } else {
+        } else if (buttonIndex == 1) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
             [self.layoutLabel setText:@"Alternative"];
         }
@@ -91,7 +91,7 @@
             NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"dim", @"focusMode", nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
             [self.focusLabel setText:@"Dimming"];
-        } else {
+        } else if (buttonIndex == 1) {
             NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"slide", @"focusMode", nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
             [self.focusLabel setText:@"Sliding"];
