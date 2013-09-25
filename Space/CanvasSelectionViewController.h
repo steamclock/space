@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface CanvasSelectionViewController : UIViewController <UITextFieldDelegate, UIActionSheetDelegate>
+@interface CanvasSelectionViewController : UIViewController <UITextFieldDelegate>
 
 @end

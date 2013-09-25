@@ -272,6 +272,10 @@
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
     NoteView* view = (NoteView*)recognizer.view;
+    
+    // Prevents double tap
+    [view setUserInteractionEnabled:NO];
+    
     [self.focus focusOn:view];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];

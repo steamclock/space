@@ -93,6 +93,7 @@
     [[Database sharedDatabase] save];
 
     [self.noteView setHighlighted:NO];
+    [self.noteView setUserInteractionEnabled:YES];
     
     self.view.hidden = true;
     

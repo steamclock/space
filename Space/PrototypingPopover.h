@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface PrototypingPopover : UIViewController
+@interface PrototypingPopover : UIViewController <UIActionSheetDelegate>
 
 @property (weak, nonatomic) UIPopoverController* popoverController;
 
