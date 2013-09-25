@@ -8,6 +8,7 @@
 
 #import "CanvasSelectionViewController.h"
 #import "CanvasTitleEditPopover.h"
+#import "PrototypingPopover.h"
 #import "Database.h"
 #import "Notifications.h"
 #import "Constants.h"
@@ -23,14 +24,12 @@
 @property (strong, nonatomic) UIButton* currentlyEditingButton;
 @property (strong, nonatomic) UILabel* currentlyEditingTitle;
 @property (strong, nonatomic) UIPopoverController* popoverController;
+@property (strong, nonatomic) UIPopoverController* prototypingPopoverController;
 
 // Cannot use a variable name that starts with "new"
 @property (strong, nonatomic) NSString* brandNewCanvasTitle;
 
 @property (strong, nonatomic) NSUserDefaults* defaults;
-
-@property (strong, nonatomic) UIActionSheet* drawerLayoutSelection;
-@property (strong, nonatomic) UIActionSheet* focusModeSelection;
 
 @end
 
@@ -60,6 +59,10 @@
         Class popoverClass = NSClassFromString(@"UIPopoverController");
         
         if (popoverClass != nil && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            
+            PrototypingPopover *prototypingPopover = [[PrototypingPopover alloc] init];
+            self.prototypingPopoverController = [[UIPopoverController alloc] initWithContentViewController:prototypingPopover];
+            prototypingPopover.popoverController = self.prototypingPopoverController;
             
             CanvasTitleEditPopover *canvasTitlePopover = [[CanvasTitleEditPopover alloc] init];
             self.popoverController = [[UIPopoverController alloc] initWithContentViewController:canvasTitlePopover];
@@ -124,15 +127,8 @@
     // corresponds to actual canvas title array's index that the button represents.
     int indexTag = 0;
     
-    // Allows switching between different drawer layout to help with prototyping
-    [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Layout"
-                                                      style:UIBarButtonItemStyleBordered
-                                                     target:self
-                                                     action:@selector(showDrawerLayoutSelection)]];
-    
-    [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Focus"
-                                                      style:UIBarButtonItemStyleBordered
-                                                     target:self action:@selector(showFocusModeSelection)]];
+    // Allows toggling different prototyping options for easier experimentation
+    [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(showPrototypingPopover:)]];
     
     for (NSString* name in canvasTitles) {
         [items addObject:[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil] ];
@@ -274,46 +270,9 @@
     [self.popoverController presentPopoverFromBarButtonItem:sender permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
 }
 
-- (void)showDrawerLayoutSelection {
+- (IBAction)showPrototypingPopover:(id)sender {
     
-    self.drawerLayoutSelection = [[UIActionSheet alloc] initWithTitle:@"Choose a Drawer Layout"
-                                                             delegate:(id<UIActionSheetDelegate>)self
-                                                    cancelButtonTitle:@"Cancel"
-                                               destructiveButtonTitle:nil
-                                                    otherButtonTitles:@"Original", @"Alternative", nil];
-    [self.drawerLayoutSelection showFromToolbar:self.toolbar];
-}
-
-- (void)showFocusModeSelection {
-    
-    self.focusModeSelection = [[UIActionSheet alloc] initWithTitle:@"Choose a Focus Mode"
-                                                             delegate:(id<UIActionSheetDelegate>)self
-                                                    cancelButtonTitle:@"Cancel"
-                                               destructiveButtonTitle:nil
-                                                    otherButtonTitles:@"Dimming", @"Slide Out", nil];
-    [self.focusModeSelection showFromToolbar:self.toolbar];
-}
-
-- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
-    
-    if (actionSheet == self.drawerLayoutSelection) {
-    
-        if (buttonIndex == 0) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadOriginalDrawerNotification object:nil];
-        } else {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
-        }
-        
-    } else {
-        
-        if (buttonIndex == 0) {
-            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"dim", @"focusMode", nil];
-            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
-        } else {
-            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"slide", @"focusMode", nil];
-            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
-        }
-    }
+    [self.prototypingPopoverController presentPopoverFromBarButtonItem:sender permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
 }
 
 @end
