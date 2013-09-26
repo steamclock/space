@@ -103,6 +103,7 @@
     panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
     
+    // Setting up UIDynamics in viewDidLoad will prevent our custom layout codes from finishing correctly
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
     self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
     
@@ -353,6 +354,15 @@
     float newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
     BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
     
+    // It is important to remove boundaries at the start of gesture or it'll be too late and the boundaries may
+    // persist and cause weird glitches.
+    if (recognizer.state == UIGestureRecognizerStateBegan) {
+        
+        if ([self.collision.boundaryIdentifiers count] > 0) {
+            [self.collision removeAllBoundaries];
+        }
+    }
+    
     // If canvas extends beyond a certain point, fully extend it
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         
@@ -369,11 +379,6 @@
                                                   toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
             }
             
-            // Get rid of top boundary that's not needed
-            if ([[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
-                [self.collision removeBoundaryWithIdentifier:@"topCanvasTopBoundary"];
-            }
-            
         } else if (fromTopHandle && !velocityDownwards) {
             
             // If we're adding upward velocity to the top canvas, we want to create a boundary at the top to
@@ -383,26 +388,25 @@
                                                 fromPoint:CGPointMake(0, self.restY)
                                                   toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
             }
-            
-            // Get rid of bottom boundary that's not needed
-            if ([[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
-                [self.collision removeBoundaryWithIdentifier:@"topCanvasBottomBoundary"];
-            }
         
+        } else if (!fromTopHandle && velocityDownwards) { // Case for dragging the bottom canvas downward
+            
+            if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasBottomBoundary"]) {
+                [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
+                                                fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
+                                                  toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
+            }
+            
+            // newPosition = self.minY;
+            
         } else if (!fromTopHandle && !velocityDownwards) { // Case for dragging the bottom canvas upward
             
-            // Get rid of top boundary that's not needed
-            if ([[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
-                [self.collision removeBoundaryWithIdentifier:@"topCanvasTopBoundary"];
+            if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasTopBoundary"]) {
+                [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
+                                                fromPoint:CGPointMake(0, self.minY)
+                                                  toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
             }
-            
-            // Get rid of bottom boundary that's not needed
-            if ([[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
-                [self.collision removeBoundaryWithIdentifier:@"topCanvasBottomBoundary"];
-            }
-            
-            newPosition = self.minY;
-            
+        
         } else {
             
             newPosition = self.restY;

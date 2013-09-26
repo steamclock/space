@@ -13,9 +13,11 @@
 
 @property (strong, nonatomic) UIActionSheet* drawerLayoutSelection;
 @property (strong, nonatomic) UIActionSheet* focusModeSelection;
+@property (strong, nonatomic) UIActionSheet* dragModeSelection;
 
 @property (strong, nonatomic) UILabel* layoutLabel;
 @property (strong, nonatomic) UILabel* focusLabel;
+@property (strong, nonatomic) UILabel* dragLabel;
 
 @end
 
@@ -47,10 +49,22 @@
     self.focusLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 80, 100, 50)];
     [self.focusLabel setText:@"Dimming"];
     
+    UIButton* dragButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [dragButton setTitle:@"Drag" forState:UIControlStateNormal];
+    dragButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    CGRect dragButtonFrame = CGRectMake(5, 150, 100, 50);
+    dragButton.frame = dragButtonFrame;
+    [dragButton addTarget:self action:@selector(showDragModeSelection) forControlEvents:UIControlEventTouchUpInside];
+    
+    self.dragLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 150, 150, 50)];
+    [self.dragLabel setText:@"UIView Animation"];
+    
     [self.view addSubview:layoutButton];
     [self.view addSubview:self.layoutLabel];
     [self.view addSubview:focusButton];
     [self.view addSubview:self.focusLabel];
+    [self.view addSubview:dragButton];
+    [self.view addSubview:self.dragLabel];
 }
 
 - (void)showDrawerLayoutSelection {
@@ -73,6 +87,16 @@
     [self.focusModeSelection showInView:self.view];
 }
 
+- (void)showDragModeSelection {
+    
+    self.dragModeSelection = [[UIActionSheet alloc] initWithTitle:@"Choose a Drag Mode"
+                                                          delegate:(id<UIActionSheetDelegate>)self
+                                                 cancelButtonTitle:@"Cancel"
+                                            destructiveButtonTitle:nil
+                                                 otherButtonTitles:@"UIView Animation", @"UIDynamics Free Sliding", @"UIDynamics Sliding with Gravity", nil];
+    [self.dragModeSelection showInView:self.view];
+}
+
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
     
     if (actionSheet == self.drawerLayoutSelection) {
@@ -85,7 +109,7 @@
             [self.layoutLabel setText:@"Alternative"];
         }
         
-    } else {
+    } else if (actionSheet == self.focusModeSelection) {
         
         if (buttonIndex == 0) {
             NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"dim", @"focusMode", nil];
