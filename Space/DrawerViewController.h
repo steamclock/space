@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "CanvasViewController.h"
 
-@interface DrawerViewController : UIViewController
+@interface DrawerViewController : UIViewController <UIDynamicAnimatorDelegate>
 
 @property (nonatomic) CanvasViewController* topDrawerContents;
 @property (nonatomic) CanvasViewController* bottomDrawerContents;

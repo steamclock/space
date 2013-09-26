@@ -50,6 +50,7 @@
 @property (strong, nonatomic) UIDynamicAnimator* animator;
 @property (strong, nonatomic) UIDynamicItemBehavior* drawerBehavior;
 @property (strong, nonatomic) UICollisionBehavior* collision;
+@property (strong, nonatomic) UIGravityBehavior* gravity;
 
 @end
 
@@ -73,8 +74,8 @@
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideOutCanvases) name:kFocusNoteNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideBackCanvases) name:kFocusDismissedNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeFocusMode:) name:kChangeFocusModeNotification object:nil];
     
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeFocusMode:) name:kChangeFocusModeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeDragMode:) name:kChangeDragModeNotification object:nil];
 
     self.topDragHandle = [[UIView alloc] init];
@@ -155,13 +156,22 @@
 
 - (void)startPhysicsEngine {
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
+    self.animator.delegate = self;
+    
     self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
     
     self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
     self.drawerBehavior.resistance = 10;
+    self.drawerBehavior.allowsRotation = NO;
     
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.drawerBehavior];
+    
+    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
+        
+        self.drawerBehavior.density = self.view.frame.size.width * self.view.frame.size.height;
+        self.drawerBehavior.resistance = 0;
+    }
 }
 
 - (void)stopPhysicsEngine {
@@ -169,6 +179,15 @@
     self.animator = nil;
     self.collision = nil;
     self.drawerBehavior = nil;
+}
+
+- (void)dynamicAnimatorDidPause:(UIDynamicAnimator *)animator {
+    [self.animator removeBehavior:self.gravity];
+    self.gravity = nil;
+}
+
+- (void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {
+    
 }
 
 #pragma mark - Prototyping Options
@@ -382,6 +401,10 @@
     CGPoint drag = [recognizer locationInView:self.view.superview];
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
+        
+        [self.animator removeBehavior:self.gravity];
+        self.gravity = nil;
+        
         self.dragStart = drag;
         self.initialFrameY = self.view.frame.origin.y;
         
@@ -413,6 +436,14 @@
                                                     fromPoint:CGPointMake(0, self.view.frame.size.height)
                                                       toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
                 }
+                
+                // Let gravity pull the drawer down when the drawer is dragged past a certain point
+                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && newPosition > self.restY + 100) {
+                    
+                    self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
+                    [self.gravity setMagnitude:1];
+                    [self.animator addBehavior:self.gravity];
+                }
             }
             
         } else if (fromTopHandle && !velocityDownwards) {
@@ -426,6 +457,14 @@
                     [self.collision addBoundaryWithIdentifier:@"topCanvasTopBoundary"
                                                     fromPoint:CGPointMake(0, self.restY)
                                                       toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
+                }
+                
+                // Let gravity pull the drawer up when the drawer is dragged past a certain point
+                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && newPosition < self.maxY - 100) {
+                    
+                    self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
+                    [self.gravity setMagnitude:-1];
+                    [self.animator addBehavior:self.gravity];
                 }
             }
         
