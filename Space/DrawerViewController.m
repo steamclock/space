@@ -44,6 +44,10 @@
 
 @property (nonatomic) CGRect topCanvasFrameBeforeSlidingOut;
 
+@property (strong, nonatomic) UIDynamicAnimator* animator;
+@property (strong, nonatomic) UIDynamicItemBehavior* drawerBehavior;
+@property (strong, nonatomic) UICollisionBehavior* collision;
+
 @end
 
 @implementation DrawerViewController
@@ -98,6 +102,15 @@
     
     panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
+    
+    self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
+    self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
+    
+    self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
+    self.drawerBehavior.resistance = 10;
+    
+    [self.animator addBehavior:self.collision];
+    [self.animator addBehavior:self.drawerBehavior];
 }
 
 -(void)viewWillLayoutSubviews {
@@ -120,6 +133,42 @@
         
         NSLog(@"Setting focus mode to slide.");
     }
+}
+
+#pragma mark - Setup Top and Bottom Canvases
+
+-(void)setTopDrawerContents:(CanvasViewController *)contents {
+    [_topDrawerContents removeFromParentViewController];
+    [_topDrawerContents.view removeFromSuperview];
+    _topDrawerContents = contents;
+    
+    if(_topDrawerContents) {
+        [self addChildViewController:_topDrawerContents];
+        [self.view addSubview:_topDrawerContents.view];
+        [self.view bringSubviewToFront:self.topDragHandle];
+        [self.view bringSubviewToFront:self.bottomDragHandle];
+    }
+}
+
+-(CanvasViewController*)topDrawerContents {
+    return _topDrawerContents;
+}
+
+-(void)setBottomDrawerContents:(CanvasViewController *)contents {
+    [_bottomDrawerContents removeFromParentViewController];
+    [_bottomDrawerContents.view removeFromSuperview];
+    _bottomDrawerContents = contents;
+    
+    if(_bottomDrawerContents) {
+        [self addChildViewController:_bottomDrawerContents];
+        [self.view addSubview:_bottomDrawerContents.view];
+        [self.view bringSubviewToFront:self.topDragHandle];
+        [self.view bringSubviewToFront:self.bottomDragHandle];
+    }
+}
+
+-(CanvasViewController*)bottomDrawerContents {
+    return _bottomDrawerContents;
 }
 
 #pragma mark - Request Layout Change
@@ -178,7 +227,7 @@
     self.topDrawerHeight = screenSize.height - 24;
     self.bottomDrawerHeight = screenSize.height - 224;
 
-    // When the drawer is pulled down all the way with the top canvas fully revealed, it will be resting and (0, 0)
+    // When the drawer is pulled down all the way with the top canvas fully revealed, it will be resting at (0, 0)
     self.maxY = 0;
     
     // Resting position or initial position is when the top left corner of the drawer is up and outside the screen,
@@ -189,7 +238,7 @@
     // how far the drawer can be pulled up
     self.minY = self.restY - self.bottomDrawerHeight;
     
-    // This has to start where the bottom of the screen is
+    // Bottom canvas starts at where the bottom of the screen is, so it's not visible initially
     self.bottomDrawerStart = screenSize.height - self.restY;
     
     // Update values for alternative layout
@@ -302,32 +351,78 @@
     }
     
     float newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
-    
     BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
     
+    // If canvas extends beyond a certain point, fully extend it
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         
-        //animate to the appropriate end position
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
         if (fromTopHandle && velocityDownwards) {
             newPosition = self.maxY;
-        } else if (!fromTopHandle && !velocityDownwards) {
+            
+            // If we're adding downward velocity to the top canvas, we want to create a boundary at the bottom to
+            // prevent the top canvas from sliding out of sight
+            if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
+                [self.collision addBoundaryWithIdentifier:@"topCanvasBottomBoundary"
+                                                fromPoint:CGPointMake(0, self.view.frame.size.height)
+                                                  toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+            }
+            
+            // Get rid of top boundary that's not needed
+            if ([[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
+                [self.collision removeBoundaryWithIdentifier:@"topCanvasTopBoundary"];
+            }
+            
+        } else if (fromTopHandle && !velocityDownwards) {
+            
+            // If we're adding upward velocity to the top canvas, we want to create a boundary at the top to
+            // prevent the top canvas from sliding out of sight
+            if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
+                [self.collision addBoundaryWithIdentifier:@"topCanvasTopBoundary"
+                                                fromPoint:CGPointMake(0, self.restY)
+                                                  toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
+            }
+            
+            // Get rid of bottom boundary that's not needed
+            if ([[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
+                [self.collision removeBoundaryWithIdentifier:@"topCanvasBottomBoundary"];
+            }
+        
+        } else if (!fromTopHandle && !velocityDownwards) { // Case for dragging the bottom canvas upward
+            
+            // Get rid of top boundary that's not needed
+            if ([[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
+                [self.collision removeBoundaryWithIdentifier:@"topCanvasTopBoundary"];
+            }
+            
+            // Get rid of bottom boundary that's not needed
+            if ([[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
+                [self.collision removeBoundaryWithIdentifier:@"topCanvasBottomBoundary"];
+            }
+            
             newPosition = self.minY;
+            
         } else {
+            
             newPosition = self.restY;
         }
         
-        [self animateDrawerPosition:newPosition];
+        // [self animateDrawerPosition:newPosition];
         
-    } else {
+        CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
+        verticalVelocity = CGPointMake(0, verticalVelocity.y);
         
-        //bound the drag based on the handle in use (it's not allowed to close past its rest position)
+        [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
+        
+    } else { // Otherwise, continue updating canvas' new position based on current drag
+    
         if ((fromTopHandle && newPosition < self.restY) || (!fromTopHandle && newPosition > self.restY)) {
             newPosition = self.restY;
         }
         
         [self setDrawerPosition:newPosition];
+        [self.animator updateItemUsingCurrentState:self.view];
     }
 }
 
@@ -402,43 +497,15 @@
     }
 }
 
--(void)setTopDrawerContents:(CanvasViewController *)contents {
-    [_topDrawerContents removeFromParentViewController];
-    [_topDrawerContents.view removeFromSuperview];
-    _topDrawerContents = contents;
-    
-    if(_topDrawerContents) {
-        [self addChildViewController:_topDrawerContents];
-        [self.view addSubview:_topDrawerContents.view];
-        [self.view bringSubviewToFront:self.topDragHandle];
-        [self.view bringSubviewToFront:self.bottomDragHandle];
-    }
-}
-
--(CanvasViewController*)topDrawerContents {
-    return _topDrawerContents;
-}
-
--(void)setBottomDrawerContents:(CanvasViewController *)contents {
-    [_bottomDrawerContents removeFromParentViewController];
-    [_bottomDrawerContents.view removeFromSuperview];
-    _bottomDrawerContents = contents;
-    
-    if(_bottomDrawerContents) {
-        [self addChildViewController:_bottomDrawerContents];
-        [self.view addSubview:_bottomDrawerContents.view];
-        [self.view bringSubviewToFront:self.topDragHandle];
-        [self.view bringSubviewToFront:self.bottomDragHandle];
-    }
-}
-
--(CanvasViewController*)bottomDrawerContents {
-    return _bottomDrawerContents;
-}
-
 #pragma mark - Alternate Layout Sliding Logic
 
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    
+    // Prevents animator from overriding our custom updates to views that are needed for orientation changes
+    [self.animator removeAllBehaviors];
+    self.animator = nil;
+    self.collision = nil;
+    self.drawerBehavior = nil;
     
     // Hide the ugly and unnecessary animations when the slid-out canvas is updating its frames to fit the new orientations
     if (self.isFocusModeDim == NO && self.canvasesAreSlidOut == YES) {
@@ -466,6 +533,16 @@
         
         self.topDrawerContents.view.frame = destination;
     }
+    
+    // Restore animator with the updated views
+    self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
+    self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
+    
+    self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
+    self.drawerBehavior.resistance = 10;
+    
+    [self.animator addBehavior:self.collision];
+    [self.animator addBehavior:self.drawerBehavior];
 }
 
 - (void)slideOutCanvases {
