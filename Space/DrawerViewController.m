@@ -73,7 +73,7 @@
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideOutCanvases) name:kFocusNoteNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideBackCanvases) name:kFocusDismissedNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(setFocusMode:) name:kChangeFocusModeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeFocusMode:) name:kChangeFocusModeNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeDragMode:) name:kChangeDragModeNotification object:nil];
 
@@ -109,68 +109,10 @@
     
     panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
-    
-    /*
-    // Setting up UIDynamics in viewDidLoad will prevent our custom layout codes from finishing correctly
-    self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
-    self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
-    
-    self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
-    self.drawerBehavior.resistance = 10;
-    
-    [self.animator addBehavior:self.collision];
-    [self.animator addBehavior:self.drawerBehavior];
-    */
 }
 
 -(void)viewWillLayoutSubviews {
     [self drawCanvasLayout];
-}
-
-- (void)setFocusMode:(NSNotification *)notification {
-    
-    if ([[notification.userInfo objectForKey:@"focusMode"] isEqualToString:@"dim"]) {
-        
-        self.isFocusModeDim = YES;
-        self.focusModeChangeRequested = YES;
-        
-        NSLog(@"Setting focus mode to dim.");
-        
-    } else {
-        
-        self.isFocusModeDim = NO;
-        self.focusModeChangeRequested = YES;
-        
-        NSLog(@"Setting focus mode to slide.");
-    }
-}
-
-- (void)changeDragMode:(NSNotification *)notification {
-    
-    self.drawerDragMode = [[notification.userInfo objectForKey:@"dragMode"] intValue];
-    
-    if (self.drawerDragMode == UIViewAnimation) {
-        
-        // Kill UIDynamics
-        [self.animator removeAllBehaviors];
-        self.animator = nil;
-        self.collision = nil;
-        self.drawerBehavior = nil;
-        
-    } else {
-        
-        // Revive UIDynamics
-        self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
-        self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
-        
-        self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
-        self.drawerBehavior.resistance = 10;
-        
-        [self.animator addBehavior:self.collision];
-        [self.animator addBehavior:self.drawerBehavior];
-    }
-    
-    NSLog(@"Drawer Drag Mode = %d", self.drawerDragMode);
 }
 
 #pragma mark - Setup Top and Bottom Canvases
@@ -209,7 +151,63 @@
     return _bottomDrawerContents;
 }
 
-#pragma mark - Request Layout Change
+#pragma mark - UIDynamic
+
+- (void)startPhysicsEngine {
+    self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
+    self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
+    
+    self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
+    self.drawerBehavior.resistance = 10;
+    
+    [self.animator addBehavior:self.collision];
+    [self.animator addBehavior:self.drawerBehavior];
+}
+
+- (void)stopPhysicsEngine {
+    [self.animator removeAllBehaviors];
+    self.animator = nil;
+    self.collision = nil;
+    self.drawerBehavior = nil;
+}
+
+#pragma mark - Prototyping Options
+
+- (void)changeFocusMode:(NSNotification *)notification {
+    
+    if ([[notification.userInfo objectForKey:@"focusMode"] isEqualToString:@"dim"]) {
+        
+        self.isFocusModeDim = YES;
+        self.focusModeChangeRequested = YES;
+        
+        NSLog(@"Setting focus mode to dim.");
+        
+    } else {
+        
+        self.isFocusModeDim = NO;
+        self.focusModeChangeRequested = YES;
+        
+        NSLog(@"Setting focus mode to slide.");
+    }
+}
+
+- (void)changeDragMode:(NSNotification *)notification {
+    
+    self.drawerDragMode = [[notification.userInfo objectForKey:@"dragMode"] intValue];
+    
+    if (self.drawerDragMode == UIViewAnimation) {
+        
+        // Kill UIDynamics
+        [self stopPhysicsEngine];
+        
+    } else {
+        
+        // Revive UIDynamics
+        [self startPhysicsEngine];
+    }
+    
+    NSLog(@"Drawer Drag Mode = %d", self.drawerDragMode);
+}
 
 - (void)loadOriginalDrawer {
     NSLog(@"Load original drawer.");
@@ -559,11 +557,10 @@
 
 - (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
     
-    // Prevents animator from overriding our custom updates to views that are needed for orientation changes
-    [self.animator removeAllBehaviors];
-    self.animator = nil;
-    self.collision = nil;
-    self.drawerBehavior = nil;
+    if (self.drawerDragMode != UIViewAnimation) {
+        // Prevents animator from overriding our custom updates to views that are needed for orientation changes
+        [self stopPhysicsEngine];
+    }
     
     // Hide the ugly and unnecessary animations when the slid-out canvas is updating its frames to fit the new orientations
     if (self.isFocusModeDim == NO && self.canvasesAreSlidOut == YES) {
@@ -592,20 +589,19 @@
         self.topDrawerContents.view.frame = destination;
     }
     
-    // Restore animator with the updated views
-    self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
-    self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
-    
-    self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
-    self.drawerBehavior.resistance = 10;
-    
-    [self.animator addBehavior:self.collision];
-    [self.animator addBehavior:self.drawerBehavior];
+    if (self.drawerDragMode != UIViewAnimation) {
+        // Restore animator with the updated views
+        [self startPhysicsEngine];
+    }
 }
 
 - (void)slideOutCanvases {
     
     // NSLog(@"Checking focus mode to see if drawer should slide out.");
+    
+    if (self.drawerDragMode != UIViewAnimation) {
+        [self stopPhysicsEngine];
+    }
     
     if (self.isFocusModeDim == NO && self.focusModeChangeRequested == YES) {
         
@@ -618,7 +614,12 @@
         if (self.view.frame.origin.y == 0) {
             destination.origin.y = -(self.realScreenSize.height);
         } else {
-            destination.origin.y = -(self.restY + self.realScreenSize.height);
+            
+            if (self.drawerDragMode == UIViewAnimation) {
+                destination.origin.y = -(self.restY + self.realScreenSize.height);
+            } else {
+                 destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
+            }
         }
         
         [UIView animateWithDuration:1 animations:^{
@@ -642,6 +643,13 @@
         [UIView animateWithDuration:1 animations:^{
             self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;
             self.topDragHandle.alpha = 1;
+        } completion:^(BOOL finished) {
+            
+            if (finished) {
+                if (self.drawerDragMode != UIViewAnimation) {
+                    [self startPhysicsEngine];
+                }
+            }
         }];
         
         self.canvasesAreSlidOut = NO;
