@@ -8,6 +8,7 @@
 
 #import "DrawerViewController.h"
 #import "Notifications.h"
+#import "Constants.h"
 
 @interface DrawerViewController () {
     CanvasViewController* _topDrawerContents;
@@ -42,6 +43,8 @@
 @property (nonatomic) BOOL isFocusModeDim;
 @property (nonatomic) BOOL canvasesAreSlidOut;
 
+@property (nonatomic) DragMode drawerDragMode;
+
 @property (nonatomic) CGRect topCanvasFrameBeforeSlidingOut;
 
 @property (strong, nonatomic) UIDynamicAnimator* animator;
@@ -60,8 +63,10 @@
     
     [self setEdgesForExtendedLayout:UIRectEdgeNone];
     
+    // Default prototype settings
     self.isOriginalLayout = YES;
     self.isFocusModeDim = YES;
+    self.drawerDragMode = UIViewAnimation;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadOriginalDrawer) name:kLoadOriginalDrawerNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadAlternativeDrawer) name:kLoadAlternativeDrawerNotification object:nil];
@@ -69,6 +74,8 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideOutCanvases) name:kFocusNoteNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideBackCanvases) name:kFocusDismissedNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(setFocusMode:) name:kChangeFocusModeNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeDragMode:) name:kChangeDragModeNotification object:nil];
 
     self.topDragHandle = [[UIView alloc] init];
     self.bottomDragHandle = [[UIView alloc] init];
@@ -103,6 +110,7 @@
     panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
     [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
     
+    /*
     // Setting up UIDynamics in viewDidLoad will prevent our custom layout codes from finishing correctly
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
     self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
@@ -112,6 +120,7 @@
     
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.drawerBehavior];
+    */
 }
 
 -(void)viewWillLayoutSubviews {
@@ -134,6 +143,34 @@
         
         NSLog(@"Setting focus mode to slide.");
     }
+}
+
+- (void)changeDragMode:(NSNotification *)notification {
+    
+    self.drawerDragMode = [[notification.userInfo objectForKey:@"dragMode"] intValue];
+    
+    if (self.drawerDragMode == UIViewAnimation) {
+        
+        // Kill UIDynamics
+        [self.animator removeAllBehaviors];
+        self.animator = nil;
+        self.collision = nil;
+        self.drawerBehavior = nil;
+        
+    } else {
+        
+        // Revive UIDynamics
+        self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
+        self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
+        
+        self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
+        self.drawerBehavior.resistance = 10;
+        
+        [self.animator addBehavior:self.collision];
+        [self.animator addBehavior:self.drawerBehavior];
+    }
+    
+    NSLog(@"Drawer Drag Mode = %d", self.drawerDragMode);
 }
 
 #pragma mark - Setup Top and Bottom Canvases
@@ -349,75 +386,89 @@
     if(recognizer.state == UIGestureRecognizerStateBegan) {
         self.dragStart = drag;
         self.initialFrameY = self.view.frame.origin.y;
+        
+        // It is important to remove boundaries at the start of gesture or it'll be too late and the boundaries may
+        // persist and cause weird glitches.
+        if (self.drawerDragMode != UIViewAnimation) {
+            if ([self.collision.boundaryIdentifiers count] > 0) {
+                [self.collision removeAllBoundaries];
+            }
+        }
     }
     
     float newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
     BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
     
-    // It is important to remove boundaries at the start of gesture or it'll be too late and the boundaries may
-    // persist and cause weird glitches.
-    if (recognizer.state == UIGestureRecognizerStateBegan) {
-        
-        if ([self.collision.boundaryIdentifiers count] > 0) {
-            [self.collision removeAllBoundaries];
-        }
-    }
-    
-    // If canvas extends beyond a certain point, fully extend it
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
         if (fromTopHandle && velocityDownwards) {
-            newPosition = self.maxY;
-            
-            // If we're adding downward velocity to the top canvas, we want to create a boundary at the bottom to
-            // prevent the top canvas from sliding out of sight
-            if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
-                [self.collision addBoundaryWithIdentifier:@"topCanvasBottomBoundary"
-                                                fromPoint:CGPointMake(0, self.view.frame.size.height)
-                                                  toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+        
+            if (self.drawerDragMode == UIViewAnimation) {
+                newPosition = self.maxY;
+            } else {
+                // If we're adding downward velocity to the top canvas, we want to create a boundary at the bottom to
+                // prevent the top canvas from sliding out of sight
+                if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
+                    [self.collision addBoundaryWithIdentifier:@"topCanvasBottomBoundary"
+                                                    fromPoint:CGPointMake(0, self.view.frame.size.height)
+                                                      toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+                }
             }
             
         } else if (fromTopHandle && !velocityDownwards) {
             
-            // If we're adding upward velocity to the top canvas, we want to create a boundary at the top to
-            // prevent the top canvas from sliding out of sight
-            if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
-                [self.collision addBoundaryWithIdentifier:@"topCanvasTopBoundary"
-                                                fromPoint:CGPointMake(0, self.restY)
-                                                  toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
+            if (self.drawerDragMode == UIViewAnimation) {
+                newPosition = self.restY;
+            } else {
+                // If we're adding upward velocity to the top canvas, we want to create a boundary at the top to
+                // prevent the top canvas from sliding out of sight
+                if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
+                    [self.collision addBoundaryWithIdentifier:@"topCanvasTopBoundary"
+                                                    fromPoint:CGPointMake(0, self.restY)
+                                                      toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
+                }
             }
         
         } else if (!fromTopHandle && velocityDownwards) { // Case for dragging the bottom canvas downward
             
-            if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasBottomBoundary"]) {
-                [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
-                                                fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
-                                                  toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
+            if (self.drawerDragMode == UIViewAnimation) {
+                newPosition = self.restY;
+            } else {
+    
+                if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasBottomBoundary"]) {
+                    [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
+                                                    fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
+                                                      toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
+                }
             }
-            
-            // newPosition = self.minY;
             
         } else if (!fromTopHandle && !velocityDownwards) { // Case for dragging the bottom canvas upward
             
-            if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasTopBoundary"]) {
-                [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
-                                                fromPoint:CGPointMake(0, self.minY)
-                                                  toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
+            if (self.drawerDragMode == UIViewAnimation) {
+                newPosition = self.minY;
+            } else {
+                
+                if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasTopBoundary"]) {
+                    [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
+                                                    fromPoint:CGPointMake(0, self.minY)
+                                                      toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
+                }
             }
         
-        } else {
-            
-            newPosition = self.restY;
         }
         
-        // [self animateDrawerPosition:newPosition];
+        if (self.drawerDragMode == UIViewAnimation) {
+            [self animateDrawerPosition:newPosition];
+        }
         
-        CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
-        verticalVelocity = CGPointMake(0, verticalVelocity.y);
+        if (self.drawerDragMode == UIDynamicFreeSliding) {
+            CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
+            verticalVelocity = CGPointMake(0, verticalVelocity.y);
         
-        [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
+            [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
+        }
         
     } else { // Otherwise, continue updating canvas' new position based on current drag
     
@@ -426,7 +477,10 @@
         }
         
         [self setDrawerPosition:newPosition];
-        [self.animator updateItemUsingCurrentState:self.view];
+        
+        if (self.drawerDragMode != UIViewAnimation) {
+            [self.animator updateItemUsingCurrentState:self.view];
+        }
     }
 }
 

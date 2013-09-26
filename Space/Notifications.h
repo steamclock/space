@@ -15,3 +15,5 @@ extern NSString* kLoadAlternativeDrawerNotification;
 extern NSString* kFocusNoteNotification;
 extern NSString* kChangeFocusModeNotification;
 extern NSString* kFocusDismissedNotification;
+
+extern NSString* kChangeDragModeNotification;

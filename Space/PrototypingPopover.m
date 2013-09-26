@@ -8,6 +8,7 @@
 
 #import "PrototypingPopover.h"
 #import "Notifications.h"
+#import "Constants.h"
 
 @interface PrototypingPopover ()
 
@@ -93,7 +94,7 @@
                                                           delegate:(id<UIActionSheetDelegate>)self
                                                  cancelButtonTitle:@"Cancel"
                                             destructiveButtonTitle:nil
-                                                 otherButtonTitles:@"UIView Animation", @"UIDynamics Free Sliding", @"UIDynamics Sliding with Gravity", nil];
+                                                 otherButtonTitles:@"UIView Animation", @"UIDynamic Free Sliding", @"UIDynamic Sliding with Gravity", nil];
     [self.dragModeSelection showInView:self.view];
 }
 
@@ -120,6 +121,23 @@
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
             [self.focusLabel setText:@"Sliding"];
         }
+        
+    } else if (actionSheet == self.dragModeSelection) {
+        
+        if (buttonIndex == 0) {
+            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIViewAnimation], @"dragMode", nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
+            [self.dragLabel setText:@"UIView Animation"];
+        } else if (buttonIndex == 1) {
+            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSliding], @"dragMode", nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
+            [self.dragLabel setText:@"Free Sliding"];
+        } else if (buttonIndex == 2) {
+            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], @"dragMode", nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
+            [self.dragLabel setText:@"Sliding & Gravity"];
+        }
+
     }
 }
 

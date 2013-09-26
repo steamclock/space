@@ -15,3 +15,5 @@ NSString* kLoadAlternativeDrawerNotification = @"loadAlternativeDrawer";
 NSString* kFocusNoteNotification = @"focusNote";
 NSString* kChangeFocusModeNotification = @"changeFocusMode";
 NSString* kFocusDismissedNotification = @"focusDismissed";
+
+NSString* kChangeDragModeNotification = @"changeDragMode";

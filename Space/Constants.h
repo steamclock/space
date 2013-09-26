@@ -11,3 +11,9 @@
 extern NSString* const Key_CanvasTitles;
 extern NSString* const Key_CanvasTitleIndices;
 extern NSString* const Key_TrashedNotes;
+
+typedef enum DragModeEnum {
+    UIViewAnimation,
+    UIDynamicFreeSliding,
+    UIDynamicFreeSlidingWithGravity
+} DragMode;
