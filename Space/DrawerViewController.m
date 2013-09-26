@@ -168,9 +168,7 @@
     [self.animator addBehavior:self.drawerBehavior];
     
     if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-        
         self.drawerBehavior.density = self.view.frame.size.width * self.view.frame.size.height;
-        self.drawerBehavior.resistance = 0;
     }
 }
 
@@ -182,12 +180,25 @@
 }
 
 - (void)dynamicAnimatorDidPause:(UIDynamicAnimator *)animator {
+    
+    self.drawerBehavior.resistance = 10;
+    
     [self.animator removeBehavior:self.gravity];
     self.gravity = nil;
 }
 
 - (void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {
     
+}
+
+- (void)collisionBehavior:(UICollisionBehavior *)behavior
+      beganContactForItem:(id<UIDynamicItem>)item
+   withBoundaryIdentifier:(id<NSCopying>)identifier
+                  atPoint:(CGPoint)p {
+    
+    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
+        self.drawerBehavior.resistance = 10;
+    }
 }
 
 #pragma mark - Prototyping Options
@@ -384,7 +395,7 @@
     
     self.view.frame = frame;
     
-    // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
 }
 
 -(void)animateDrawerPosition:(float)positionY {
@@ -418,6 +429,7 @@
     }
     
     float newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
+    NSLog(@"newPosition = %f", newPosition);
     BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
     
     if (recognizer.state == UIGestureRecognizerStateEnded) {
@@ -437,8 +449,18 @@
                                                       toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
                 }
                 
+                int gravityTriggerThreshold = (self.isOriginalLayout) ? self.restY + 100 : -100;
+                BOOL pastGravityThreshold;
+                if (self.isOriginalLayout) {
+                    pastGravityThreshold = (newPosition > gravityTriggerThreshold) ? YES : NO;
+                } else {
+                    pastGravityThreshold = (newPosition < gravityTriggerThreshold) ? YES : NO;
+                }
+                
                 // Let gravity pull the drawer down when the drawer is dragged past a certain point
-                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && newPosition > self.restY + 100) {
+                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+                    
+                    self.drawerBehavior.resistance = 0;
                     
                     self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
                     [self.gravity setMagnitude:1];
@@ -459,8 +481,18 @@
                                                       toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
                 }
                 
+                int gravityTriggerThreshold = (self.isOriginalLayout) ? self.maxY - 100 : -700;
+                BOOL pastGravityThreshold;
+                if (self.isOriginalLayout) {
+                    pastGravityThreshold = (newPosition < gravityTriggerThreshold) ? YES : NO;
+                } else {
+                    pastGravityThreshold = (newPosition > gravityTriggerThreshold) ? YES : NO;
+                }
+                
                 // Let gravity pull the drawer up when the drawer is dragged past a certain point
-                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && newPosition < self.maxY - 100) {
+                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+                    
+                    self.drawerBehavior.resistance = 0;
                     
                     self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
                     [self.gravity setMagnitude:-1];
@@ -475,9 +507,34 @@
             } else {
     
                 if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasBottomBoundary"]) {
-                    [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
-                                                    fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
-                                                      toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
+                    
+                    if (self.isOriginalLayout) {
+                        [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
+                                                        fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
+                                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
+                    } else {
+                        [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
+                                                        fromPoint:CGPointMake(0, self.view.frame.size.height)
+                                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+                    }
+                }
+                
+                int gravityTriggerThreshold = (self.isOriginalLayout) ? self.minY + 100 : -100;
+                BOOL pastGravityThreshold;
+                if (self.isOriginalLayout) {
+                    pastGravityThreshold = (newPosition > gravityTriggerThreshold) ? YES : NO;
+                } else {
+                    pastGravityThreshold = (newPosition < gravityTriggerThreshold) ? YES : NO;
+                }
+                
+                // Let gravity pull the drawer down when the drawer is dragged past a certain point
+                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+                    
+                    self.drawerBehavior.resistance = 0;
+                    
+                    self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
+                    [self.gravity setMagnitude:1];
+                    [self.animator addBehavior:self.gravity];
                 }
             }
             
@@ -488,9 +545,34 @@
             } else {
                 
                 if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasTopBoundary"]) {
-                    [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
-                                                    fromPoint:CGPointMake(0, self.minY)
-                                                      toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
+                    
+                    if (self.isOriginalLayout) {
+                        [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
+                                                        fromPoint:CGPointMake(0, self.minY)
+                                                          toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
+                    } else {
+                        [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
+                                                        fromPoint:CGPointMake(0, self.minY)
+                                                          toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
+                    }
+                }
+                
+                int gravityTriggerThreshold = (self.isOriginalLayout) ? self.maxY - 100 : self.minY + 100;
+                BOOL pastGravityThreshold;
+                if (self.isOriginalLayout) {
+                    pastGravityThreshold = (newPosition < gravityTriggerThreshold) ? YES : NO;
+                } else {
+                    pastGravityThreshold = (newPosition > gravityTriggerThreshold) ? YES : NO;
+                }
+                
+                // Let gravity pull the drawer up when the drawer is dragged past a certain point
+                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+                    
+                    self.drawerBehavior.resistance = 0;
+                    
+                    self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
+                    [self.gravity setMagnitude:-1];
+                    [self.animator addBehavior:self.gravity];
                 }
             }
         
@@ -500,7 +582,7 @@
             [self animateDrawerPosition:newPosition];
         }
         
-        if (self.drawerDragMode == UIDynamicFreeSliding) {
+        if (self.drawerDragMode == UIDynamicFreeSliding || self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
             CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
             verticalVelocity = CGPointMake(0, verticalVelocity.y);
         
