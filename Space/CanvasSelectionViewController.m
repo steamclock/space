@@ -18,6 +18,8 @@
 @property (strong, nonatomic) UIPopoverController* canvasMenuPopoverController;
 @property (strong, nonatomic) UIPopoverController* prototypingPopoverController;
 
+@property (strong, nonatomic) UINavigationItem* menuItems;
+
 @end
 
 @implementation CanvasSelectionViewController
@@ -53,28 +55,28 @@
             
             [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Canvas Menu" style:UIBarButtonItemStyleBordered target:self action:@selector(showCanvasMenuPopover:)]];
             
-            UINavigationItem* menuItems = [[UINavigationItem alloc] initWithTitle:@"Space"];
-            [menuItems setLeftBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Prototyping Menu"
+            self.menuItems = [[UINavigationItem alloc] initWithTitle:@"Space"];
+            [self.menuItems setLeftBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Prototyping Menu"
                                                                              style:UIBarButtonItemStyleBordered
                                                                             target:self
                                                                             action:@selector(showPrototypingPopover:)]];
             
-            [menuItems setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Canvas Menu"
+            [self.menuItems setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Canvas Menu"
                                                                               style:UIBarButtonItemStyleBordered
                                                                              target:self
                                                                              action:@selector(showCanvasMenuPopover:)]];
             
-            [self.menuBar setItems:@[menuItems]];
+            [self.menuBar setItems:@[self.menuItems]];
+            
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateTitle:) name:kCanvasChangedNotification object:nil];
         }
     }
     return self;
 }
 
-- (void)viewDidLoad {
+- (void)updateTitle:(NSNotification *)notification {
     
-    [super viewDidLoad];
-    
-    // [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
+    self.menuItems.title = [notification.userInfo objectForKey:@"canvasName"];
 }
 
 -(void)viewWillAppear:(BOOL)animated {

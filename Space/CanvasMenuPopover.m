@@ -184,7 +184,7 @@
     // NSLog(@"Button number = %@", [NSNumber numberWithInt:pressedButton.tag]);
     // NSLog(@"Canvas number = %@", self.canvasTitleIndices[pressedButton.tag]);
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":self.canvasTitleIndices[pressedButton.tag]}];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":self.canvasTitleIndices[pressedButton.tag], @"canvasName":[self.canvasTitles objectAtIndex:pressedButton.tag]}];
 }
 
 - (void)addNewCanvasTitle:(NSString *)newCanvasTitle {
@@ -235,7 +235,7 @@
         canvasToSwitchTo = 0;
     }
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":[NSNumber numberWithInt:canvasToSwitchTo]}];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":[NSNumber numberWithInt:canvasToSwitchTo], @"canvasName":[self.canvasTitles objectAtIndex:canvasToSwitchTo]}];
     
     self.deleteTitleAllowed = NO;
 }
