@@ -45,6 +45,17 @@
             
             // If there are no canvases stored, initilalize two default ones
             [self setupMenuWithCanvasTitles:@[@"Canvas One", @"Canvas Two"] andIndices:@[@0, @1]];
+            
+            [self.defaults setObject:[NSNumber numberWithInt:0] forKey:Key_CurrentCanvasIndex];
+            [self.defaults synchronize];
+        }
+        
+        if ([self.defaults objectForKey:Key_CurrentCanvasIndex]) {
+            
+            int currentCanvas = [[self.defaults objectForKey:Key_CurrentCanvasIndex] intValue];
+            
+            UIButton* buttonToHighlight = (UIButton *)[self.allCanvasButtons objectAtIndex:currentCanvas];
+            buttonToHighlight.backgroundColor = [UIColor colorWithWhite:0.8 alpha:0.5];
         }
     }
     
@@ -190,6 +201,9 @@
     
     // NSLog(@"Button number = %@", [NSNumber numberWithInt:pressedButton.tag]);
     // NSLog(@"Canvas number = %@", self.canvasTitleIndices[pressedButton.tag]);
+    
+    [self.defaults setObject:[NSNumber numberWithInt:pressedButton.tag] forKey:Key_CurrentCanvasIndex];
+    [self.defaults synchronize];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":self.canvasTitleIndices[pressedButton.tag], @"canvasName":[self.canvasTitles objectAtIndex:pressedButton.tag]}];
     

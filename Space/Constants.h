@@ -10,6 +10,9 @@
 
 extern NSString* const Key_CanvasTitles;
 extern NSString* const Key_CanvasTitleIndices;
+
+extern NSString* const Key_CurrentCanvasIndex;
+
 extern NSString* const Key_TrashedNotes;
 
 typedef enum DragModeEnum {

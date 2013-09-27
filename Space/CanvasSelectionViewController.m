@@ -10,6 +10,7 @@
 #import "CanvasMenuPopover.h"
 #import "PrototypingPopover.h"
 #import "Notifications.h"
+#import "Constants.h"
 
 @interface CanvasSelectionViewController ()
 
@@ -18,6 +19,7 @@
 @property (strong, nonatomic) UIPopoverController* canvasMenuPopoverController;
 @property (strong, nonatomic) UIPopoverController* prototypingPopoverController;
 
+@property (strong, nonatomic) NSUserDefaults* defaults;
 @property (strong, nonatomic) UINavigationItem* menuItems;
 
 @end
@@ -31,6 +33,8 @@
     self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
     
     if (self) {
+        
+        self.defaults = [NSUserDefaults standardUserDefaults];
         
         self.menuBar = [[UINavigationBar alloc] init];
         self.menuBar.translucent = YES;
@@ -55,7 +59,25 @@
             
             [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Canvas Menu" style:UIBarButtonItemStyleBordered target:self action:@selector(showCanvasMenuPopover:)]];
             
-            self.menuItems = [[UINavigationItem alloc] initWithTitle:@"Space"];
+            if ([self.defaults objectForKey:Key_CurrentCanvasIndex]) {
+                
+                NSMutableArray* canvasTitles = [self.defaults objectForKey:Key_CanvasTitles];
+                NSMutableArray* canvasTitleIndices = [self.defaults objectForKey:Key_CanvasTitleIndices];
+                
+                int currentCanvas = [[self.defaults objectForKey:Key_CurrentCanvasIndex] intValue];
+                NSString* currentTitle = [[self.defaults objectForKey:Key_CanvasTitles] objectAtIndex:currentCanvas];
+                self.menuItems = [[UINavigationItem alloc] initWithTitle:currentTitle];
+                
+                [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
+                                                                    object:self
+                                                                  userInfo:@{@"canvas":canvasTitleIndices[currentCanvas], @"canvasName":[canvasTitles objectAtIndex:currentCanvas]}];
+                
+            } else {
+                
+                self.menuItems = [[UINavigationItem alloc] initWithTitle:@"Canvas One"];
+                
+            }
+            
             [self.menuItems setLeftBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Prototyping Menu"
                                                                              style:UIBarButtonItemStyleBordered
                                                                             target:self
