@@ -242,7 +242,6 @@
 - (void)updateSelectedCanvas {
     
     [self.canvasTitles replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:self.currentlyEditingButtonTextField.text];
-    [self.canvasTitleIndices replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:self.currentlyEditingButtonTextField.text];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
                                                         object:self
