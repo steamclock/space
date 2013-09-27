@@ -122,7 +122,7 @@
 }
 
 -(void)canvasChangedNotification:(NSNotification*)notification {
-    self.currentCanvas = [notification.userInfo[@"canvas"] intValue];
+    self.currentCanvas = [notification.userInfo[Key_CanvasNumber] intValue];
     [self loadCurrentCanvas];
 }
 

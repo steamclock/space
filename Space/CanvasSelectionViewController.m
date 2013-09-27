@@ -70,7 +70,8 @@
                 
                 [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
                                                                     object:self
-                                                                  userInfo:@{@"canvas":canvasTitleIndices[currentCanvas], @"canvasName":[canvasTitles objectAtIndex:currentCanvas]}];
+                                                                  userInfo:@{Key_CanvasNumber:canvasTitleIndices[currentCanvas],
+                                                                             Key_CanvasName:[canvasTitles objectAtIndex:currentCanvas]}];
                 
             } else {
                 
@@ -98,7 +99,7 @@
 
 - (void)updateTitle:(NSNotification *)notification {
     
-    self.menuItems.title = [notification.userInfo objectForKey:@"canvasName"];
+    self.menuItems.title = [notification.userInfo objectForKey:Key_CanvasName];
 }
 
 -(void)viewWillAppear:(BOOL)animated {

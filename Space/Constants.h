@@ -11,6 +11,9 @@
 extern NSString* const Key_CanvasTitles;
 extern NSString* const Key_CanvasTitleIndices;
 
+extern NSString* const Key_CanvasNumber;
+extern NSString* const Key_CanvasName;
+
 extern NSString* const Key_CurrentCanvasIndex;
 
 extern NSString* const Key_TrashedNotes;

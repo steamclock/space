@@ -205,7 +205,10 @@
     [self.defaults setObject:[NSNumber numberWithInt:pressedButton.tag] forKey:Key_CurrentCanvasIndex];
     [self.defaults synchronize];
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":self.canvasTitleIndices[pressedButton.tag], @"canvasName":[self.canvasTitles objectAtIndex:pressedButton.tag]}];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
+                                                        object:self
+                                                      userInfo:@{Key_CanvasNumber:self.canvasTitleIndices[pressedButton.tag],
+                                                                 Key_CanvasName:[self.canvasTitles objectAtIndex:pressedButton.tag]}];
     
     for (UIButton* button in self.allCanvasButtons) {
         button.backgroundColor = [UIColor clearColor];
@@ -262,7 +265,10 @@
         canvasToSwitchTo = 0;
     }
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":[NSNumber numberWithInt:canvasToSwitchTo], @"canvasName":[self.canvasTitles objectAtIndex:canvasToSwitchTo]}];
+    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
+                                                        object:self
+                                                      userInfo:@{Key_CanvasNumber:[NSNumber numberWithInt:canvasToSwitchTo],
+                                                                 Key_CanvasName:[self.canvasTitles objectAtIndex:canvasToSwitchTo]}];
     
     self.deleteTitleAllowed = NO;
 }

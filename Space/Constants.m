@@ -11,6 +11,9 @@
 NSString* const Key_CanvasTitles = @"canvasTitles";
 NSString* const Key_CanvasTitleIndices = @"canvasTitleIndices";
 
+NSString* const Key_CanvasNumber = @"canvasNumber";
+NSString* const Key_CanvasName = @"canvasName";
+
 NSString* const Key_CurrentCanvasIndex = @"currentCanvasIndex";
 
 NSString* const Key_TrashedNotes = @"trashedNotes";
