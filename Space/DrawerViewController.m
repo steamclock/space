@@ -161,6 +161,7 @@
     self.animator.delegate = self;
     
     self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
+    self.collision.collisionDelegate = self;
     
     self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
     self.drawerBehavior.resistance = 10;
@@ -171,6 +172,7 @@
     
     if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
         self.drawerBehavior.density = self.view.frame.size.width * self.view.frame.size.height;
+        self.drawerBehavior.elasticity = 0;
     }
 }
 
@@ -179,14 +181,18 @@
     self.animator = nil;
     self.collision = nil;
     self.drawerBehavior = nil;
+    self.gravity = nil;
 }
 
 - (void)dynamicAnimatorDidPause:(UIDynamicAnimator *)animator {
     
-    self.drawerBehavior.resistance = 10;
-    
-    [self.animator removeBehavior:self.gravity];
-    self.gravity = nil;
+    // When gravity is affecting the drawer, resistance is turned off to allow a smoother free-falling of the drawer,
+    // so we'll restore resistance to our default value once the gravity is done animating
+    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
+        self.drawerBehavior.resistance = 10;
+        [self.animator removeBehavior:self.gravity];
+        self.gravity = nil;
+    }
 }
 
 - (void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {
@@ -198,8 +204,10 @@
    withBoundaryIdentifier:(id<NSCopying>)identifier
                   atPoint:(CGPoint)p {
     
+    // Resistance is set to 0 when gravity is taking place,
+    // but we'll need to increase resistance to keep the bounce from gravity at collision under control
     if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-        self.drawerBehavior.resistance = 10;
+        self.drawerBehavior.resistance = 2.5;
     }
 }
 
@@ -370,19 +378,35 @@
 - (void)loadOriginalDrawer {
     NSLog(@"Load original drawer.");
     
+    if (self.drawerDragMode != UIViewAnimation) {
+        [self stopPhysicsEngine];
+    }
+    
     self.layoutChangeRequested = YES;
     self.isOriginalLayout = YES;
     
     [self drawCanvasLayout];
+    
+    if (self.drawerDragMode != UIViewAnimation) {
+        [self startPhysicsEngine];
+    }
 }
 
 - (void)loadAlternativeDrawer {
     NSLog(@"Load alternative drawer.");
     
+    if (self.drawerDragMode != UIViewAnimation) {
+        [self stopPhysicsEngine];
+    }
+    
     self.layoutChangeRequested = YES;
     self.isOriginalLayout = NO;
     
     [self drawCanvasLayout];
+    
+    if (self.drawerDragMode != UIViewAnimation) {
+        [self startPhysicsEngine];
+    }
 }
 
 #pragma mark - Render Layout
@@ -742,7 +766,7 @@
     
     // NSLog(@"Checking focus mode to see if drawer should slide out.");
     
-    if (self.drawerDragMode != UIViewAnimation) {
+    if (self.drawerDragMode != UIViewAnimation && self.isFocusModeDim == NO) {
         [self stopPhysicsEngine];
     }
     
