@@ -20,6 +20,8 @@
 
 @property (nonatomic) BOOL deleteTitleAllowed;
 
+@property (strong, nonatomic) NSMutableArray* allCanvasButtons;
+
 @end
 
 @implementation CanvasMenuPopover
@@ -89,6 +91,9 @@
 
 - (void)setupMenuWithCanvasTitles:(NSArray *)canvasTitles andIndices:(NSArray *)canvasIndices {
     
+    self.allCanvasButtons = nil;
+    self.allCanvasButtons = [[NSMutableArray alloc] init];
+    
     [self clearAllButtons];
     
     // Store canvas titles and indices to NSUserDefaults
@@ -133,6 +138,8 @@
         
         canvasButton.tag = indexTag;
         indexTag++;
+        
+        [self.allCanvasButtons addObject:canvasButton];
         
         [self.view addSubview:canvasButton];
         yCoord += buttonHeight + gapBetweenButtons;
@@ -185,6 +192,12 @@
     // NSLog(@"Canvas number = %@", self.canvasTitleIndices[pressedButton.tag]);
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification object:self userInfo:@{@"canvas":self.canvasTitleIndices[pressedButton.tag], @"canvasName":[self.canvasTitles objectAtIndex:pressedButton.tag]}];
+    
+    for (UIButton* button in self.allCanvasButtons) {
+        button.backgroundColor = [UIColor clearColor];
+    }
+    
+    pressedButton.backgroundColor = [UIColor colorWithWhite:0.8 alpha:0.5];
 }
 
 - (void)addNewCanvasTitle:(NSString *)newCanvasTitle {
