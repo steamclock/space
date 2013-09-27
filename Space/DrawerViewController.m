@@ -25,6 +25,8 @@
 @property (nonatomic) float allowedDragStartY;
 @property (nonatomic) BOOL allowedDragStartYAssigned;
 
+@property (nonatomic) float newPosition;
+
 // iPad reports faulty screen size after orientation changes, so this stores the correct values.
 @property (nonatomic) CGSize realScreenSize;
 
@@ -198,6 +200,132 @@
     
     if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
         self.drawerBehavior.resistance = 10;
+    }
+}
+
+- (void)physicsForTopHandleDraggedDownwards {
+    
+    // If we're adding downward velocity to the top canvas, we want to create a boundary at the bottom to
+    // prevent the top canvas from sliding out of sight
+    if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
+        [self.collision addBoundaryWithIdentifier:@"topCanvasBottomBoundary"
+                                        fromPoint:CGPointMake(0, self.view.frame.size.height)
+                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+    }
+    
+    int gravityTriggerThreshold = (self.isOriginalLayout) ? self.restY + 100 : -100;
+    BOOL pastGravityThreshold;
+    if (self.isOriginalLayout) {
+        pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
+    } else {
+        pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
+    }
+    
+    // Let gravity pull the drawer down when the drawer is dragged past a certain point
+    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+        
+        self.drawerBehavior.resistance = 0;
+        
+        self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
+        [self.gravity setMagnitude:1];
+        [self.animator addBehavior:self.gravity];
+    }
+}
+
+- (void)physicsForTopHandleDraggedUpwards {
+    
+    // If we're adding upward velocity to the top canvas, we want to create a boundary at the top to
+    // prevent the top canvas from sliding out of sight
+    if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
+        [self.collision addBoundaryWithIdentifier:@"topCanvasTopBoundary"
+                                        fromPoint:CGPointMake(0, self.restY)
+                                          toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
+    }
+    
+    int gravityTriggerThreshold = (self.isOriginalLayout) ? self.maxY - 100 : -700;
+    BOOL pastGravityThreshold;
+    if (self.isOriginalLayout) {
+        pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
+    } else {
+        pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
+    }
+    
+    // Let gravity pull the drawer up when the drawer is dragged past a certain point
+    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+        
+        self.drawerBehavior.resistance = 0;
+        
+        self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
+        [self.gravity setMagnitude:-1];
+        [self.animator addBehavior:self.gravity];
+    }
+}
+
+- (void)physicsForBottomHandleDraggedDownwards {
+    
+    if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasBottomBoundary"]) {
+        
+        if (self.isOriginalLayout) {
+            [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
+                                            fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
+                                              toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
+        } else {
+            [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
+                                            fromPoint:CGPointMake(0, self.view.frame.size.height)
+                                              toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+        }
+    }
+    
+    int gravityTriggerThreshold = (self.isOriginalLayout) ? self.minY + 100 : -100;
+    BOOL pastGravityThreshold;
+    if (self.isOriginalLayout) {
+        pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
+    } else {
+        pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
+    }
+    
+    // Let gravity pull the drawer down when the drawer is dragged past a certain point
+    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+        
+        self.drawerBehavior.resistance = 0;
+        
+        self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
+        [self.gravity setMagnitude:1];
+        [self.animator addBehavior:self.gravity];
+    }
+}
+
+- (void)physicsForBottomHandleDraggedUpwards {
+    
+    if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasTopBoundary"]) {
+        
+        if (self.isOriginalLayout) {
+            [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
+                                            fromPoint:CGPointMake(0, self.minY)
+                                              toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
+        } else {
+            [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
+                                            fromPoint:CGPointMake(0, self.minY)
+                                              toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
+        }
+    }
+    
+    int gravityTriggerThreshold = (self.isOriginalLayout) ? self.maxY - 100 : self.minY + 100;
+    BOOL pastGravityThreshold;
+    if (self.isOriginalLayout) {
+        pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
+    } else {
+        pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
+    }
+    
+    // Let gravity pull the drawer up when the drawer is dragged past a certain point
+    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+        
+        self.drawerBehavior.resistance = 0;
+        
+        self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
+        [self.gravity setMagnitude:-1];
+        [self.animator addBehavior:self.gravity];
     }
 }
 
@@ -428,160 +556,54 @@
         }
     }
     
-    float newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
-    NSLog(@"newPosition = %f", newPosition);
+    self.newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
+    // NSLog(@"newPosition = %f", self.newPosition);
     BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
     
+    // If dragged past a certain point, extend or hide the the canvas
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
         if (fromTopHandle && velocityDownwards) {
-        
+            
             if (self.drawerDragMode == UIViewAnimation) {
-                newPosition = self.maxY;
+                self.newPosition = self.maxY;
             } else {
-                // If we're adding downward velocity to the top canvas, we want to create a boundary at the bottom to
-                // prevent the top canvas from sliding out of sight
-                if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
-                    [self.collision addBoundaryWithIdentifier:@"topCanvasBottomBoundary"
-                                                    fromPoint:CGPointMake(0, self.view.frame.size.height)
-                                                      toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
-                }
-                
-                int gravityTriggerThreshold = (self.isOriginalLayout) ? self.restY + 100 : -100;
-                BOOL pastGravityThreshold;
-                if (self.isOriginalLayout) {
-                    pastGravityThreshold = (newPosition > gravityTriggerThreshold) ? YES : NO;
-                } else {
-                    pastGravityThreshold = (newPosition < gravityTriggerThreshold) ? YES : NO;
-                }
-                
-                // Let gravity pull the drawer down when the drawer is dragged past a certain point
-                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
-                    
-                    self.drawerBehavior.resistance = 0;
-                    
-                    self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-                    [self.gravity setMagnitude:1];
-                    [self.animator addBehavior:self.gravity];
-                }
+                [self physicsForTopHandleDraggedDownwards];
             }
             
         } else if (fromTopHandle && !velocityDownwards) {
             
             if (self.drawerDragMode == UIViewAnimation) {
-                newPosition = self.restY;
+                self.newPosition = self.restY;
             } else {
-                // If we're adding upward velocity to the top canvas, we want to create a boundary at the top to
-                // prevent the top canvas from sliding out of sight
-                if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
-                    [self.collision addBoundaryWithIdentifier:@"topCanvasTopBoundary"
-                                                    fromPoint:CGPointMake(0, self.restY)
-                                                      toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
-                }
-                
-                int gravityTriggerThreshold = (self.isOriginalLayout) ? self.maxY - 100 : -700;
-                BOOL pastGravityThreshold;
-                if (self.isOriginalLayout) {
-                    pastGravityThreshold = (newPosition < gravityTriggerThreshold) ? YES : NO;
-                } else {
-                    pastGravityThreshold = (newPosition > gravityTriggerThreshold) ? YES : NO;
-                }
-                
-                // Let gravity pull the drawer up when the drawer is dragged past a certain point
-                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
-                    
-                    self.drawerBehavior.resistance = 0;
-                    
-                    self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-                    [self.gravity setMagnitude:-1];
-                    [self.animator addBehavior:self.gravity];
-                }
+                [self physicsForTopHandleDraggedUpwards];
             }
         
         } else if (!fromTopHandle && velocityDownwards) { // Case for dragging the bottom canvas downward
             
             if (self.drawerDragMode == UIViewAnimation) {
-                newPosition = self.restY;
+                self.newPosition = self.restY;
             } else {
-    
-                if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasBottomBoundary"]) {
-                    
-                    if (self.isOriginalLayout) {
-                        [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
-                                                        fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
-                                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
-                    } else {
-                        [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
-                                                        fromPoint:CGPointMake(0, self.view.frame.size.height)
-                                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
-                    }
-                }
-                
-                int gravityTriggerThreshold = (self.isOriginalLayout) ? self.minY + 100 : -100;
-                BOOL pastGravityThreshold;
-                if (self.isOriginalLayout) {
-                    pastGravityThreshold = (newPosition > gravityTriggerThreshold) ? YES : NO;
-                } else {
-                    pastGravityThreshold = (newPosition < gravityTriggerThreshold) ? YES : NO;
-                }
-                
-                // Let gravity pull the drawer down when the drawer is dragged past a certain point
-                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
-                    
-                    self.drawerBehavior.resistance = 0;
-                    
-                    self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-                    [self.gravity setMagnitude:1];
-                    [self.animator addBehavior:self.gravity];
-                }
+                [self physicsForBottomHandleDraggedDownwards];
             }
             
         } else if (!fromTopHandle && !velocityDownwards) { // Case for dragging the bottom canvas upward
             
             if (self.drawerDragMode == UIViewAnimation) {
-                newPosition = self.minY;
+                self.newPosition = self.minY;
             } else {
-                
-                if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasTopBoundary"]) {
-                    
-                    if (self.isOriginalLayout) {
-                        [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
-                                                        fromPoint:CGPointMake(0, self.minY)
-                                                          toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
-                    } else {
-                        [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
-                                                        fromPoint:CGPointMake(0, self.minY)
-                                                          toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
-                    }
-                }
-                
-                int gravityTriggerThreshold = (self.isOriginalLayout) ? self.maxY - 100 : self.minY + 100;
-                BOOL pastGravityThreshold;
-                if (self.isOriginalLayout) {
-                    pastGravityThreshold = (newPosition < gravityTriggerThreshold) ? YES : NO;
-                } else {
-                    pastGravityThreshold = (newPosition > gravityTriggerThreshold) ? YES : NO;
-                }
-                
-                // Let gravity pull the drawer up when the drawer is dragged past a certain point
-                if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
-                    
-                    self.drawerBehavior.resistance = 0;
-                    
-                    self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-                    [self.gravity setMagnitude:-1];
-                    [self.animator addBehavior:self.gravity];
-                }
+                [self physicsForBottomHandleDraggedUpwards];
             }
         
         }
         
         if (self.drawerDragMode == UIViewAnimation) {
-            [self animateDrawerPosition:newPosition];
+            [self animateDrawerPosition:self.newPosition];
         }
         
+        // Add throwable feel to the drawer
         if (self.drawerDragMode == UIDynamicFreeSliding || self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
             CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
             verticalVelocity = CGPointMake(0, verticalVelocity.y);
@@ -589,13 +611,13 @@
             [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
         }
         
-    } else { // Otherwise, continue updating canvas' new position based on current drag
+    } else { // If we did not drag past a certain point, continue updating canvas' new position based on current drag
     
-        if ((fromTopHandle && newPosition < self.restY) || (!fromTopHandle && newPosition > self.restY)) {
-            newPosition = self.restY;
+        if ((fromTopHandle && self.newPosition < self.restY) || (!fromTopHandle && self.newPosition > self.restY)) {
+            self.newPosition = self.restY;
         }
         
-        [self setDrawerPosition:newPosition];
+        [self setDrawerPosition:self.newPosition];
         
         if (self.drawerDragMode != UIViewAnimation) {
             [self.animator updateItemUsingCurrentState:self.view];
