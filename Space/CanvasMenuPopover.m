@@ -243,6 +243,11 @@
     
     [self.canvasTitles replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:self.currentlyEditingButtonTextField.text];
     [self.canvasTitleIndices replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:self.currentlyEditingButtonTextField.text];
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
+                                                        object:self
+                                                      userInfo:@{Key_CanvasNumber:[NSNumber numberWithInt:self.currentlyEditingButton.tag],
+                                                                 Key_CanvasName:[self.canvasTitles objectAtIndex:self.currentlyEditingButton.tag]}];
 }
 
 - (void)deleteSelectedCanvas {
@@ -310,6 +315,11 @@
     }
     
     return YES;
+}
+
+- (void)textFieldDidBeginEditing:(UITextField *)textField {
+    
+    [textField setReturnKeyType:UIReturnKeyDone];
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField {
