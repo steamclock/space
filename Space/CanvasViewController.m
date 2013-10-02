@@ -51,8 +51,9 @@
     return self;
 }
 
--(id)initAsTrashCanvas {
+-(id)initAsTrashCanvasWithTopLevelView:(UIView*)view {
     if (self = [super init]) {
+        self.topLevelView = view;
         self.isTrashMode = YES;
     }
     
@@ -210,8 +211,9 @@
     NSString* title = self.isTrashMode ? @"Delete forever" : @"Send to trash";
     menu.items = @[ [[QBPopupMenuItem alloc] initWithTitle:title target:self action:@selector(deletePendingNote)] ];
     
-    // we need to use the top-level view so that clicking outside the popup dismisses it.
+    // We need to use the top-level view so that clicking outside the popup dismisses it.
     CGPoint showAt = [view.superview convertPoint:view.center toView:self.topLevelView];
+    
     [menu showInView:self.topLevelView atPoint:showAt];
 }
 

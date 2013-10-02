@@ -28,7 +28,7 @@
     UIViewController* container = [[UIViewController alloc] init];
     
     CanvasViewController* canvas = [[CanvasViewController alloc] initWithTopLevelView:container.view];
-    CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvas];
+    CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvasWithTopLevelView:container.view];
     
     DrawerViewController* drawer = [[DrawerViewController alloc] init];
     drawer.topDrawerContents = canvas;
