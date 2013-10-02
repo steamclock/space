@@ -23,6 +23,8 @@
 @property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
 @property (nonatomic) UIDynamicItemBehavior* activeDrag;
 
+@property (nonatomic) CGPoint noteOriginalPosition;
+
 @property (nonatomic) BOOL simulating;
 
 @property (nonatomic) NoteView* notePendingDelete;
@@ -296,6 +298,10 @@
         self.activeDrag.density = 1000000.0f;
         [self.animator addBehavior:self.activeDrag];
         [self.activeDrag addItem:view];
+        
+        if (!CGPointEqualToPoint(self.noteOriginalPosition, view.center)) {
+            self.noteOriginalPosition = view.center;
+        }
     }
     
     [view setCenter:drag withReferenceBounds:self.view.bounds];
@@ -329,6 +335,8 @@
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self returnNoteToBounds:view];
                 [self.focus focusOn:view];
+                
+                [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
             } else {
                 [view setBackgroundColor:[UIColor greenColor]];
             }
@@ -378,7 +386,10 @@
         }
         
         NSLog(@"move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
-        note.center = center;
+        // note.center = center;
+        
+        note.center = self.noteOriginalPosition;
+        
         [self.animator updateItemUsingCurrentState:note];
         [[Database sharedDatabase] save];
     }
