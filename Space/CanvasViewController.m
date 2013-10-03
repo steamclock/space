@@ -40,6 +40,8 @@
 
 @property (nonatomic) BOOL newNoteCreated;
 
+@property (strong, nonatomic) UIButton* emptyTrashButton;
+
 @end
 
 @implementation CanvasViewController;
@@ -68,6 +70,25 @@
     self.trashY = trashY - self.view.frame.origin.y - 100;
 }
 
+- (void)emptyTrash {
+    
+    // NSLog(@"Emptying trash...");
+    
+    NSArray* notes;
+    
+    if (self.isTrashMode) {
+        notes = [[Database sharedDatabase] trashedNotesInCanvas:self.currentCanvas];
+    }
+    
+    for (int i = 0; i < [notes count]; i++) {
+        Note* note = [notes objectAtIndex:i];
+        [note removeFromDatabase];
+        [[Database sharedDatabase] save];
+    }
+    
+    [self loadCurrentCanvas];
+}
+
 -(void)viewDidLoad
 {
     [super viewDidLoad];
@@ -90,6 +111,7 @@
     if (self.isTrashMode) {
         // Catch the trashed notes
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteTrashedNotification:) name:kNoteTrashedNotification object:nil];
+        
     } else {
         // Allow new notes
         UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceTap:)];
@@ -103,6 +125,22 @@
     [self loadCurrentCanvas];
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    
+    [super viewDidAppear:animated];
+    
+    if (self.isTrashMode) {
+        self.emptyTrashButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        [self.emptyTrashButton setTitle:@"Empty Trash" forState:UIControlStateNormal];
+        self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
+        [self.emptyTrashButton addTarget:self action:@selector(emptyTrash) forControlEvents:UIControlEventTouchUpInside];
+        self.emptyTrashButton.titleLabel.font = [UIFont systemFontOfSize:20];
+        
+        [self.view addSubview:self.emptyTrashButton];
+        // NSLog(@"Empty Trash Button Frame = %@", NSStringFromCGRect(self.emptyTrashButton.frame));
+    }
 }
 
 -(void)loadCurrentCanvas {
@@ -119,6 +157,16 @@
     if (self.isTrashMode) {
         notes = [[Database sharedDatabase] trashedNotesInCanvas:self.currentCanvas];
         NSLog(@"Number of deleted notes = %d", [notes count]);
+        
+        self.emptyTrashButton = [UIButton buttonWithType:UIButtonTypeSystem];
+        [self.emptyTrashButton setTitle:@"Empty Trash" forState:UIControlStateNormal];
+        self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
+        [self.emptyTrashButton addTarget:self action:@selector(emptyTrash) forControlEvents:UIControlEventTouchUpInside];
+        self.emptyTrashButton.titleLabel.font = [UIFont systemFontOfSize:20];
+        
+        [self.view addSubview:self.emptyTrashButton];
+        // NSLog(@"Empty Trash Button Frame = %@", NSStringFromCGRect(self.emptyTrashButton.frame));
+        
     } else {
         notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
         NSLog(@"%d saved notes", [notes count]);
