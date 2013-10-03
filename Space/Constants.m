@@ -18,3 +18,5 @@ NSString* const Key_CurrentCanvasIndex = @"currentCanvasIndex";
 
 NSString* const Key_TrashedNotes = @"trashedNotes";
 NSString* const Key_RecoveredNote = @"recoveredNote";
+
+int const Key_NavBarHeight = 64;

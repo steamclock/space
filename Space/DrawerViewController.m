@@ -231,8 +231,8 @@
     // prevent the top canvas from sliding out of sight
     if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
         [self.collision addBoundaryWithIdentifier:@"topCanvasBottomBoundary"
-                                        fromPoint:CGPointMake(0, self.view.frame.size.height)
-                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+                                        fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
+                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
     }
     
     int gravityTriggerThreshold = (self.isOriginalLayout) ? self.restY + 100 : -100;
@@ -293,8 +293,8 @@
                                               toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
         } else {
             [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
-                                            fromPoint:CGPointMake(0, self.view.frame.size.height)
-                                              toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+                                            fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
+                                              toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
         }
     }
     
@@ -456,15 +456,15 @@
     self.realScreenSize = screenSize;
 
     // Size of top and bottom canvas
-    self.topDrawerHeight = screenSize.height - 24;
+    self.topDrawerHeight = screenSize.height - 24 - Key_NavBarHeight;
     self.bottomDrawerHeight = screenSize.height - 224;
 
     // When the drawer is pulled down all the way with the top canvas fully revealed, it will be resting at (0, 0)
-    self.maxY = 0;
+    self.maxY = Key_NavBarHeight;
     
     // Resting position or initial position is when the top left corner of the drawer is up and outside the screen,
     // so that's why it's a negative value
-    self.restY = 324 - screenSize.height;
+    self.restY = 324 - screenSize.height + Key_NavBarHeight;
     
     // When the drawer reveals the trash canvas, it is pulled up and outside the screen even more, and this represents
     // how far the drawer can be pulled up
@@ -480,7 +480,9 @@
         int bottomSpace = 100;
         
         // Alternative layout requires a different height for the top canvas, or else notes can get fly out of sight
-        self.topDrawerHeight = screenSize.height - bottomSpace;
+        self.topDrawerHeight = screenSize.height - bottomSpace - Key_NavBarHeight;
+        
+        self.maxY = Key_NavBarHeight;
         
         // Resting position is with the canvas pulled all the way down
         self.restY = self.maxY;
@@ -489,7 +491,7 @@
         self.minY = self.restY - self.bottomDrawerHeight;
         
         // Bottom drawer starts right at the bottom of the screen in alternative layout
-        self.bottomDrawerStart = screenSize.height;
+        self.bottomDrawerStart = screenSize.height - Key_NavBarHeight;
     }
     
     NSLog(@"restY = %f minY = %f topDrawerHeight = %f bottomDrawerHeight = %f bottomDrawerStart = %f",

@@ -37,7 +37,7 @@
         self.defaults = [NSUserDefaults standardUserDefaults];
         
         self.menuBar = [[UINavigationBar alloc] init];
-        self.menuBar.translucent = YES;
+        self.menuBar.translucent = NO;
         self.view = self.menuBar;
         
         Class popoverClass = NSClassFromString(@"UIPopoverController");

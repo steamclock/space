@@ -19,6 +19,8 @@ extern NSString* const Key_CurrentCanvasIndex;
 extern NSString* const Key_TrashedNotes;
 extern NSString* const Key_RecoveredNote;
 
+extern int const Key_NavBarHeight;
+
 typedef enum DragModeEnum {
     UIViewAnimation,
     UIDynamicFreeSliding,
