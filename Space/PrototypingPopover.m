@@ -38,7 +38,7 @@
     [layoutButton addTarget:self action:@selector(showDrawerLayoutSelection) forControlEvents:UIControlEventTouchUpInside];
     
     self.layoutLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 10, 100, 50)];
-    [self.layoutLabel setText:@"Original"];
+    [self.layoutLabel setText:@"2 Sections"];
     
     UIButton* focusButton = [UIButton buttonWithType:UIButtonTypeSystem];
     [focusButton setTitle:@"Focus" forState:UIControlStateNormal];
@@ -58,7 +58,7 @@
     [dragButton addTarget:self action:@selector(showDragModeSelection) forControlEvents:UIControlEventTouchUpInside];
     
     self.dragLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 150, 150, 50)];
-    [self.dragLabel setText:@"UIView Animation"];
+    [self.dragLabel setText:@"Sliding & Gravity"];
     
     [self.view addSubview:layoutButton];
     [self.view addSubview:self.layoutLabel];
@@ -74,7 +74,7 @@
                                                              delegate:(id<UIActionSheetDelegate>)self
                                                     cancelButtonTitle:@"Cancel"
                                                destructiveButtonTitle:nil
-                                                    otherButtonTitles:@"Original", @"Alternative", nil];
+                                                    otherButtonTitles:@"3 Sections", @"2 Sections", nil];
     [self.drawerLayoutSelection showInView:self.view];
 }
 
@@ -104,10 +104,10 @@
         
         if (buttonIndex == 0) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kLoadOriginalDrawerNotification object:nil];
-            [self.layoutLabel setText:@"Original"];
+            [self.layoutLabel setText:@"3 Sections"];
         } else if (buttonIndex == 1) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
-            [self.layoutLabel setText:@"Alternative"];
+            [self.layoutLabel setText:@"2 Sections"];
         }
         
     } else if (actionSheet == self.focusModeSelection) {
@@ -119,7 +119,7 @@
         } else if (buttonIndex == 1) {
             NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"slide", @"focusMode", nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
-            [self.focusLabel setText:@"Sliding"];
+            [self.focusLabel setText:@"Slide Out"];
         }
         
     } else if (actionSheet == self.dragModeSelection) {

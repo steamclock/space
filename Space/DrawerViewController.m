@@ -54,6 +54,8 @@
 @property (strong, nonatomic) UICollisionBehavior* collision;
 @property (strong, nonatomic) UIGravityBehavior* gravity;
 
+@property (nonatomic) BOOL hasLoaded;
+
 @end
 
 @implementation DrawerViewController
@@ -95,6 +97,18 @@
     self.bottomDragHandle.backgroundColor = [UIColor grayColor];
     
     [self.view addSubview:self.bottomDragHandle];
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    
+    // Load default settings for demo
+    if (self.hasLoaded == NO) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
+        
+        NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], @"dragMode", nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
+        self.hasLoaded = YES;
+    }
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -164,7 +178,7 @@
     self.collision.collisionDelegate = self;
     
     self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
-    self.drawerBehavior.resistance = 0;
+    self.drawerBehavior.resistance = 10;
     self.drawerBehavior.allowsRotation = NO;
     
     [self.animator addBehavior:self.collision];
@@ -298,7 +312,7 @@
         self.drawerBehavior.resistance = 0;
         
         self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-        [self.gravity setMagnitude:1];
+        [self.gravity setMagnitude:5.0];
         [self.animator addBehavior:self.gravity];
     }
 }
@@ -332,7 +346,7 @@
         self.drawerBehavior.resistance = 0;
         
         self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-        [self.gravity setMagnitude:-1];
+        [self.gravity setMagnitude:-5.0];
         [self.animator addBehavior:self.gravity];
     }
 }
