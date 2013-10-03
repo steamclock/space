@@ -523,6 +523,10 @@
     // Restore the behaviours after orientation changes and calculations are completed.
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
+    
+    if (self.isTrashMode) {
+        self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
+    }
 }
 
 #pragma mark - Animator Delegate Methods
