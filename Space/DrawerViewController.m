@@ -504,14 +504,16 @@
     int viewHeight = self.bottomDrawerStart + self.bottomDrawerHeight;
     self.view.frame = CGRectMake(0, self.restY, self.realScreenSize.width, viewHeight);
     
-    int dragHeight = 40;
-    int dragWidth = 200;
+    int dragHeight = 50;
+    int dragWidth = 600;
     float dragTop = self.topDrawerHeight - dragHeight - 5;
     float dragLeft = (self.view.bounds.size.width - dragWidth) / 2;
-    float dragBottom = self.bottomDrawerStart - dragHeight - 50;
+    float dragBottom = self.bottomDrawerStart - dragHeight - 25;
 
     self.topDragHandle.frame = CGRectMake(dragLeft, dragTop, dragWidth, dragHeight);
+    self.topDragHandle.layer.cornerRadius = 15;
     self.bottomDragHandle.frame = CGRectMake(dragLeft, dragBottom, dragWidth, dragHeight);
+    self.bottomDragHandle.layer.cornerRadius = 15;
     
     // Update some frames for alternative layout
     if (self.isOriginalLayout == NO) {
