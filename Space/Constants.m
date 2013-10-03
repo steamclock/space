@@ -17,3 +17,4 @@ NSString* const Key_CanvasName = @"canvasName";
 NSString* const Key_CurrentCanvasIndex = @"currentCanvasIndex";
 
 NSString* const Key_TrashedNotes = @"trashedNotes";
+NSString* const Key_RecoveredNote = @"recoveredNote";

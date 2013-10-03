@@ -86,12 +86,15 @@
     [self.animator addBehavior:self.dynamicProperties];
 
     if (self.isTrashMode) {
-        //catch the trash
+        // Catch the trashed notes
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteTrashedNotification:) name:kNoteTrashedNotification object:nil];
     } else {
-        //allow new notes
+        // Allow new notes
         UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceTap:)];
         [self.view addGestureRecognizer:tapGestureRecognizer];
+        
+        // Catch the recovered notes
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteRecoveredNotification:) name:kNoteRecoveredNotification object:nil];
     }
     
     self.currentCanvas = 0;
@@ -162,9 +165,9 @@
     CGPoint unnomralizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
     [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
     
-    // NSLog(@"Note position X = %f", note.positionX);
-    // NSLog(@"Note position Y = %f", note.positionY);
-    // NSLog(@"Adding note at %@", NSStringFromCGPoint(imageView.center));
+    NSLog(@"Note position X = %f", note.positionX);
+    NSLog(@"Note position Y = %f", note.positionY);
+    NSLog(@"Adding note at %@", NSStringFromCGPoint(imageView.center));
     
     // If this is a trashed note, "flip" its y-coordinate so that for example, if it was originally 80% down the y-coordinate in the top canvas,
     // it should only be roughly 20% down in the bottom canvas.
@@ -275,6 +278,39 @@
     }
 }
 
+- (void)recoverNote:(NoteView*)noteView {
+    
+    NSDictionary* noteToRecoverInfo = [[NSDictionary alloc] initWithObjects:@[noteView.note, [NSValue valueWithCGPoint:self.noteOriginalPosition]] forKeys:@[Key_RecoveredNote, @"originalPosition"]];
+    
+    NSNotification* noteRecoveredNotification = [[NSNotification alloc] initWithName:kNoteRecoveredNotification object:self userInfo:noteToRecoverInfo];
+    [[NSNotificationCenter defaultCenter] postNotification:noteRecoveredNotification];
+    
+    [noteView removeFromSuperview];
+    
+    [self.collision removeItem:noteView];
+    [self.dynamicProperties removeItem:noteView];
+}
+
+- (void)noteRecoveredNotification:(NSNotification*)notification {
+   
+    Note* recoveredNote = [notification.userInfo objectForKey:Key_RecoveredNote];
+    NSValue *originalPosition = [notification.userInfo objectForKey:@"originalPosition"];
+    
+    CGPoint originalCenter = [originalPosition CGPointValue];
+    
+    NSLog(@"Recovered note position X = %f",originalCenter.x);
+    NSLog(@"Recovered note position Y = %f",originalCenter.y);
+    
+    recoveredNote.positionX = [Coordinate normalizeXCoord:originalCenter.x withReferenceBounds:self.view.bounds];
+    recoveredNote.positionY = [Coordinate normalizeYCoord:originalCenter.y withReferenceBounds:self.view.bounds];
+    
+    [self addViewForNote:recoveredNote];
+    
+    recoveredNote.trashed = NO;
+    
+    [[Database sharedDatabase] save];
+}
+
 #pragma mark - Focus Notes
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
@@ -317,21 +353,29 @@
     }
     
     if (self.isTrashMode) {
-        //TODO maybe an un-trash action?
-        if(recognizer.state == UIGestureRecognizerStateEnded) {
+        
+        if (view.center.y < self.trashY) {
+            if(recognizer.state == UIGestureRecognizerStateEnded) {
+                [self returnNoteToBounds:view];
+                [self recoverNote:view];
+            } else {
+                [view setBackgroundColor:[UIColor redColor]];
+            }
+        } else if(recognizer.state == UIGestureRecognizerStateEnded) {
             [[Database sharedDatabase] save];
             CGPoint velocity = [recognizer velocityInView:self.view];
             [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
+        } else {
+            [view setBackgroundColor:[UIColor clearColor]];
         }
+        
     } else {
-        //edit/trash actions and feedback
-        //TODO: make the feedback pretty.
         
         if (view.center.y > self.trashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self deleteNoteWithoutAsking:view];
             } else {
-                [view setBackgroundColor:[UIColor redColor]];
+                [view setBackgroundColor:[UIColor greenColor]];
             }
         } else if (view.center.y > self.editY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {

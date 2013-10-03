@@ -17,6 +17,7 @@ extern NSString* const Key_CanvasName;
 extern NSString* const Key_CurrentCanvasIndex;
 
 extern NSString* const Key_TrashedNotes;
+extern NSString* const Key_RecoveredNote;
 
 typedef enum DragModeEnum {
     UIViewAnimation,

@@ -7,7 +7,9 @@
 //
 
 extern NSString* kCanvasChangedNotification;
+
 extern NSString* kNoteTrashedNotification;
+extern NSString* kNoteRecoveredNotification;
 
 extern NSString* kLoadOriginalDrawerNotification;
 extern NSString* kLoadAlternativeDrawerNotification;
