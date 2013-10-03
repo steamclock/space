@@ -38,6 +38,8 @@
 
 @property (nonatomic) UIView* topLevelView;
 
+@property (nonatomic) BOOL newNoteCreated;
+
 @end
 
 @implementation CanvasViewController;
@@ -153,6 +155,7 @@
     
     NSLog(@"Unnormalized coord = %@", NSStringFromCGPoint([Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds]));
     
+    self.newNoteCreated = YES;
     [self addViewForNote:note];
     
     [[Database sharedDatabase] save];
@@ -196,6 +199,12 @@
     [self.dynamicProperties addItem:imageView];
 
     imageView.note = note;
+    
+    if (self.newNoteCreated == YES) {
+        [self.focus focusOn:imageView withTouchPoint:unnomralizedCenter];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
+        self.newNoteCreated = NO;
+    }
 }
 
 #pragma mark - Delete Notes
