@@ -34,6 +34,7 @@
     
     if (self) {
         
+        // Helps retrieve canvas indices
         self.defaults = [NSUserDefaults standardUserDefaults];
         
         self.menuBar = [[UINavigationBar alloc] init];
@@ -52,13 +53,6 @@
             self.canvasMenuPopoverController = [[UIPopoverController alloc] initWithContentViewController:canvasTitlePopover];
             canvasTitlePopover.popoverController = self.canvasMenuPopoverController;
             
-            NSMutableArray* items = [[NSMutableArray alloc] init];
-            
-            // Allows toggling different prototyping options for easier experimentation
-            [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Prototyping" style:UIBarButtonItemStyleBordered target:self action:@selector(showPrototypingPopover:)]];
-            
-            [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Canvases" style:UIBarButtonItemStyleBordered target:self action:@selector(showCanvasMenuPopover:)]];
-            
             if ([self.defaults objectForKey:Key_CurrentCanvasIndex]) {
                 
                 NSMutableArray* canvasTitles = [self.defaults objectForKey:Key_CanvasTitles];
@@ -72,10 +66,6 @@
                                                                     object:self
                                                                   userInfo:@{Key_CanvasNumber:canvasTitleIndices[currentCanvas],
                                                                              Key_CanvasName:[canvasTitles objectAtIndex:currentCanvas]}];
-                
-            } else {
-                
-                self.menuItems = [[UINavigationItem alloc] initWithTitle:@"Canvas One"];
                 
             }
             
@@ -94,9 +84,11 @@
             [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(updateTitle:) name:kCanvasChangedNotification object:nil];
         }
     }
+    
     return self;
 }
 
+// Update the navigation bar title to show the name of the currently selected canvas
 - (void)updateTitle:(NSNotification *)notification {
     
     self.menuItems.title = [notification.userInfo objectForKey:Key_CanvasName];
@@ -106,7 +98,7 @@
     
     [super viewWillAppear:animated];
     
-    self.view.frame = CGRectMake(0, 0, self.view.superview.bounds.size.width, 64);
+    self.view.frame = CGRectMake(0, 0, self.view.superview.bounds.size.width, Key_NavBarHeight);
     self.view.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleWidth;
 }
 
@@ -115,7 +107,7 @@
     [super didReceiveMemoryWarning];
 }
 
-#pragma mark - Tool Bar Button Actions
+#pragma mark - Show NavBar Popover
 
 - (IBAction)showCanvasMenuPopover:(id)sender {
     
