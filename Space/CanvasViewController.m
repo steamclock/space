@@ -323,6 +323,7 @@
 #pragma mark - Focus Notes
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
+    
     NoteView* view = (NoteView*)recognizer.view;
     
     // Prevents double tap

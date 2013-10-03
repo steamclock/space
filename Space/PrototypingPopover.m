@@ -16,9 +16,9 @@
 @property (strong, nonatomic) UIActionSheet* focusModeSelection;
 @property (strong, nonatomic) UIActionSheet* dragModeSelection;
 
-@property (strong, nonatomic) UILabel* layoutLabel;
-@property (strong, nonatomic) UILabel* focusLabel;
-@property (strong, nonatomic) UILabel* dragLabel;
+@property (strong, nonatomic) UIButton* layoutButton;
+@property (strong, nonatomic) UIButton* focusButton;
+@property (strong, nonatomic) UIButton* dragButton;
 
 @end
 
@@ -30,42 +30,33 @@
 {
     [super viewDidLoad];
 	
-    UIButton* layoutButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [layoutButton setTitle:@"Layout" forState:UIControlStateNormal];
-    layoutButton.titleLabel.font = [UIFont systemFontOfSize:20];
-    CGRect layoutButtonFrame = CGRectMake(5, 10, 100, 50);
-    layoutButton.frame = layoutButtonFrame;
-    [layoutButton addTarget:self action:@selector(showDrawerLayoutSelection) forControlEvents:UIControlEventTouchUpInside];
+    self.layoutButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [self.layoutButton setTitle:@"Layout: 2 Sections" forState:UIControlStateNormal];
+    self.layoutButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    CGRect layoutButtonFrame = CGRectMake(5, 10, 300, 50);
+    self.layoutButton.frame = layoutButtonFrame;
+    [self.layoutButton addTarget:self action:@selector(showDrawerLayoutSelection) forControlEvents:UIControlEventTouchUpInside];
     
-    self.layoutLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 10, 100, 50)];
-    [self.layoutLabel setText:@"2 Sections"];
     
-    UIButton* focusButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [focusButton setTitle:@"Focus" forState:UIControlStateNormal];
-    focusButton.titleLabel.font = [UIFont systemFontOfSize:20];
-    CGRect focusButtonFrame = CGRectMake(5, 80, 100, 50);
-    focusButton.frame = focusButtonFrame;
-    [focusButton addTarget:self action:@selector(showFocusModeSelection) forControlEvents:UIControlEventTouchUpInside];
+    self.focusButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [self.focusButton setTitle:@"Focus: Dimming" forState:UIControlStateNormal];
+    self.focusButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    CGRect focusButtonFrame = CGRectMake(5, 80, 300, 50);
+    self.focusButton.frame = focusButtonFrame;
+    [self.focusButton addTarget:self action:@selector(showFocusModeSelection) forControlEvents:UIControlEventTouchUpInside];
     
-    self.focusLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 80, 100, 50)];
-    [self.focusLabel setText:@"Dimming"];
     
-    UIButton* dragButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [dragButton setTitle:@"Drag" forState:UIControlStateNormal];
-    dragButton.titleLabel.font = [UIFont systemFontOfSize:20];
-    CGRect dragButtonFrame = CGRectMake(5, 150, 100, 50);
-    dragButton.frame = dragButtonFrame;
-    [dragButton addTarget:self action:@selector(showDragModeSelection) forControlEvents:UIControlEventTouchUpInside];
+    self.dragButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [self.dragButton setTitle:@"Drag: Gravity" forState:UIControlStateNormal];
+    self.dragButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    CGRect dragButtonFrame = CGRectMake(5, 150, 300, 50);
+    self.dragButton.frame = dragButtonFrame;
+    [self.dragButton addTarget:self action:@selector(showDragModeSelection) forControlEvents:UIControlEventTouchUpInside];
     
-    self.dragLabel = [[UILabel alloc] initWithFrame:CGRectMake(120, 150, 150, 50)];
-    [self.dragLabel setText:@"Sliding & Gravity"];
     
-    [self.view addSubview:layoutButton];
-    [self.view addSubview:self.layoutLabel];
-    [self.view addSubview:focusButton];
-    [self.view addSubview:self.focusLabel];
-    [self.view addSubview:dragButton];
-    [self.view addSubview:self.dragLabel];
+    [self.view addSubview:self.layoutButton];
+    [self.view addSubview:self.focusButton];
+    [self.view addSubview:self.dragButton];
 }
 
 - (void)showDrawerLayoutSelection {
@@ -94,7 +85,7 @@
                                                           delegate:(id<UIActionSheetDelegate>)self
                                                  cancelButtonTitle:@"Cancel"
                                             destructiveButtonTitle:nil
-                                                 otherButtonTitles:@"UIView Animation", @"UIDynamic Free Sliding", @"UIDynamic Sliding with Gravity", nil];
+                                                 otherButtonTitles:@"Basic Animation", @"Free Sliding", @"Gravity", nil];
     [self.dragModeSelection showInView:self.view];
 }
 
@@ -104,10 +95,10 @@
         
         if (buttonIndex == 0) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kLoadOriginalDrawerNotification object:nil];
-            [self.layoutLabel setText:@"3 Sections"];
+            [self.layoutButton setTitle:@"Layout: 3 Sections" forState:UIControlStateNormal];
         } else if (buttonIndex == 1) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
-            [self.layoutLabel setText:@"2 Sections"];
+            [self.layoutButton setTitle:@"Layout: 2 Sections" forState:UIControlStateNormal];
         }
         
     } else if (actionSheet == self.focusModeSelection) {
@@ -115,11 +106,11 @@
         if (buttonIndex == 0) {
             NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"dim", @"focusMode", nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
-            [self.focusLabel setText:@"Dimming"];
+            [self.focusButton setTitle:@"Focus: Dimming" forState:UIControlStateNormal];
         } else if (buttonIndex == 1) {
             NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"slide", @"focusMode", nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
-            [self.focusLabel setText:@"Slide Out"];
+            [self.focusButton setTitle:@"Focus: Slide Out" forState:UIControlStateNormal];
         }
         
     } else if (actionSheet == self.dragModeSelection) {
@@ -127,15 +118,15 @@
         if (buttonIndex == 0) {
             NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIViewAnimation], @"dragMode", nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
-            [self.dragLabel setText:@"UIView Animation"];
+            [self.dragButton setTitle:@"Drag: Basic Animation" forState:UIControlStateNormal];
         } else if (buttonIndex == 1) {
             NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSliding], @"dragMode", nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
-            [self.dragLabel setText:@"Free Sliding"];
+            [self.dragButton setTitle:@"Drag: Free Sliding" forState:UIControlStateNormal];
         } else if (buttonIndex == 2) {
             NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], @"dragMode", nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
-            [self.dragLabel setText:@"Sliding & Gravity"];
+            [self.dragButton setTitle:@"Drag: Gravity" forState:UIControlStateNormal];
         }
 
     }

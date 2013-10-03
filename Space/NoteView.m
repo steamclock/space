@@ -11,7 +11,7 @@
 #import "Coordinate.h"
 #import "Database.h"
 
-const int NOTE_RADIUS = 22;
+const int NOTE_RADIUS = 25;
 
 @interface NoteView () {
     Note* _note;
