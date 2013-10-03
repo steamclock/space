@@ -128,9 +128,20 @@
     
     NSLog(@"Focus frame = %@", NSStringFromCGRect(self.focus.frame));
     self.touchPoint = pointOfTouch;
+    
+    BCRectEdge rectEdge;
+    
+    if (pointOfTouch.y < [UIScreen mainScreen].bounds.size.height / 2) {
+        rectEdge = BCRectEdgeBottom;
+    } else if (pointOfTouch.y > [UIScreen mainScreen].bounds.size.height / 2) {
+        rectEdge = BCRectEdgeTop;
+    } else {
+        rectEdge = BCRectEdgeBottom;
+    }
+    
     [self.focus genieOutTransitionWithDuration:0.5
                                      startRect:CGRectMake(pointOfTouch.x, pointOfTouch.y, view.frame.size.width, view.frame.size.height)
-                                     startEdge:BCRectEdgeBottom
+                                     startEdge:rectEdge
                                     completion:nil];
 }
 
