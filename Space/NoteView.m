@@ -51,7 +51,7 @@ const int NOTE_RADIUS = 22;
     self.contentMode = UIViewContentModeScaleToFill;
     self.frame = CGRectMake(0, 0, portraitSize, portraitSize);
 
-    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.center.x - 32, self.frame.size.height, 64, 20)];
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.center.x - 32, -20, 64, 20)];
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
     self.titleLabel.font = [UIFont systemFontOfSize:14];
     
