@@ -12,6 +12,6 @@
 
 @interface FocusViewController : UIViewController
 
--(void)focusOn:(NoteView*)note;
+-(void)focusOn:(NoteView*)note withTouchPoint:(CGPoint)pointOfTouch;
 
 @end

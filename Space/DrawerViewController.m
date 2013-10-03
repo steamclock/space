@@ -164,7 +164,7 @@
     self.collision.collisionDelegate = self;
     
     self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
-    self.drawerBehavior.resistance = 10;
+    self.drawerBehavior.resistance = 0;
     self.drawerBehavior.allowsRotation = NO;
     
     [self.animator addBehavior:self.collision];
@@ -235,7 +235,7 @@
         self.drawerBehavior.resistance = 0;
         
         self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-        [self.gravity setMagnitude:1];
+        [self.gravity setMagnitude:5.0];
         [self.animator addBehavior:self.gravity];
     }
 }
@@ -264,7 +264,7 @@
         self.drawerBehavior.resistance = 0;
         
         self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-        [self.gravity setMagnitude:-1];
+        [self.gravity setMagnitude:-5.0];
         [self.animator addBehavior:self.gravity];
     }
 }

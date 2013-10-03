@@ -12,6 +12,7 @@
 #import <QuartzCore/QuartzCore.h>
 #import "Coordinate.h"
 #import "Notifications.h"
+#import "UIView+Genie.h"
 
 #define FOCUS_SIZE 400
 
@@ -22,6 +23,8 @@
 @property (nonatomic) UIView* focus;
 @property (nonatomic) UITextField* titleField;
 @property (nonatomic) UITextView* contentField;
+
+@property (nonatomic) CGPoint touchPoint;
 
 @end
 
@@ -95,14 +98,16 @@
     [self.noteView setHighlighted:NO];
     [self.noteView setUserInteractionEnabled:YES];
     
-    self.view.hidden = true;
+    // NSLog(@"Self noteView frame = %@", NSStringFromCGRect(self.noteView.frame));
+    self.view.hidden = YES;
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kFocusDismissedNotification object:self];
 }
 
--(void)focusOn:(NoteView *)view {
+-(void)focusOn:(NoteView *)view withTouchPoint:(CGPoint)pointOfTouch {
     self.noteView = view;
     [self.noteView setHighlighted:YES];
+    // NSLog(@"Note view frame = %@", NSStringFromCGRect(view.frame));
     
     [self updateFocusViewFrame];
     
@@ -120,6 +125,13 @@
     }
 
     self.view.hidden = NO;
+    
+    NSLog(@"Focus frame = %@", NSStringFromCGRect(self.focus.frame));
+    self.touchPoint = pointOfTouch;
+    [self.focus genieOutTransitionWithDuration:0.5
+                                     startRect:CGRectMake(pointOfTouch.x, pointOfTouch.y, view.frame.size.width, view.frame.size.height)
+                                     startEdge:BCRectEdgeBottom
+                                    completion:nil];
 }
 
 - (void)updateFocusViewFrame {

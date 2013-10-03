@@ -319,7 +319,8 @@
     // Prevents double tap
     [view setUserInteractionEnabled:NO];
     
-    [self.focus focusOn:view];
+    [self.focus focusOn:view withTouchPoint:[recognizer locationInView:self.topLevelView]];
+    NSLog(@"Point of touch = %@", NSStringFromCGPoint([recognizer locationInView:self.topLevelView]));
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
 }
@@ -359,7 +360,7 @@
                 [self returnNoteToBounds:view];
                 [self recoverNote:view];
             } else {
-                [view setBackgroundColor:[UIColor redColor]];
+                [view setBackgroundColor:[UIColor greenColor]];
             }
         } else if(recognizer.state == UIGestureRecognizerStateEnded) {
             [[Database sharedDatabase] save];
@@ -380,7 +381,7 @@
         } else if (view.center.y > self.editY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self returnNoteToBounds:view];
-                [self.focus focusOn:view];
+                [self.focus focusOn:view withTouchPoint:CGPointZero];
                 
                 [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
             } else {

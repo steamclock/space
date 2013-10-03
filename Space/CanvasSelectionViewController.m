@@ -55,9 +55,9 @@
             NSMutableArray* items = [[NSMutableArray alloc] init];
             
             // Allows toggling different prototyping options for easier experimentation
-            [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Prototyping Menu" style:UIBarButtonItemStyleBordered target:self action:@selector(showPrototypingPopover:)]];
+            [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Prototyping" style:UIBarButtonItemStyleBordered target:self action:@selector(showPrototypingPopover:)]];
             
-            [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Canvas Menu" style:UIBarButtonItemStyleBordered target:self action:@selector(showCanvasMenuPopover:)]];
+            [items addObject:[[UIBarButtonItem alloc] initWithTitle:@"Canvases" style:UIBarButtonItemStyleBordered target:self action:@selector(showCanvasMenuPopover:)]];
             
             if ([self.defaults objectForKey:Key_CurrentCanvasIndex]) {
                 
@@ -79,12 +79,12 @@
                 
             }
             
-            [self.menuItems setLeftBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Prototyping Menu"
+            [self.menuItems setLeftBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Prototyping"
                                                                              style:UIBarButtonItemStyleBordered
                                                                             target:self
                                                                             action:@selector(showPrototypingPopover:)]];
             
-            [self.menuItems setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Canvas Menu"
+            [self.menuItems setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Canvases"
                                                                               style:UIBarButtonItemStyleBordered
                                                                              target:self
                                                                              action:@selector(showCanvasMenuPopover:)]];
