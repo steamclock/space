@@ -99,21 +99,19 @@
     [self.view addSubview:self.bottomDragHandle];
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-    
-    // Load default settings for demo
-    if (self.hasLoaded == NO) {
-        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
-        
-        NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], @"dragMode", nil];
-        [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
-        self.hasLoaded = YES;
-    }
-}
-
 -(void)viewDidAppear:(BOOL)animated {
     
     [super viewDidAppear:animated];
+    
+    // Load default settings for demo
+    if (self.hasLoaded == NO) {
+        NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], @"dragMode", nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
+        
+        self.hasLoaded = YES;
+    }
     
     UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panningDrawer:)];
     [_topDrawerContents.view addGestureRecognizer:panGestureRecognizer];
