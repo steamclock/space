@@ -17,6 +17,4 @@
 @property (strong, nonatomic) UITextField* titleField;
 @property (weak, nonatomic) UIPopoverController* popoverController;
 
-// @property (copy, nonatomic) void(^newTitleEntered)(NSString* title);
-
 @end

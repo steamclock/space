@@ -14,6 +14,7 @@
 @interface CanvasMenuPopover ()
 
 @property (strong, nonatomic) NSUserDefaults* defaults;
+
 @property (strong, nonatomic) UIButton* currentlyEditingButton;
 @property (strong, nonatomic) NSString* currentlyEditingButtonTitle;
 @property (strong, nonatomic) UITextField* currentlyEditingButtonTextField;
@@ -89,7 +90,7 @@
     return YES;
 }
 
-#pragma mark - Canvas Button
+#pragma mark - Canvas Menu Buttons
 
 - (void)clearAllButtons {
     
@@ -195,7 +196,7 @@
 
 #pragma mark - Select, Add, Update, Delete Canvases
 
--(IBAction)canvasSelected:(id)sender {
+- (IBAction)canvasSelected:(id)sender {
     
     UIButton* pressedButton = (UIButton*)sender;
     
@@ -251,6 +252,18 @@
 
 - (void)deleteSelectedCanvas {
     
+    // Reject delete if there's only one remaining canvas, or we can gracefully delete it and replace it with a placeholder
+    if ([self.canvasTitles count] == 1) {
+        NSLog(@"Tried to delete last canvas");
+        
+        UIAlertView* alertView = [[UIAlertView alloc] initWithTitle:@"Cannot Delete" message:@"Cannot delete last canvas" delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        [alertView show];
+        
+        // Delete operation completed, so reset deleteTitleAllowed check
+        self.deleteTitleAllowed = NO;
+        return;
+    }
+    
     int canvasToDelete;
     int canvasToSwitchTo;
     
@@ -259,21 +272,23 @@
     [self.canvasTitles removeObjectAtIndex:self.currentlyEditingButton.tag];
     [self.canvasTitleIndices removeObjectAtIndex:self.currentlyEditingButton.tag];
     
-    // Switches canvas view to the previous one or to the first one if it's the last canvas
-    int indexOfCanvasToSwitchTo = self.currentlyEditingButton.tag - 1;
-    if (indexOfCanvasToSwitchTo < 0) {
+    // Switches canvas view to the previous one by default
+    int indexOfCanvasToSwitchTo = canvasToDelete - 1;
+    
+    // Switches canvas view to the last available one (second object will move from index 1 to 0)
+    // if the first of the two canvases is the one to be deleted
+    if (canvasToDelete == 0) {
         indexOfCanvasToSwitchTo = 0;
     }
+    
     canvasToSwitchTo = [[self.canvasTitleIndices objectAtIndex:indexOfCanvasToSwitchTo] intValue];
-    if (canvasToSwitchTo < 0) {
-        canvasToSwitchTo = 0;
-    }
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
                                                         object:self
                                                       userInfo:@{Key_CanvasNumber:[NSNumber numberWithInt:canvasToSwitchTo],
-                                                                 Key_CanvasName:[self.canvasTitles objectAtIndex:canvasToSwitchTo]}];
+                                                                 Key_CanvasName:[self.canvasTitles objectAtIndex:indexOfCanvasToSwitchTo]}];
     
+    // Delete operation completed, so reset deleteTitleAllowed check
     self.deleteTitleAllowed = NO;
 }
 
