@@ -211,7 +211,7 @@
 
 -(void)addViewForNote:(Note*)note {
     
-    NoteView* imageView = [[NoteView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
+    NoteView* imageView = [[NoteView alloc] init];
     imageView.animator = self.animator;
     CGPoint unnomralizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
     [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];

@@ -19,12 +19,14 @@ const int NOTE_RADIUS = 25;
 
 @property UILabel* titleLabel;
 
+@property (nonatomic) CAShapeLayer* circleShape;
+@property (nonatomic) CGRect originalCircleFrame;
+
 @end
 
 @implementation NoteView
 
-- (id)initWithFrame:(CGRect)frame {
-    
+-(id)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self) {
         [self commonSetup];
@@ -32,14 +34,15 @@ const int NOTE_RADIUS = 25;
     return self;
 }
 
-- (id)initWithImage:(UIImage *)image {
-    
+/*
+-(id)initWithImage:(UIImage *)image {
     self = [super initWithImage:image];
     if (self) {
         [self commonSetup];
     }
     return self;
 }
+*/
 
 -(void)dealloc {
     [_note removeObserver:self forKeyPath:@"title"];
@@ -57,17 +60,39 @@ const int NOTE_RADIUS = 25;
     
     [self addSubview:self.titleLabel];
     self.clipsToBounds = NO;
+    
+    self.originalCircleFrame = self.frame;
+    [self drawCircle];
+}
+
+-(void)drawCircle {
+    UIView* circle = [[UIView alloc] initWithFrame:self.frame];
+    circle.backgroundColor = [UIColor clearColor];
+    [self addSubview:circle];
+    
+    self.circleShape = [CAShapeLayer layer];
+    
+    CGRect circleFrame = self.bounds;
+    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:NOTE_RADIUS];
+    
+    self.circleShape.path = circlePath.CGPath;
+    
+    self.circleShape.fillColor = [UIColor clearColor].CGColor;
+    self.circleShape.strokeColor = [UIColor blackColor].CGColor;
+    self.circleShape.lineWidth = 2.0f;
+    
+    self.circleShape.frame = self.bounds;
+    
+    [self.layer addSublayer:self.circleShape];
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    
     if([keyPath isEqualToString:@"title"]) {
         self.titleLabel.text = self.note.title;
     }
 }
 
 -(void)setNote:(Note *)note {
-    
     [_note removeObserver:self forKeyPath:@"title"];
     _note = note;
     self.titleLabel.text = note.title;
@@ -79,7 +104,6 @@ const int NOTE_RADIUS = 25;
 }
 
 -(void)setCenter:(CGPoint)center {
-    
     [super setCenter:center];
     
     if (self.onDropOffscreen && center.y > self.offscreenYDistance) {
@@ -89,7 +113,6 @@ const int NOTE_RADIUS = 25;
 }
 
 -(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds {
-    
     [super setCenter:center];
     
     self.note.positionX = [Coordinate normalizeXCoord:center.x withReferenceBounds:bounds];
