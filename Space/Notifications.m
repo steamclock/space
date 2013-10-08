@@ -11,8 +11,9 @@ NSString* kCanvasChangedNotification = @"spaceCanvasChanged";
 NSString* kNoteTrashedNotification = @"noteTrashed";
 NSString* kNoteRecoveredNotification = @"noteRecovered";
 
-NSString* kLoadOriginalDrawerNotification = @"loadOriginalDrawer";
-NSString* kLoadAlternativeDrawerNotification = @"loadAlternativeDrawer";
+NSString* kLoadThreeSectionsLayoutNotification = @"loadThreeSectionsLayout";
+NSString* kLoadTwoSectionsLayoutNotification = @"loadTwoSectionsLayout";
+NSString* kLayoutChangedNotification = @"layoutChanged";
 
 NSString* kFocusNoteNotification = @"focusNote";
 NSString* kChangeFocusModeNotification = @"changeFocusMode";

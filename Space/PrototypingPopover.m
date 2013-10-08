@@ -94,12 +94,14 @@
     if (actionSheet == self.drawerLayoutSelection) {
         
         if (buttonIndex == 0) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadOriginalDrawerNotification object:nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadThreeSectionsLayoutNotification object:nil];
             [self.layoutButton setTitle:@"Layout: 3 Sections" forState:UIControlStateNormal];
         } else if (buttonIndex == 1) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadTwoSectionsLayoutNotification object:nil];
             [self.layoutButton setTitle:@"Layout: 2 Sections" forState:UIControlStateNormal];
         }
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLayoutChangedNotification object:nil];
         
     } else if (actionSheet == self.focusModeSelection) {
         

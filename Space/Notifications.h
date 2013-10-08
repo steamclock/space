@@ -11,8 +11,9 @@ extern NSString* kCanvasChangedNotification;
 extern NSString* kNoteTrashedNotification;
 extern NSString* kNoteRecoveredNotification;
 
-extern NSString* kLoadOriginalDrawerNotification;
-extern NSString* kLoadAlternativeDrawerNotification;
+extern NSString* kLoadThreeSectionsLayoutNotification;
+extern NSString* kLoadTwoSectionsLayoutNotification;
+extern NSString* kLayoutChangedNotification;
 
 extern NSString* kFocusNoteNotification;
 extern NSString* kChangeFocusModeNotification;

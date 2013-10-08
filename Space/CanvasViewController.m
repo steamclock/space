@@ -43,6 +43,7 @@
 
 @property (strong, nonatomic) NoteView* currentlyZoomedInNoteView;
 @property (nonatomic) BOOL isCurrentlyZoomedIn;
+@property (nonatomic) float zoomAnimationDuration;
 
 @end
 
@@ -125,12 +126,15 @@
         // Help manage note circle zoom animation
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteFocused:) name:kFocusNoteNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteDismissed:) name:kFocusDismissedNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(layoutChanged:) name:kLayoutChangedNotification object:nil];
     }
     
     self.currentCanvas = 0;
     [self loadCurrentCanvas];
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
+    
+    self.zoomAnimationDuration = 0.5;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -185,6 +189,12 @@
 
 -(void)canvasChangedNotification:(NSNotification*)notification {
 
+    if (self.isCurrentlyZoomedIn) {
+        self.zoomAnimationDuration = 0;
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView];
+        self.zoomAnimationDuration = 0.5;
+    }
+    
     self.currentCanvas = [notification.userInfo[Key_CanvasNumber] intValue];
     NSLog(@"Current canvas = %d", self.currentCanvas);
     
@@ -423,7 +433,7 @@
         
         noteView.layer.zPosition = 1000;
         
-        [UIView animateWithDuration:0.5 animations:^{
+        [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Zoom Circle
             [noteView setTransform:CGAffineTransformMakeScale(10.0, 10.0)];
             
@@ -431,7 +441,7 @@
             
             [CATransaction begin]; {
                 
-                [CATransaction setValue:[NSNumber numberWithFloat:0.5] forKey:kCATransactionAnimationDuration];
+                [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
                 noteView.circleShape.lineWidth = 1.0;
                 
             } [CATransaction commit];
@@ -448,7 +458,7 @@
         
         self.isCurrentlyZoomedIn = NO;
         
-        [UIView animateWithDuration:0.5 animations:^{
+        [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Unzoom Circle
             [noteView setTransform:CGAffineTransformMakeScale(1.0, 1.0)];
             
@@ -456,7 +466,7 @@
             
             [CATransaction begin]; {
                 
-                [CATransaction setValue:[NSNumber numberWithFloat:0.5] forKey:kCATransactionAnimationDuration];
+                [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
                 noteView.circleShape.lineWidth = 2.0;
                 
             } [CATransaction commit];
@@ -474,15 +484,28 @@
     }
 }
 
--(void)noteFocused:(UITapGestureRecognizer*)recognizer {
+-(void)noteFocused:(NSNotification*)notification {
 }
 
--(void)noteDismissed:(UITapGestureRecognizer*)recognizer {
+-(void)noteDismissed:(NSNotification*)notification {
+}
+
+-(void)layoutChanged:(NSNotification*)notification {
+    if (self.isCurrentlyZoomedIn) {
+        self.zoomAnimationDuration = 0;
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView];
+        self.zoomAnimationDuration = 0.5;
+    }
 }
 
 #pragma mark - Drag Notes
 
 -(void)noteDrag:(UIPanGestureRecognizer*)recognizer {
+    
+    // Don't allow note drag if we're currently zoomed in, which can cause problematic behaviours
+    if (self.isCurrentlyZoomedIn) {
+        return;
+    }
     
     NoteView* view = (NoteView*)recognizer.view;
     CGPoint drag = [recognizer locationInView:self.view];

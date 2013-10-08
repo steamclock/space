@@ -73,8 +73,8 @@
     self.isFocusModeDim = YES;
     self.drawerDragMode = UIViewAnimation;
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadOriginalDrawer) name:kLoadOriginalDrawerNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadAlternativeDrawer) name:kLoadAlternativeDrawerNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadThreeSectionsLayout) name:kLoadThreeSectionsLayoutNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadTwoSectionsLayout) name:kLoadTwoSectionsLayoutNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideOutCanvases) name:kFocusNoteNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideBackCanvases) name:kFocusDismissedNotification object:nil];
@@ -108,7 +108,7 @@
         NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], @"dragMode", nil];
         [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
         
-        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadAlternativeDrawerNotification object:nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadTwoSectionsLayoutNotification object:nil];
         
         self.hasLoaded = YES;
     }
@@ -387,8 +387,8 @@
     NSLog(@"Drawer Drag Mode = %d", self.drawerDragMode);
 }
 
-- (void)loadOriginalDrawer {
-    NSLog(@"Load original drawer.");
+- (void)loadThreeSectionsLayout {
+    NSLog(@"Loading three sections layout drawer.");
     
     if (self.drawerDragMode != UIViewAnimation) {
         [self stopPhysicsEngine];
@@ -404,8 +404,8 @@
     }
 }
 
-- (void)loadAlternativeDrawer {
-    NSLog(@"Load alternative drawer.");
+- (void)loadTwoSectionsLayout {
+    NSLog(@"Loading two sections layout drawer.");
     
     if (self.drawerDragMode != UIViewAnimation) {
         [self stopPhysicsEngine];
