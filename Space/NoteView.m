@@ -11,16 +11,13 @@
 #import "Coordinate.h"
 #import "Database.h"
 
-const int NOTE_RADIUS = 25;
+const int NOTE_RADIUS = 30;
 
 @interface NoteView () {
     Note* _note;
 }
 
 @property UILabel* titleLabel;
-
-@property (nonatomic) CAShapeLayer* circleShape;
-@property (nonatomic) CGRect originalCircleFrame;
 
 @end
 
@@ -61,7 +58,6 @@ const int NOTE_RADIUS = 25;
     [self addSubview:self.titleLabel];
     self.clipsToBounds = NO;
     
-    self.originalCircleFrame = self.frame;
     [self drawCircle];
 }
 
@@ -77,7 +73,7 @@ const int NOTE_RADIUS = 25;
     
     self.circleShape.path = circlePath.CGPath;
     
-    self.circleShape.fillColor = [UIColor clearColor].CGColor;
+    self.circleShape.fillColor = [UIColor lightGrayColor].CGColor;
     self.circleShape.strokeColor = [UIColor blackColor].CGColor;
     self.circleShape.lineWidth = 2.0f;
     

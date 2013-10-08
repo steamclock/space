@@ -23,6 +23,9 @@ extern const int NOTE_RADIUS;
 // Used to help update item coordinates in setCenter:withReferenceBounds:
 @property (nonatomic, weak) UIDynamicAnimator* animator;
 
+@property (nonatomic) CAShapeLayer* circleShape;
+@property (nonatomic) CGRect originalCircleFrame;
+
 -(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds;
 -(void)setHighlighted:(BOOL)highlighted;
 
