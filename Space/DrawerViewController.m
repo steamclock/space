@@ -77,7 +77,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadTwoSectionsLayout) name:kLoadTwoSectionsLayoutNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideOutCanvases) name:kFocusNoteNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideBackCanvases) name:kFocusDismissedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideBackCanvases) name:kNoteDismissedNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeFocusMode:) name:kChangeFocusModeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeDragMode:) name:kChangeDragModeNotification object:nil];

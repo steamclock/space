@@ -15,8 +15,15 @@ NSString* kLoadThreeSectionsLayoutNotification = @"loadThreeSectionsLayout";
 NSString* kLoadTwoSectionsLayoutNotification = @"loadTwoSectionsLayout";
 NSString* kLayoutChangedNotification = @"layoutChanged";
 
+NSString* kNoteCreatedNotification = @"noteCreated";
+NSString* kNoteSavedNotification = @"noteSaved";
+
 NSString* kFocusNoteNotification = @"focusNote";
+NSString* kDismissNoteNotification = @"dismissNote";
+
 NSString* kChangeFocusModeNotification = @"changeFocusMode";
-NSString* kFocusDismissedNotification = @"focusDismissed";
+
+NSString* kNoteFocusedNotification = @"noteFocused";
+NSString* kNoteDismissedNotification = @"noteDismissed";
 
 NSString* kChangeDragModeNotification = @"changeDragMode";

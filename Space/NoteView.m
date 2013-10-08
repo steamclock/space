@@ -73,7 +73,7 @@ const int NOTE_RADIUS = 30;
     
     self.circleShape.path = circlePath.CGPath;
     
-    self.circleShape.fillColor = [UIColor lightGrayColor].CGColor;
+    self.circleShape.fillColor = [UIColor clearColor].CGColor;
     self.circleShape.strokeColor = [UIColor blackColor].CGColor;
     self.circleShape.lineWidth = 2.0f;
     

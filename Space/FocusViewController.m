@@ -23,7 +23,6 @@
 @property (nonatomic) UIView* focus;
 @property (nonatomic) UITextField* titleField;
 @property (nonatomic) UITextView* contentField;
-
 @property (nonatomic) CGPoint touchPoint;
 
 @end
@@ -34,8 +33,17 @@
 {
     [super viewDidLoad];
     
-    self.view.frame = self.view.bounds;
-    self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveNote) name:kDismissNoteNotification object:nil];
+    
+    // self.view.frame = self.view.bounds;
+    self.view.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                           centerYByFactor:0.475
+                                                     width:400
+                                                    height:400
+                                       withReferenceBounds:self.view.bounds];
+    
+    // self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
+    self.view.backgroundColor = [UIColor clearColor];
     
     self.focus = [[UIView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                     centerYByFactor:0.5
@@ -43,7 +51,8 @@
                                                                              height:FOCUS_SIZE
                                                                 withReferenceBounds:self.view.bounds]];
     
-    self.focus.backgroundColor = [UIColor lightGrayColor];
+    // self.focus.backgroundColor = [UIColor lightGrayColor];
+    self.focus.backgroundColor = [UIColor clearColor];
     self.focus.layer.cornerRadius = FOCUS_SIZE / 2;
     
     self.titleField = [[UITextField alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
@@ -85,8 +94,7 @@
     }
 }
 
--(void)tapOutside:(UITapGestureRecognizer*)guesture {
-    
+-(void)saveNote {
     [self.titleField resignFirstResponder];
     [self.contentField resignFirstResponder];
     
@@ -94,19 +102,22 @@
     self.note.content = self.contentField.text;
     
     [[Database sharedDatabase] save];
-
+    
     [self.noteView setHighlighted:NO];
     [self.noteView setUserInteractionEnabled:YES];
+}
+
+-(void)tapOutside:(UITapGestureRecognizer*)guesture {
+    
+    [self saveNote];
     
     // NSLog(@"Self noteView frame = %@", NSStringFromCGRect(self.noteView.frame));
-    self.view.hidden = YES;
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kFocusDismissedNotification object:self];
+    // self.view.hidden = YES;
 }
 
 -(void)focusOn:(NoteView *)view withTouchPoint:(CGPoint)pointOfTouch {
     self.noteView = view;
-    [self.noteView setHighlighted:YES];
+    // [self.noteView setHighlighted:YES];
     // NSLog(@"Note view frame = %@", NSStringFromCGRect(view.frame));
     
     [self updateFocusViewFrame];
@@ -124,8 +135,9 @@
         [self.titleField becomeFirstResponder];
     }
 
-    self.view.hidden = NO;
+    // self.view.hidden = NO;
     
+    /*
     NSLog(@"Focus frame = %@", NSStringFromCGRect(self.focus.frame));
     self.touchPoint = pointOfTouch;
     
@@ -143,6 +155,7 @@
                                      startRect:CGRectMake(pointOfTouch.x, pointOfTouch.y, view.frame.size.width, view.frame.size.height)
                                      startEdge:rectEdge
                                     completion:nil];
+    */
 }
 
 - (void)updateFocusViewFrame {

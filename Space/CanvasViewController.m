@@ -16,6 +16,8 @@
 #import "Constants.h"
 #import "Coordinate.h"
 
+#define SCALE_FACTOR 8.0
+
 @interface CanvasViewController ()
 
 @property (nonatomic) UIDynamicAnimator* animator;
@@ -44,6 +46,9 @@
 @property (strong, nonatomic) NoteView* currentlyZoomedInNoteView;
 @property (nonatomic) BOOL isCurrentlyZoomedIn;
 @property (nonatomic) float zoomAnimationDuration;
+
+@property (strong, nonatomic) NoteView* newlyCreatedNoteView;
+@property (nonatomic) BOOL shouldAutoZoom;
 
 @end
 
@@ -124,8 +129,7 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteRecoveredNotification:) name:kNoteRecoveredNotification object:nil];
         
         // Help manage note circle zoom animation
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteFocused:) name:kFocusNoteNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteDismissed:) name:kFocusDismissedNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteCreated:) name:kNoteCreatedNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(layoutChanged:) name:kLayoutChangedNotification object:nil];
     }
     
@@ -212,6 +216,8 @@
     
     // Don't create a note when an empty space is tapped while we're zoomed in, instead, zoom out.
     if (self.isCurrentlyZoomedIn) {
+        // Ask focus view to save the note
+        [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
         [self toggleZoomForNoteView:self.currentlyZoomedInNoteView];
         return;
     }
@@ -238,46 +244,49 @@
 
 -(void)addViewForNote:(Note*)note {
     
-    NoteView* imageView = [[NoteView alloc] init];
-    imageView.animator = self.animator;
+    NoteView* noteView = [[NoteView alloc] init];
+    noteView.animator = self.animator;
     CGPoint unnomralizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
-    [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+    [noteView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
     
     NSLog(@"Note position X = %f", note.positionX);
     NSLog(@"Note position Y = %f", note.positionY);
-    NSLog(@"Adding note at %@", NSStringFromCGPoint(imageView.center));
+    NSLog(@"Adding note at %@", NSStringFromCGPoint(noteView.center));
     
     // If this is a trashed note, "flip" its y-coordinate so that for example, if it was originally 80% down the y-coordinate in the top canvas,
     // it should only be roughly 20% down in the bottom canvas.
     if (note.trashed == YES && note.draggedToTrash != YES) {
         unnomralizedCenter.y = self.view.bounds.size.height - unnomralizedCenter.y;
-        [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+        [noteView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
     } else if (note.draggedToTrash == YES) {
         // If this note was manually dragged to trash, place it near the top
         unnomralizedCenter.y = NOTE_RADIUS;
-        [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+        [noteView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
     }
     
-    imageView.userInteractionEnabled = YES;
+    noteView.userInteractionEnabled = YES;
     
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(noteTap:)];
-    [imageView addGestureRecognizer:tapGestureRecognizer];
+    [noteView addGestureRecognizer:tapGestureRecognizer];
     
     UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(noteDrag:)];
-    [imageView addGestureRecognizer:panGestureRecognizer];
+    [noteView addGestureRecognizer:panGestureRecognizer];
 
     UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(noteLongPress:)];
-    [imageView addGestureRecognizer:longPress];
+    [noteView addGestureRecognizer:longPress];
 
-    [self.view addSubview:imageView];
-    [self.collision addItem:imageView];
-    [self.dynamicProperties addItem:imageView];
+    [self.view addSubview:noteView];
+    [self.collision addItem:noteView];
+    [self.dynamicProperties addItem:noteView];
 
-    imageView.note = note;
+    noteView.note = note;
     
     if (self.newNoteCreated == YES) {
-        [self.focus focusOn:imageView withTouchPoint:unnomralizedCenter];
-        [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
+        // [self.focus focusOn:imageView withTouchPoint:unnomralizedCenter];
+        self.newlyCreatedNoteView = noteView;
+        self.shouldAutoZoom = YES;
+        [[NSNotificationCenter defaultCenter] postNotificationName:kNoteCreatedNotification object:self];
+        // [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
         self.newNoteCreated = NO;
     }
 }
@@ -423,20 +432,21 @@
     
     [self toggleZoomForNoteView:self.currentlyZoomedInNoteView];
     
-    // [self.focus focusOn:view withTouchPoint:[recognizer locationInView:self.topLevelView]];
+    // [self.focus focusOn:noteView withTouchPoint:[recognizer locationInView:self.topLevelView]];
     // NSLog(@"Point of touch = %@", NSStringFromCGPoint([recognizer locationInView:self.topLevelView]));
 }
 
 -(void)toggleZoomForNoteView:(NoteView*)noteView {
-    if (CGRectEqualToRect(noteView.frame, noteView.originalCircleFrame)) {
+    if (CGRectEqualToRect(noteView.frame, noteView.originalCircleFrame) || self.shouldAutoZoom == YES) {
         
         self.isCurrentlyZoomedIn = YES;
+        self.shouldAutoZoom = NO;
         
         noteView.layer.zPosition = 1000;
         
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Zoom Circle
-            [noteView setTransform:CGAffineTransformMakeScale(10.0, 10.0)];
+            [noteView setTransform:CGAffineTransformMakeScale(SCALE_FACTOR, SCALE_FACTOR)];
             
             noteView.center = self.view.center;
             
@@ -444,6 +454,7 @@
                 
                 [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
                 noteView.circleShape.lineWidth = 1.0;
+                noteView.circleShape.fillColor = [UIColor colorWithWhite:0.5 alpha:0.8].CGColor;
                 
             } [CATransaction commit];
             
@@ -453,11 +464,19 @@
             [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
             
             // Show editor
-            [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
+            [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
+                self.focus.view.alpha = 1.0;
+                [self.focus focusOn:noteView withTouchPoint:CGPointZero];
+            }];
+            
+            // [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
         }];
     } else {
         
         self.isCurrentlyZoomedIn = NO;
+        
+        // Hide editor
+        self.focus.view.alpha = 0;
         
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Unzoom Circle
@@ -469,6 +488,7 @@
                 
                 [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
                 noteView.circleShape.lineWidth = 2.0;
+                noteView.circleShape.fillColor = [UIColor clearColor].CGColor;
                 
             } [CATransaction commit];
             
@@ -479,16 +499,18 @@
             
             noteView.layer.zPosition = 0;
             
-            // Hide editor
-            [[NSNotificationCenter defaultCenter] postNotificationName:kFocusDismissedNotification object:self];
+            // [[NSNotificationCenter defaultCenter] postNotificationName:kFocusDismissedNotification object:self];
         }];
     }
 }
 
--(void)noteFocused:(NSNotification*)notification {
-}
-
--(void)noteDismissed:(NSNotification*)notification {
+-(void)noteCreated:(NSNotification*)notification {
+    if (self.newlyCreatedNoteView != nil) {
+        self.currentlyZoomedInNoteView = self.newlyCreatedNoteView;
+        self.currentlyZoomedInNoteView.originalCircleFrame = self.newlyCreatedNoteView.frame;
+        // Slight delay is required to wait for the animator to pause
+        [self performSelector:@selector(toggleZoomForNoteView:) withObject:self.newlyCreatedNoteView afterDelay:1.0];
+    }
 }
 
 -(void)layoutChanged:(NSNotification*)notification {

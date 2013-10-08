@@ -15,8 +15,15 @@ extern NSString* kLoadThreeSectionsLayoutNotification;
 extern NSString* kLoadTwoSectionsLayoutNotification;
 extern NSString* kLayoutChangedNotification;
 
+extern NSString* kNoteCreatedNotification;
+extern NSString* kNoteSavedNotification;
+
 extern NSString* kFocusNoteNotification;
+extern NSString* kDismissNoteNotification;
+
 extern NSString* kChangeFocusModeNotification;
-extern NSString* kFocusDismissedNotification;
+
+extern NSString* kNoteFocusedNotification;
+extern NSString* kNoteDismissedNotification;
 
 extern NSString* kChangeDragModeNotification;
