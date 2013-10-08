@@ -210,8 +210,9 @@
         return;
     }
     
-    // Don't create a note when an empty space is tapped while we're zoomed in
+    // Don't create a note when an empty space is tapped while we're zoomed in, instead, zoom out.
     if (self.isCurrentlyZoomedIn) {
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView];
         return;
     }
     
