@@ -105,7 +105,7 @@
     self.collision.translatesReferenceBoundsIntoBoundary = YES;
     self.dynamicProperties = [[UIDynamicItemBehavior alloc] init];
     self.dynamicProperties.allowsRotation = NO;
-    self.dynamicProperties.resistance = 8;
+    self.dynamicProperties.resistance = 10;
 
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
@@ -383,10 +383,16 @@
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
     
+    // Don't allow focus if the animator is running
+    if (self.animator.running) {
+        return;
+    }
+    
     NoteView* noteView = (NoteView*)recognizer.view;
     
     // If we're already zoomed in and another note is tapped, dismiss the currently zoomed in note, then zoom in the newly selected note
     if (self.isCurrentlyZoomedIn == YES && self.currentlyZoomedInNoteView != noteView) {
+        self.currentlyZoomedInNoteView.layer.zPosition = 500;
         [self toggleZoomForNoteView:self.currentlyZoomedInNoteView];
     }
     
