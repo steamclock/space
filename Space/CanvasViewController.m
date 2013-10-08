@@ -21,7 +21,6 @@
 @property (nonatomic) UIDynamicAnimator* animator;
 @property (nonatomic) UICollisionBehavior* collision;
 @property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
-@property (nonatomic) UIDynamicItemBehavior* activeDrag;
 
 @property (nonatomic) CGPoint noteOriginalPosition;
 
@@ -478,11 +477,6 @@
     CGPoint drag = [recognizer locationInView:self.view];
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
-        self.activeDrag = [[UIDynamicItemBehavior alloc] init];
-        self.activeDrag.density = 1000000.0f;
-        [self.animator addBehavior:self.activeDrag];
-        [self.activeDrag addItem:view];
-        
         if (!CGPointEqualToPoint(self.noteOriginalPosition, view.center)) {
             self.noteOriginalPosition = view.center;
         }
@@ -490,12 +484,8 @@
     
     [view setCenter:drag withReferenceBounds:self.view.bounds];
     
-    //clean up the drag operation (and ONLY the drag operation. do all other ending actions below the isTrashMode check)
     if(recognizer.state == UIGestureRecognizerStateEnded) {
         [view setBackgroundColor:[UIColor clearColor]];
-        [self.activeDrag removeItem:view];
-        [self.animator removeBehavior:self.activeDrag];
-        self.activeDrag = nil;
     }
     
     if (self.isTrashMode) {
