@@ -195,7 +195,12 @@
 
 -(void)spaceTap:(UITapGestureRecognizer *)recognizer {
     
-    // Don't create an empty space is tapped while we're zoomed in
+    // Don't allow note creation when the animator is still active
+    if (self.animator.running) {
+        return;
+    }
+    
+    // Don't create a note when an empty space is tapped while we're zoomed in
     if (self.isCurrentlyZoomedIn) {
         return;
     }
