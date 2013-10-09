@@ -25,6 +25,8 @@ extern const int NOTE_RADIUS;
 
 @property (nonatomic) CAShapeLayer* circleShape;
 @property (nonatomic) CGRect originalCircleFrame;
+@property (nonatomic) float originalPositionX;
+@property (nonatomic) float originalPositionY;
 
 -(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds;
 -(void)setHighlighted:(BOOL)highlighted;

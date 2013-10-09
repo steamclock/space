@@ -450,6 +450,9 @@
 -(void)toggleZoomForNoteView:(NoteView*)noteView {
     if (CGRectEqualToRect(noteView.frame, noteView.originalCircleFrame) || self.shouldZoomInAfterCreatingNewNote == YES || self.isCurrentlyZoomedIn == NO) {
         
+        noteView.originalPositionX = noteView.note.positionX;
+        noteView.originalPositionY = noteView.note.positionY;
+        
         // Cannot transform properly when the view is being controlled by the animator
         [self.collision removeItem:noteView];
         [self.dynamicProperties removeItem:noteView];
@@ -713,6 +716,14 @@
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    
+    if (self.isCurrentlyZoomedIn) {
+        self.currentlyZoomedInNoteView.originalCircleFrame = [Coordinate frameWithCenterXByFactor:self.currentlyZoomedInNoteView.originalPositionX
+                                                                                  centerYByFactor:self.currentlyZoomedInNoteView.originalPositionY
+                                                                                            width:self.currentlyZoomedInNoteView.originalCircleFrame.size.width
+                                                                                           height:self.currentlyZoomedInNoteView.originalCircleFrame.size.height
+                                                                              withReferenceBounds:self.view.bounds];
+    }
     
     // Restore the behaviours after orientation changes and calculations are completed.
     [self.animator addBehavior:self.collision];
