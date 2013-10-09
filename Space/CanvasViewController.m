@@ -448,6 +448,9 @@
 #pragma mark - Zoom Focus Animation
 
 -(void)toggleZoomForNoteView:(NoteView*)noteView {
+    
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    
     if (CGRectEqualToRect(noteView.frame, noteView.originalCircleFrame) || self.shouldZoomInAfterCreatingNewNote == YES || self.isCurrentlyZoomedIn == NO) {
         
         noteView.originalPositionX = noteView.note.positionX;
@@ -465,7 +468,14 @@
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Zoom Circle
             [noteView setTransform:CGAffineTransformMakeScale(SCALE_FACTOR, SCALE_FACTOR)];
-            noteView.center = self.view.center;
+            
+            if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+                noteView.center = CGPointMake(self.view.center.x, self.view.center.y - 50);
+                self.focus.view.center = self.view.center;
+            } else {
+                noteView.center = self.view.center;
+                self.focus.view.center = CGPointMake(self.view.center.x, self.view.center.y + 50);
+            }
             
             [CATransaction begin]; {
                 
@@ -687,24 +697,16 @@
 }
 
 -(void)updateLocationForNoteView:(NoteView*)noteView {
+
+    CGPoint relativePosition = CGPointMake(noteView.note.positionX, noteView.note.positionY);
+    // NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
     
-    if (noteView == self.currentlyZoomedInNoteView) {
-        
-        CGPoint relativePosition = CGPointMake(noteView.note.positionX, noteView.note.positionY);
-        CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
-        [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+    CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
+    [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+    // NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
     
-        NSLog(@"Circle frame in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.frame));
-        NSLog(@"Circle bounds in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.bounds));
-        
-    } else {
-        CGPoint relativePosition = CGPointMake(noteView.note.positionX, noteView.note.positionY);
-        // NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
-        
-        CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
-        [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
-        // NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
-    }
+    // NSLog(@"Circle frame in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.frame));
+    // NSLog(@"Circle bounds in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.bounds));
 }
 
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
@@ -717,20 +719,41 @@
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     
-    if (self.isCurrentlyZoomedIn) {
-        self.currentlyZoomedInNoteView.originalCircleFrame = [Coordinate frameWithCenterXByFactor:self.currentlyZoomedInNoteView.originalPositionX
-                                                                                  centerYByFactor:self.currentlyZoomedInNoteView.originalPositionY
-                                                                                            width:self.currentlyZoomedInNoteView.originalCircleFrame.size.width
-                                                                                           height:self.currentlyZoomedInNoteView.originalCircleFrame.size.height
-                                                                              withReferenceBounds:self.view.bounds];
-    }
-    
     // Restore the behaviours after orientation changes and calculations are completed.
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
     
     if (self.isTrashMode) {
         self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
+    }
+    
+    if (self.isCurrentlyZoomedIn) {
+        self.currentlyZoomedInNoteView.originalCircleFrame = [Coordinate frameWithCenterXByFactor:self.currentlyZoomedInNoteView.originalPositionX
+                                                                                  centerYByFactor:self.currentlyZoomedInNoteView.originalPositionY
+                                                                                            width:self.currentlyZoomedInNoteView.originalCircleFrame.size.width
+                                                                                           height:self.currentlyZoomedInNoteView.originalCircleFrame.size.height
+                                                                              withReferenceBounds:self.view.bounds];
+        
+        if (self.isCurrentlyZoomedIn) {
+            [self repositionZoomedInNoteView:self.currentlyZoomedInNoteView];
+        }
+    }
+}
+
+-(void)repositionZoomedInNoteView:(NoteView*)noteView {
+    
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    
+    if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+        [UIView animateWithDuration:0.5 animations:^{
+            noteView.center = CGPointMake(self.view.center.x, self.view.center.y - 50);
+            self.focus.view.center = self.view.center;
+        }];
+    } else {
+        [UIView animateWithDuration:0.5 animations:^{
+            noteView.center = self.view.center;
+            self.focus.view.center = CGPointMake(self.view.center.x, self.view.center.y + 50);
+        }];
     }
 }
 
