@@ -384,7 +384,7 @@
         [self startPhysicsEngine];
     }
     
-    NSLog(@"Drawer Drag Mode = %d", self.drawerDragMode);
+    // NSLog(@"Drawer Drag Mode = %d", self.drawerDragMode);
 }
 
 - (void)loadThreeSectionsLayout {
@@ -435,7 +435,7 @@
         screenSize.width = tmp;
     }
     
-    NSLog(@"Orientation: %d Screen: %@", orientation, NSStringFromCGSize(screenSize));
+    // NSLog(@"Orientation: %d Screen: %@", orientation, NSStringFromCGSize(screenSize));
     
     // Redraw the layout if orientation has changed, or if a layout change is requested by the user
     if (screenSize.height != self.realScreenSize.height || self.layoutChangeRequested) {
@@ -492,8 +492,7 @@
         self.bottomDrawerStart = screenSize.height - Key_NavBarHeight;
     }
     
-    NSLog(@"restY = %f minY = %f topDrawerHeight = %f bottomDrawerHeight = %f bottomDrawerStart = %f",
-          self.restY, self.minY, self.topDrawerHeight, self.bottomDrawerHeight, self.bottomDrawerStart);
+    // NSLog(@"restY = %f minY = %f topDrawerHeight = %f bottomDrawerHeight = %f bottomDrawerStart = %f", self.restY, self.minY, self.topDrawerHeight, self.bottomDrawerHeight, self.bottomDrawerStart);
 }
 
 -(void)updateViewSizes {
