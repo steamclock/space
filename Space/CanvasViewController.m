@@ -507,6 +507,8 @@
             [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
                 self.focus.view.alpha = 1.0;
                 [self.focus focusOn:noteView withTouchPoint:CGPointZero];
+            } completion:^(BOOL finished) {
+                noteView.alpha = 0;
             }];
             
             // NSLog(@"Circle frame after zoomed in = %@", NSStringFromCGRect(noteView.frame));
@@ -520,12 +522,13 @@
     } else {
         
         self.isCurrentlyZoomedIn = NO;
+        noteView.alpha = 1;
         
         // Ask focus view to save the note
         [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
         
         // Hide editor
-        self.focus.view.alpha = 1.0;
+        self.focus.view.alpha = 0;
         
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Unzoom Circle

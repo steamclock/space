@@ -43,8 +43,10 @@
                                                     height:FOCUS_SIZE
                                        withReferenceBounds:self.view.bounds];
     
-    self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
-    // self.view.backgroundColor = [UIColor clearColor];
+    // self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
+    self.view.backgroundColor = [UIColor clearColor];
+    
+    [self drawCircle];
     
     self.focus = [[UIView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                     centerYByFactor:0.5
@@ -94,6 +96,27 @@
     } else {
         self.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
     }
+}
+
+-(void)drawCircle {
+    UIView* circle = [[UIView alloc] initWithFrame:self.view.frame];
+    circle.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:circle];
+    
+    CAShapeLayer* circleShape = [CAShapeLayer layer];
+    
+    CGRect circleFrame = self.view.bounds;
+    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:FOCUS_SIZE];
+    
+    circleShape.path = circlePath.CGPath;
+    
+    circleShape.fillColor = [UIColor colorWithWhite:0.8 alpha:1.0].CGColor;
+    circleShape.strokeColor = [UIColor blackColor].CGColor;
+    circleShape.lineWidth = 0.0f;
+    
+    circleShape.frame = self.view.bounds;
+    
+    [self.view.layer addSublayer:circleShape];
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
