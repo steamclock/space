@@ -33,6 +33,7 @@
     DrawerViewController* drawer = [[DrawerViewController alloc] init];
     drawer.bottomDrawerContents = trash;
     drawer.topDrawerContents = canvas;
+    drawer.delegate = canvas;
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     

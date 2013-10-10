@@ -8,10 +8,11 @@
 
 #import <UIKit/UIKit.h>
 #import "NoteView.h"
+#import "DrawerViewControllerDelegate.h"
 
 @class FocusViewController;
 
-@interface CanvasViewController : UIViewController <UIDynamicAnimatorDelegate>
+@interface CanvasViewController : UIViewController <UIDynamicAnimatorDelegate, DrawerViewControllerDelegate>
 
 @property (nonatomic) FocusViewController* focus;
 

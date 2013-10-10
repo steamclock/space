@@ -571,7 +571,8 @@
     
     self.view.frame = frame;
     
-    NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    [self.delegate updateCurrentlyZoomedInNoteViewCenter];
 }
 
 -(void)animateDrawerPosition:(float)positionY {

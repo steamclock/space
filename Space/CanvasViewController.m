@@ -441,6 +441,21 @@
     return [self.view.superview.superview convertPoint:self.view.superview.superview.center fromView:self.view.superview.superview.superview];
 }
 
+-(void)updateCurrentlyZoomedInNoteViewCenter {
+    
+    // When the drawer is dragged or has changed position while a note view is zoomed in, we want to update the center of the note view so that
+    // when we unzoom the note circle, it will start the unzoom from the correct location
+    if (self.isCurrentlyZoomedIn) {
+        UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+        CGPoint centerOfScreen = [self findCenterOfScreen];
+        if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+            self.currentlyZoomedInNoteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment);
+        } else {
+            self.currentlyZoomedInNoteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
+        }
+    }
+}
+
 -(void)toggleZoomForNoteView:(NoteView*)noteView {
     
     if (self.isCurrentlyZoomedIn) {
