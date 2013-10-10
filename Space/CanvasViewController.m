@@ -14,6 +14,7 @@
 #import "Notifications.h"
 #import "Constants.h"
 #import "Coordinate.h"
+#import "HelperMethods.h"
 
 #define SCALE_FACTOR 8.0
 
@@ -501,7 +502,7 @@
                 
                 [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
                 noteView.circleShape.lineWidth = 0;
-                noteView.circleShape.fillColor = [UIColor colorWithWhite:0.8 alpha:1.0].CGColor;
+                noteView.circleShape.fillColor = [HelperMethods circleFillColor];
                 
             } [CATransaction commit];
             

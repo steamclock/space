@@ -13,6 +13,7 @@
 #import "Coordinate.h"
 #import "Notifications.h"
 #import "Constants.h"
+#import "HelperMethods.h"
 #import "UIView+Genie.h"
 
 #define FOCUS_SIZE 480
@@ -22,8 +23,6 @@
 @property (nonatomic) Note* note;
 @property (nonatomic) NoteView* noteView;
 @property (nonatomic) UIView* focus;
-@property (nonatomic) UITextField* titleField;
-@property (nonatomic) UITextView* contentField;
 @property (nonatomic) CGPoint touchPoint;
 
 @end
@@ -103,20 +102,20 @@
     circle.backgroundColor = [UIColor clearColor];
     [self.view addSubview:circle];
     
-    CAShapeLayer* circleShape = [CAShapeLayer layer];
+    self.circleShape = [CAShapeLayer layer];
     
     CGRect circleFrame = self.view.bounds;
     UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:FOCUS_SIZE];
     
-    circleShape.path = circlePath.CGPath;
+    self.circleShape.path = circlePath.CGPath;
     
-    circleShape.fillColor = [UIColor colorWithWhite:0.8 alpha:1.0].CGColor;
-    circleShape.strokeColor = [UIColor blackColor].CGColor;
-    circleShape.lineWidth = 0.0f;
+    self.circleShape.fillColor = [HelperMethods circleFillColor];
+    self.circleShape.strokeColor = [UIColor blackColor].CGColor;
+    self.circleShape.lineWidth = 0.0f;
     
-    circleShape.frame = self.view.bounds;
+    self.circleShape.frame = self.view.bounds;
     
-    [self.view.layer addSublayer:circleShape];
+    [self.view.layer addSublayer:self.circleShape];
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
