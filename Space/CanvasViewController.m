@@ -462,6 +462,7 @@
         self.shouldZoomInAfterCreatingNewNote = NO;
         
         noteView.layer.zPosition = 1000;
+        [self.view bringSubviewToFront:noteView];
         
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Zoom Circle
@@ -475,7 +476,7 @@
                 noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
                 self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
                 
-                NSLog(@"Drawer Y = %f", self.view.superview.frame.origin.y);
+                // NSLog(@"Drawer Y = %f", self.view.superview.frame.origin.y);
                 // NSLog(@"Note view center = %@", NSStringFromCGPoint(noteView.center));
                 // NSLog(@"Focus view center = %@", NSStringFromCGPoint(self.focus.view.center));
             }

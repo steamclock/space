@@ -149,8 +149,8 @@
     if(_topDrawerContents) {
         [self addChildViewController:_topDrawerContents];
         [self.view addSubview:_topDrawerContents.view];
-        [self.view bringSubviewToFront:self.topDragHandle];
-        [self.view bringSubviewToFront:self.bottomDragHandle];
+        // [self.view bringSubviewToFront:self.topDragHandle];
+        // [self.view bringSubviewToFront:self.bottomDragHandle];
     }
 }
 
@@ -166,8 +166,8 @@
     if(_bottomDrawerContents) {
         [self addChildViewController:_bottomDrawerContents];
         [self.view addSubview:_bottomDrawerContents.view];
-        [self.view bringSubviewToFront:self.topDragHandle];
-        [self.view bringSubviewToFront:self.bottomDragHandle];
+        // [self.view bringSubviewToFront:self.topDragHandle];
+        // [self.view bringSubviewToFront:self.bottomDragHandle];
     }
 }
 
@@ -512,7 +512,7 @@
     
     int dragHeight = 50;
     int dragWidth = 600;
-    float dragTop = self.topDrawerHeight - dragHeight - 5;
+    float dragTop = self.topDrawerHeight + 25;
     float dragLeft = (self.view.bounds.size.width - dragWidth) / 2;
     float dragBottom = self.bottomDrawerStart - dragHeight - 25;
 
