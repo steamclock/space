@@ -463,7 +463,7 @@
     self.realScreenSize = screenSize;
 
     // Size of top and bottom canvas
-    self.topDrawerHeight = screenSize.height - 24 - Key_NavBarHeight;
+    self.topDrawerHeight = screenSize.height - 84 - Key_NavBarHeight;
     self.bottomDrawerHeight = screenSize.height - 224;
 
     // When the drawer is pulled down all the way with the top canvas fully revealed, it will be resting at (0, 0)

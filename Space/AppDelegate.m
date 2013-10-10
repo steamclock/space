@@ -31,8 +31,8 @@
     CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvasWithTopLevelView:container.view];
     
     DrawerViewController* drawer = [[DrawerViewController alloc] init];
-    drawer.topDrawerContents = canvas;
     drawer.bottomDrawerContents = trash;
+    drawer.topDrawerContents = canvas;
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     
