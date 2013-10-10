@@ -7,12 +7,28 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "NoteView.h"
 
 @class FocusViewController;
 
 @interface CanvasViewController : UIViewController <UIDynamicAnimatorDelegate>
 
 @property (nonatomic) FocusViewController* focus;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// These properties help manage zoom focus animation
+
+@property (strong, nonatomic) NoteView* currentlyZoomedInNoteView;
+@property (nonatomic) BOOL isCurrentlyZoomedIn;
+@property (nonatomic) float zoomAnimationDuration;
+
+@property (strong, nonatomic) NoteView* newlyCreatedNoteView;
+@property (nonatomic) BOOL noteCreated;
+@property (nonatomic) BOOL shouldZoomInAfterCreatingNewNote;
+@property (nonatomic) BOOL shouldLoadCanvasAfterZoomOut;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 -(id)initWithTopLevelView:(UIView*)view;
 -(id)initAsTrashCanvasWithTopLevelView:(UIView*)view;

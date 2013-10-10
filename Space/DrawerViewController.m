@@ -97,6 +97,15 @@
     self.bottomDragHandle.backgroundColor = [UIColor grayColor];
     
     [self.view addSubview:self.bottomDragHandle];
+    
+    UITapGestureRecognizer* tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOutsideOfCanvases:)];
+    [self.view addGestureRecognizer:tapGestureRecognizer];
+}
+
+-(void)tapOutsideOfCanvases:(UITapGestureRecognizer*)recognizer {
+    if(self.topDrawerContents.isCurrentlyZoomedIn) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
+    }
 }
 
 -(void)viewDidAppear:(BOOL)animated {

@@ -10,7 +10,6 @@
 #import "FocusViewController.h"
 #import "Database.h"
 #import "Note.h"
-#import "NoteView.h"
 #import "QBPopupMenu.h"
 #import "Notifications.h"
 #import "Constants.h"
@@ -40,21 +39,6 @@
 @property (nonatomic) UIView* topLevelView;
 
 @property (strong, nonatomic) UIButton* emptyTrashButton;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-// These properties help manage zoom focus animation
-
-@property (strong, nonatomic) NoteView* currentlyZoomedInNoteView;
-@property (nonatomic) BOOL isCurrentlyZoomedIn;
-@property (nonatomic) float zoomAnimationDuration;
-
-@property (strong, nonatomic) NoteView* newlyCreatedNoteView;
-@property (nonatomic) BOOL noteCreated;
-@property (nonatomic) BOOL shouldZoomInAfterCreatingNewNote;
-@property (nonatomic) BOOL shouldLoadCanvasAfterZoomOut;
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @end
 
@@ -137,6 +121,7 @@
         // Help manage note circle zoom animation
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteCreated:) name:kNoteCreatedNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(layoutChanged:) name:kLayoutChangedNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toggleZoomForNoteView:) name:kDismissNoteNotification object:nil];
     }
     
     self.currentCanvas = 0;
@@ -458,6 +443,10 @@
 
 -(void)toggleZoomForNoteView:(NoteView*)noteView {
     
+    if (self.isCurrentlyZoomedIn) {
+        noteView = self.currentlyZoomedInNoteView;
+    }
+    
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     
     if (CGRectEqualToRect(noteView.frame, noteView.originalCircleFrame) || self.shouldZoomInAfterCreatingNewNote == YES || self.isCurrentlyZoomedIn == NO) {
@@ -509,6 +498,7 @@
                 [self.focus focusOn:noteView withTouchPoint:CGPointZero];
             } completion:^(BOOL finished) {
                 noteView.alpha = 0;
+                [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
             }];
             
             // NSLog(@"Circle frame after zoomed in = %@", NSStringFromCGRect(noteView.frame));
@@ -516,8 +506,6 @@
             
             // NSLog(@"NoteView's Note positionX after zoomed in = %f", noteView.note.positionX);
             // NSLog(@"NoteView's Note positionY after zoomed in = %f", noteView.note.positionY);
-                        
-            [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
         }];
     } else {
         
@@ -525,7 +513,7 @@
         noteView.alpha = 1;
         
         // Ask focus view to save the note
-        [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kSaveNoteNotification object:self];
         
         // Hide editor
         self.focus.view.alpha = 0;

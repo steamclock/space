@@ -34,7 +34,7 @@
 {
     [super viewDidLoad];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveNote) name:kDismissNoteNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveNote) name:kSaveNoteNotification object:nil];
     
     // self.view.frame = self.view.bounds;
     self.view.frame = [Coordinate frameWithCenterXByFactor:0.5

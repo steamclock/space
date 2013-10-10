@@ -20,6 +20,7 @@ NSString* kNoteSavedNotification = @"noteSaved";
 
 NSString* kFocusNoteNotification = @"focusNote";
 NSString* kDismissNoteNotification = @"dismissNote";
+NSString* kSaveNoteNotification = @"saveNote";
 
 NSString* kChangeFocusModeNotification = @"changeFocusMode";
 
