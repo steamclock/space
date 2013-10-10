@@ -600,6 +600,11 @@
     
     [view setCenter:drag withReferenceBounds:self.view.bounds];
     
+    // Prevents dragging above the navigation bar
+    if (view.center.y <= 0) {
+        [view setCenter:CGPointMake(drag.x, 0) withReferenceBounds:self.view.bounds];
+    }
+    
     if(recognizer.state == UIGestureRecognizerStateEnded) {
         [view setBackgroundColor:[UIColor clearColor]];
     }
