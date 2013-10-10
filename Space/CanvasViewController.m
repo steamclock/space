@@ -469,12 +469,13 @@
             CGPoint centerOfScreen = [self findCenterOfScreen];
             
             if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
-                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_LandscapeFocusViewAdjustment);
+                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment);
                 self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
             } else {
-                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_PortraitFocusViewAdjustment);
+                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
                 self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
                 
+                NSLog(@"Drawer Y = %f", self.view.superview.frame.origin.y);
                 // NSLog(@"Note view center = %@", NSStringFromCGPoint(noteView.center));
                 // NSLog(@"Focus view center = %@", NSStringFromCGPoint(self.focus.view.center));
             }
