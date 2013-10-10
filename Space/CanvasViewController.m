@@ -48,10 +48,9 @@
 @property (strong, nonatomic) NoteView* currentlyZoomedInNoteView;
 @property (nonatomic) BOOL isCurrentlyZoomedIn;
 @property (nonatomic) float zoomAnimationDuration;
-@property (nonatomic) CGRect frameBeforeZoomedIn;
 
 @property (strong, nonatomic) NoteView* newlyCreatedNoteView;
-@property (nonatomic) BOOL newNoteCreated;
+@property (nonatomic) BOOL noteCreated;
 @property (nonatomic) BOOL shouldZoomInAfterCreatingNewNote;
 @property (nonatomic) BOOL shouldLoadCanvasAfterZoomOut;
 
@@ -162,6 +161,11 @@
         [self.view addSubview:self.emptyTrashButton];
         // NSLog(@"Empty Trash Button Frame = %@", NSStringFromCGRect(self.emptyTrashButton.frame));
     }
+    
+    if (self.isTrashMode == NO) {
+        NSLog(@"Canvas view center = %@", NSStringFromCGPoint(self.view.center));
+        NSLog(@"Canvas superview center = %@", NSStringFromCGPoint(self.view.superview.superview.center));
+    }
 }
 
 -(void)loadCurrentCanvas {
@@ -245,7 +249,7 @@
     
     // NSLog(@"Unnormalized coord = %@", NSStringFromCGPoint([Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds]));
     
-    self.newNoteCreated = YES;
+    self.noteCreated = YES;
     [self addViewForNote:note];
     
     [[Database sharedDatabase] save];
@@ -290,13 +294,12 @@
 
     noteView.note = note;
     
-    if (self.newNoteCreated == YES) {
+    if (self.noteCreated == YES) {
         // [self.focus focusOn:imageView withTouchPoint:unnomralizedCenter];
         self.newlyCreatedNoteView = noteView;
         self.shouldZoomInAfterCreatingNewNote = YES;
         [[NSNotificationCenter defaultCenter] postNotificationName:kNoteCreatedNotification object:self];
-        // [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
-        self.newNoteCreated = NO;
+        self.noteCreated = NO;
     }
 }
 
@@ -447,6 +450,12 @@
 
 #pragma mark - Zoom Focus Animation
 
+-(CGPoint)findCenterOfScreen {
+    // Self.view.superview == DrawerView, DrawerView's superview is the Container view, which has the correct and current bounds of the screen,
+    // so we can use that to find the absolute center of the screen.
+    return [self.view.superview.superview convertPoint:self.view.superview.superview.center fromView:self.view.superview.superview.superview];
+}
+
 -(void)toggleZoomForNoteView:(NoteView*)noteView {
     
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
@@ -468,13 +477,17 @@
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Zoom Circle
             [noteView setTransform:CGAffineTransformMakeScale(SCALE_FACTOR, SCALE_FACTOR)];
+            CGPoint centerOfScreen = [self findCenterOfScreen];
             
             if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
-                noteView.center = CGPointMake(self.view.center.x, self.view.center.y - 50);
-                self.focus.view.center = self.view.center;
+                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_LandscapeFocusViewAdjustment);
+                self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
             } else {
-                noteView.center = self.view.center;
-                self.focus.view.center = CGPointMake(self.view.center.x, self.view.center.y + 50);
+                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_PortraitFocusViewAdjustment);
+                self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
+                
+                // NSLog(@"Note view center = %@", NSStringFromCGPoint(noteView.center));
+                // NSLog(@"Focus view center = %@", NSStringFromCGPoint(self.focus.view.center));
             }
             
             [CATransaction begin]; {
@@ -501,8 +514,8 @@
             
             // NSLog(@"NoteView's Note positionX after zoomed in = %f", noteView.note.positionX);
             // NSLog(@"NoteView's Note positionY after zoomed in = %f", noteView.note.positionY);
-            
-            // [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
+                        
+            [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
         }];
     } else {
         
@@ -512,7 +525,7 @@
         [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
         
         // Hide editor
-        self.focus.view.alpha = 0;
+        self.focus.view.alpha = 1.0;
         
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Unzoom Circle
@@ -554,7 +567,7 @@
             // NSLog(@"NoteView's Note positionX after zoomed out = %f", noteView.note.positionX);
             // NSLog(@"NoteView's Note positionY after zoomed out = %f", noteView.note.positionY);
             
-            // [[NSNotificationCenter defaultCenter] postNotificationName:kFocusDismissedNotification object:self];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kNoteDismissedNotification object:self];
         }];
     }
 }
@@ -734,26 +747,37 @@
                                                                                            height:self.currentlyZoomedInNoteView.originalCircleFrame.size.height
                                                                               withReferenceBounds:self.view.bounds];
         
-        if (self.isCurrentlyZoomedIn) {
-            [self repositionZoomedInNoteView:self.currentlyZoomedInNoteView];
-        }
+        [self repositionZoomedInNoteView:self.currentlyZoomedInNoteView];
     }
+    
+    [self repositionFocusView];
 }
 
 -(void)repositionZoomedInNoteView:(NoteView*)noteView {
     
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    CGPoint centerOfScreen = [self findCenterOfScreen];
     
     if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
         [UIView animateWithDuration:0.5 animations:^{
-            noteView.center = CGPointMake(self.view.center.x, self.view.center.y - 50);
-            self.focus.view.center = self.view.center;
+            noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_LandscapeFocusViewAdjustment);
+            self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
         }];
     } else {
         [UIView animateWithDuration:0.5 animations:^{
-            noteView.center = self.view.center;
-            self.focus.view.center = CGPointMake(self.view.center.x, self.view.center.y + 50);
+            noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_PortraitFocusViewAdjustment);
+            self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
         }];
+    }
+}
+
+-(void)repositionFocusView {
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    CGPoint centerOfScreen = [self findCenterOfScreen];
+    if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+        self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
+    } else {
+        self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
     }
 }
 

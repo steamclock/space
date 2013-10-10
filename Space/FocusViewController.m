@@ -12,9 +12,10 @@
 #import <QuartzCore/QuartzCore.h>
 #import "Coordinate.h"
 #import "Notifications.h"
+#import "Constants.h"
 #import "UIView+Genie.h"
 
-#define FOCUS_SIZE 400
+#define FOCUS_SIZE 480
 
 @interface FocusViewController ()
 
@@ -37,13 +38,13 @@
     
     // self.view.frame = self.view.bounds;
     self.view.frame = [Coordinate frameWithCenterXByFactor:0.5
-                                           centerYByFactor:0.475
-                                                     width:400
-                                                    height:400
+                                           centerYByFactor:0.5
+                                                     width:FOCUS_SIZE
+                                                    height:FOCUS_SIZE
                                        withReferenceBounds:self.view.bounds];
     
-    // self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
-    self.view.backgroundColor = [UIColor clearColor];
+    self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
+    // self.view.backgroundColor = [UIColor clearColor];
     
     self.focus = [[UIView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                     centerYByFactor:0.5
@@ -78,20 +79,27 @@
     [self.focus addSubview:self.contentField];
     
     [self.view addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOutside:)]];
+    
+    self.view.autoresizingMask =
+    UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
 }
 
-- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     
-    if (toInterfaceOrientation == UIInterfaceOrientationLandscapeLeft || toInterfaceOrientation == UIInterfaceOrientationLandscapeRight) {
-     
-        self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
-                                             centerYByFactor:0.25
-                                                       width:FOCUS_SIZE
-                                                      height:FOCUS_SIZE
-                                         withReferenceBounds:self.view.bounds];
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    CGPoint centerOfScreen = self.view.superview.center;
+    if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+        self.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
     } else {
-        [self updateFocusViewFrame];
+        self.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
     }
+}
+
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    
+    NSLog(@"Focus view center = %@", NSStringFromCGPoint(self.view.center));
+    NSLog(@"Focus view superview center = %@", NSStringFromCGPoint(self.view.superview.center));
 }
 
 -(void)saveNote {
@@ -119,8 +127,6 @@
     self.noteView = view;
     // [self.noteView setHighlighted:YES];
     // NSLog(@"Note view frame = %@", NSStringFromCGRect(view.frame));
-    
-    [self updateFocusViewFrame];
     
     self.note = view.note;
     
@@ -156,23 +162,6 @@
                                      startEdge:rectEdge
                                     completion:nil];
     */
-}
-
-- (void)updateFocusViewFrame {
-    
-    if([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortrait) {
-        self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
-                                                centerYByFactor:0.5
-                                                          width:FOCUS_SIZE
-                                                         height:FOCUS_SIZE
-                                            withReferenceBounds:self.view.bounds];
-    } else {
-        self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
-                                                centerYByFactor:0.25
-                                                          width:FOCUS_SIZE
-                                                         height:FOCUS_SIZE
-                                            withReferenceBounds:self.view.bounds];
-    }
 }
 
 - (void)didReceiveMemoryWarning

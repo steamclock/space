@@ -20,3 +20,5 @@ NSString* const Key_TrashedNotes = @"trashedNotes";
 NSString* const Key_RecoveredNote = @"recoveredNote";
 
 int const Key_NavBarHeight = 64;
+int const Key_LandscapeFocusViewAdjustment = 120;
+int const Key_PortraitFocusViewAdjustment = 100;

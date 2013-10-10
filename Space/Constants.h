@@ -20,6 +20,8 @@ extern NSString* const Key_TrashedNotes;
 extern NSString* const Key_RecoveredNote;
 
 extern int const Key_NavBarHeight;
+extern int const Key_LandscapeFocusViewAdjustment;
+extern int const Key_PortraitFocusViewAdjustment;
 
 typedef enum DragModeEnum {
     UIViewAnimation,

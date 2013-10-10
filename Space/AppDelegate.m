@@ -49,7 +49,7 @@
     [container addChildViewController:focus];
     [container.view addSubview:focus.view];
     
-    focus.view.alpha = 0;
+    focus.view.alpha = 1;
     
     self.window.rootViewController = container;
     
