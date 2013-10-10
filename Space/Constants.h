@@ -23,6 +23,9 @@ extern int const Key_NavBarHeight;
 extern int const Key_LandscapeFocusViewAdjustment;
 extern int const Key_PortraitFocusViewAdjustment;
 
+extern int const Key_NoteTitleWidth;
+extern int const Key_NoteTitleHeight;
+
 typedef enum DragModeEnum {
     UIViewAnimation,
     UIDynamicFreeSliding,

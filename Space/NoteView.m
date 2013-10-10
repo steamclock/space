@@ -10,6 +10,7 @@
 #import "Note.h"
 #import "Coordinate.h"
 #import "Database.h"
+#import "Constants.h"
 
 const int NOTE_RADIUS = 30;
 
@@ -46,12 +47,13 @@ const int NOTE_RADIUS = 30;
 }
 
 -(void)commonSetup {
-    int portraitSize = NOTE_RADIUS * 2;
+    int diameter = NOTE_RADIUS * 2;
     
     self.contentMode = UIViewContentModeScaleToFill;
-    self.frame = CGRectMake(0, 0, portraitSize, portraitSize);
+    self.frame = CGRectMake(0, 0, diameter, diameter);
 
-    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(self.center.x - 32, -20, 64, 20)];
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, Key_NoteTitleWidth, Key_NoteTitleHeight)];
+    self.titleLabel.center = CGPointMake(self.center.x, -Key_NoteTitleHeight);
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
     self.titleLabel.font = [UIFont systemFontOfSize:14];
     
