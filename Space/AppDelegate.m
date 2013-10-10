@@ -40,10 +40,6 @@
     [container addChildViewController:drawer];
     [container.view addSubview:drawer.view];
     
-    CanvasSelectionViewController* canvasSelect = [[CanvasSelectionViewController alloc] init];
-    [container addChildViewController:canvasSelect];
-    [container.view addSubview:canvasSelect.view];
-
     FocusViewController* focus = [[FocusViewController alloc] init];
     canvas.focus = focus;
     
@@ -51,6 +47,10 @@
     [container.view addSubview:focus.view];
     
     focus.view.alpha = 0;
+    
+    CanvasSelectionViewController* canvasSelect = [[CanvasSelectionViewController alloc] init];
+    [container addChildViewController:canvasSelect];
+    [container.view addSubview:canvasSelect.view];
     
     self.window.rootViewController = container;
     
