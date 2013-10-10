@@ -18,8 +18,6 @@ const int NOTE_RADIUS = 30;
     Note* _note;
 }
 
-@property UILabel* titleLabel;
-
 @end
 
 @implementation NoteView
@@ -52,8 +50,8 @@ const int NOTE_RADIUS = 30;
     self.contentMode = UIViewContentModeScaleToFill;
     self.frame = CGRectMake(0, 0, diameter, diameter);
 
-    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, Key_NoteTitleWidth, Key_NoteTitleHeight)];
-    self.titleLabel.center = CGPointMake(self.center.x, -Key_NoteTitleHeight);
+    self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, Key_NoteTitleLabelWidth, Key_NoteTitleLabelHeight)];
+    self.titleLabel.center = CGPointMake(self.center.x, -Key_NoteTitleLabelHeight);
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
     self.titleLabel.font = [UIFont systemFontOfSize:14];
     

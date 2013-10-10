@@ -23,5 +23,11 @@ int const Key_NavBarHeight = 64;
 int const Key_LandscapeFocusViewAdjustment = 120;
 int const Key_PortraitFocusViewAdjustment = 100;
 
-int const Key_NoteTitleWidth = 120;
-int const Key_NoteTitleHeight = 20;
+int const Key_NoteTitleLabelWidth = 120;
+int const Key_NoteTitleLabelHeight = 20;
+
+int const Key_NoteTitleFieldWidth = 250;
+int const Key_NoteTitleFieldHeight = 50;
+
+int const Key_NoteContentFieldWidth = 300;
+int const Key_NoteContentFieldHeight = 200;

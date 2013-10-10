@@ -466,6 +466,8 @@
     
     if (CGRectEqualToRect(noteView.frame, noteView.originalCircleFrame) || self.shouldZoomInAfterCreatingNewNote == YES || self.isCurrentlyZoomedIn == NO) {
         
+        noteView.titleLabel.alpha = 0;
+        
         noteView.originalPositionX = noteView.note.positionX;
         noteView.originalPositionY = noteView.note.positionY;
         
@@ -477,7 +479,6 @@
         self.shouldZoomInAfterCreatingNewNote = NO;
         
         noteView.layer.zPosition = 1000;
-        [self.view bringSubviewToFront:noteView];
         
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Zoom Circle
@@ -576,6 +577,10 @@
             // NSLog(@"NoteView's Note positionY after zoomed out = %f", noteView.note.positionY);
             
             [[NSNotificationCenter defaultCenter] postNotificationName:kNoteDismissedNotification object:self];
+            
+            [UIView animateWithDuration:0.5 animations:^{
+                noteView.titleLabel.alpha = 1;
+            }];
         }];
     }
 }

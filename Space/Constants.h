@@ -23,8 +23,14 @@ extern int const Key_NavBarHeight;
 extern int const Key_LandscapeFocusViewAdjustment;
 extern int const Key_PortraitFocusViewAdjustment;
 
-extern int const Key_NoteTitleWidth;
-extern int const Key_NoteTitleHeight;
+extern int const Key_NoteTitleLabelWidth;
+extern int const Key_NoteTitleLabelHeight;
+
+extern int const Key_NoteTitleFieldWidth;
+extern int const Key_NoteTitleFieldHeight;
+
+extern int const Key_NoteContentFieldWidth;
+extern int const Key_NoteContentFieldHeight;
 
 typedef enum DragModeEnum {
     UIViewAnimation,

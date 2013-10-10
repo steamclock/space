@@ -60,8 +60,8 @@
     
     self.titleField = [[UITextField alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                               centerYByFactor:0.15
-                                                                                        width:250
-                                                                                       height:50
+                                                                                        width:Key_NoteTitleFieldWidth
+                                                                                       height:Key_NoteTitleFieldHeight
                                                                           withReferenceBounds:self.focus.bounds]];
     
     self.titleField.placeholder = @"Title";
@@ -69,8 +69,8 @@
     
     self.contentField = [[UITextView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                                centerYByFactor:0.55
-                                                                                         width:280
-                                                                                        height:200
+                                                                                         width:Key_NoteContentFieldWidth
+                                                                                        height:Key_NoteContentFieldHeight
                                                                            withReferenceBounds:self.focus.bounds]];
     
     self.contentField.backgroundColor = [UIColor colorWithWhite:1 alpha:0.8];
