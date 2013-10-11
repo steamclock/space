@@ -32,6 +32,9 @@ extern int const Key_NoteTitleFieldHeight;
 extern int const Key_NoteContentFieldWidth;
 extern int const Key_NoteContentFieldHeight;
 
+extern int const Key_NoteLargeContentFieldWidth;
+extern int const Key_NoteLargeContentFieldHeight;
+
 typedef enum DragModeEnum {
     UIViewAnimation,
     UIDynamicFreeSliding,

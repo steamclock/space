@@ -22,9 +22,9 @@ NSString* kFocusNoteNotification = @"focusNote";
 NSString* kDismissNoteNotification = @"dismissNote";
 NSString* kSaveNoteNotification = @"saveNote";
 
-NSString* kChangeFocusModeNotification = @"changeFocusMode";
-
 NSString* kNoteFocusedNotification = @"noteFocused";
 NSString* kNoteDismissedNotification = @"noteDismissed";
 
+NSString* kChangeFocusModeNotification = @"changeFocusMode";
 NSString* kChangeDragModeNotification = @"changeDragMode";
+NSString* kChangeEditorModeNotification = @"changeEditorMode";

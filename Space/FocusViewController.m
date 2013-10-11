@@ -25,6 +25,8 @@
 @property (nonatomic) UIView* focus;
 @property (nonatomic) CGPoint touchPoint;
 
+@property (nonatomic) BOOL isShowingTitleField;
+
 @end
 
 @implementation FocusViewController
@@ -34,6 +36,8 @@
     [super viewDidLoad];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveNote) name:kSaveNoteNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toggleTitle:) name:kChangeEditorModeNotification object:nil];
+    self.isShowingTitleField = YES;
     
     // self.view.frame = self.view.bounds;
     self.view.frame = [Coordinate frameWithCenterXByFactor:0.5
@@ -85,7 +89,7 @@
     UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
 }
 
-- (void)viewWillAppear:(BOOL)animated {
+-(void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
@@ -94,6 +98,39 @@
         self.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
     } else {
         self.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
+    }
+}
+
+-(void)toggleTitle:(NSNotification*)notification {
+    if ([[notification.userInfo objectForKey:@"editorMode"] isEqualToString:@"showTitle"]) {
+        self.isShowingTitleField = YES;
+        
+        [self.titleField setHidden:NO];
+        
+        self.contentField.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                                       centerYByFactor:0.55
+                                                                 width:Key_NoteContentFieldWidth
+                                                                height:Key_NoteContentFieldHeight
+                                                   withReferenceBounds:self.focus.bounds];
+        
+        if (self.view.alpha == 1) {
+            [self.titleField becomeFirstResponder];
+        }
+        
+    } else {
+        self.isShowingTitleField = NO;
+        
+        [self.titleField setHidden:YES];
+        
+        self.contentField.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                                       centerYByFactor:0.5
+                                                                 width:Key_NoteLargeContentFieldWidth
+                                                                height:Key_NoteLargeContentFieldHeight
+                                                   withReferenceBounds:self.focus.bounds];
+        
+        if (self.view.alpha == 1) {
+            [self.contentField becomeFirstResponder];
+        }
     }
 }
 
@@ -155,7 +192,7 @@
     self.titleField.text = self.note.title;
     self.contentField.text = self.note.content;
 
-    if ([view.note.title length]) {
+    if ([view.note.title length] || self.isShowingTitleField == NO) {
         //title exists; edit the content
         [self.contentField becomeFirstResponder];
     } else {

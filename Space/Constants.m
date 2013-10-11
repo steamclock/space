@@ -31,3 +31,6 @@ int const Key_NoteTitleFieldHeight = 50;
 
 int const Key_NoteContentFieldWidth = 300;
 int const Key_NoteContentFieldHeight = 200;
+
+int const Key_NoteLargeContentFieldWidth = 300;
+int const Key_NoteLargeContentFieldHeight = 280;

@@ -15,10 +15,12 @@
 @property (strong, nonatomic) UIActionSheet* drawerLayoutSelection;
 @property (strong, nonatomic) UIActionSheet* focusModeSelection;
 @property (strong, nonatomic) UIActionSheet* dragModeSelection;
+@property (strong, nonatomic) UIActionSheet* editorModeSelection;
 
 @property (strong, nonatomic) UIButton* layoutButton;
 @property (strong, nonatomic) UIButton* focusButton;
 @property (strong, nonatomic) UIButton* dragButton;
+@property (strong, nonatomic) UIButton* editorButton;
 
 @end
 
@@ -53,10 +55,18 @@
     self.dragButton.frame = dragButtonFrame;
     [self.dragButton addTarget:self action:@selector(showDragModeSelection) forControlEvents:UIControlEventTouchUpInside];
     
+    self.editorButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [self.editorButton setTitle:@"Editor: Show Title" forState:UIControlStateNormal];
+    self.editorButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    CGRect editorButtonFrame = CGRectMake(5, 220, 300, 50);
+    self.editorButton.frame = editorButtonFrame;
+    [self.editorButton addTarget:self action:@selector(showEditorModeSelection) forControlEvents:UIControlEventTouchUpInside];
+    
     
     [self.view addSubview:self.layoutButton];
     [self.view addSubview:self.focusButton];
     [self.view addSubview:self.dragButton];
+    [self.view addSubview:self.editorButton];
 }
 
 - (void)showDrawerLayoutSelection {
@@ -87,6 +97,16 @@
                                             destructiveButtonTitle:nil
                                                  otherButtonTitles:@"Basic Animation", @"Free Sliding", @"Gravity", nil];
     [self.dragModeSelection showInView:self.view];
+}
+
+- (void)showEditorModeSelection {
+    
+    self.editorModeSelection = [[UIActionSheet alloc] initWithTitle:@"Choose an Editor Mode"
+                                                         delegate:(id<UIActionSheetDelegate>)self
+                                                cancelButtonTitle:@"Cancel"
+                                           destructiveButtonTitle:nil
+                                                otherButtonTitles:@"Show Title", @"No Title", nil];
+    [self.editorModeSelection showInView:self.view];
 }
 
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
@@ -131,6 +151,17 @@
             [self.dragButton setTitle:@"Drag: Gravity" forState:UIControlStateNormal];
         }
 
+    } else if (actionSheet == self.editorModeSelection) {
+        
+        if (buttonIndex == 0) {
+            NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"showTitle", @"editorMode", nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeEditorModeNotification object:nil userInfo:editorMode];
+            [self.editorButton setTitle:@"Editor: Show Title" forState:UIControlStateNormal];
+        } else if (buttonIndex == 1) {
+            NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"noTitle", @"editorMode", nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeEditorModeNotification object:nil userInfo:editorMode];
+            [self.editorButton setTitle:@"Editor: No Title" forState:UIControlStateNormal];
+        }
     }
 }
 

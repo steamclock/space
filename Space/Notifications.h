@@ -22,9 +22,9 @@ extern NSString* kFocusNoteNotification;
 extern NSString* kDismissNoteNotification;
 extern NSString* kSaveNoteNotification;
 
-extern NSString* kChangeFocusModeNotification;
-
 extern NSString* kNoteFocusedNotification;
 extern NSString* kNoteDismissedNotification;
 
+extern NSString* kChangeFocusModeNotification;
 extern NSString* kChangeDragModeNotification;
+extern NSString* kChangeEditorModeNotification;
