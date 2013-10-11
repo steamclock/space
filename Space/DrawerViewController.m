@@ -25,6 +25,9 @@
 @property (nonatomic) float allowedDragStartY;
 @property (nonatomic) BOOL allowedDragStartYAssigned;
 
+@property (nonatomic) BOOL fromTopDragHandle;
+@property (nonatomic) BOOL fromBotDragHandle;
+
 @property (nonatomic) float newPosition;
 
 // iPad reports faulty screen size after orientation changes, so this stores the correct values.
@@ -100,11 +103,140 @@
     
     UITapGestureRecognizer* tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOutsideOfCanvases:)];
     [self.view addGestureRecognizer:tapGestureRecognizer];
+    
+    UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(panOutsideOfCanvases:)];
+    [self.view addGestureRecognizer:panGestureRecognizer];
 }
 
 -(void)tapOutsideOfCanvases:(UITapGestureRecognizer*)recognizer {
     if(self.topDrawerContents.isCurrentlyZoomedIn) {
         [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
+    }
+}
+
+-(void)panOutsideOfCanvases:(UIPanGestureRecognizer*)recognizer {
+    
+    CGPoint touchPointRelativeToWindow = [recognizer locationInView:self.view.superview];
+    CGPoint touchPointRelativeToDrawer = [recognizer locationInView:self.view];
+    
+    UIView* hitView = [self.view hitTest:touchPointRelativeToDrawer withEvent:nil];
+    
+    if (hitView == self.topDragHandle) {
+        
+        self.fromTopDragHandle = YES;
+        
+        if (self.allowedDragStartYAssigned == NO) {
+            self.allowedDragStartY = touchPointRelativeToWindow.y;
+            self.allowedDragStartYAssigned = YES;
+        }
+        
+        self.allowDrag = YES;
+        
+    } else if (hitView == self.bottomDragHandle) {
+        
+        self.fromBotDragHandle = YES;
+        
+        if (self.allowedDragStartYAssigned == NO) {
+            self.allowedDragStartY = touchPointRelativeToWindow.y;
+            self.allowedDragStartYAssigned = YES;
+        }
+        
+        self.allowDrag = YES;
+    }
+    
+    float newPosition;
+    
+    if(recognizer.state == UIGestureRecognizerStateBegan) {
+        
+        [self.animator removeBehavior:self.gravity];
+        self.gravity = nil;
+        
+        self.dragStart = touchPointRelativeToWindow;
+        self.initialFrameY = self.view.frame.origin.y;
+        
+        // It is important to remove boundaries at the start of gesture or it'll be too late and the boundaries may
+        // persist and cause weird glitches.
+        if (self.drawerDragMode != UIViewAnimation) {
+            if ([self.collision.boundaryIdentifiers count] > 0) {
+                [self.collision removeAllBoundaries];
+            }
+        }
+    }
+    
+    if (self.allowDrag) {
+        newPosition = self.initialFrameY + (touchPointRelativeToWindow.y - self.allowedDragStartY);
+    } else {
+        newPosition = self.initialFrameY;
+    }
+    
+    if (recognizer.state == UIGestureRecognizerStateEnded) {
+        
+        self.allowDrag = NO;
+        self.allowedDragStartYAssigned = NO;
+        
+        BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
+        
+        if (self.fromTopDragHandle && velocityDownwards) {
+            
+            if (self.drawerDragMode == UIViewAnimation) {
+                self.newPosition = self.maxY;
+            } else {
+                [self physicsForTopHandleDraggedDownwards];
+            }
+            
+        } else if (self.fromTopDragHandle && !velocityDownwards) {
+        
+            if (self.drawerDragMode == UIViewAnimation) {
+                self.newPosition = self.restY;
+            } else {
+                [self physicsForTopHandleDraggedUpwards];
+            }
+            
+        } else if (self.fromBotDragHandle && velocityDownwards) {
+            
+            if (self.drawerDragMode == UIViewAnimation) {
+                self.newPosition = self.restY;
+            } else {
+                [self physicsForBottomHandleDraggedDownwards];
+            }
+            
+        } else if (self.fromBotDragHandle && !velocityDownwards) {
+           
+            if (self.drawerDragMode == UIViewAnimation) {
+                self.newPosition = self.minY;
+            } else {
+                [self physicsForBottomHandleDraggedUpwards];
+            }
+        }
+        
+        if (self.drawerDragMode == UIViewAnimation) {
+            [self animateDrawerPosition:self.newPosition];
+        }
+        
+        // Add throwable feel to the drawer
+        if (self.drawerDragMode == UIDynamicFreeSliding || self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
+            CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
+            verticalVelocity = CGPointMake(0, verticalVelocity.y);
+            
+            [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
+        }
+        
+        self.fromTopDragHandle = NO;
+        self.fromBotDragHandle = NO;
+        
+        // [self animateDrawerPosition:newPosition]; // Allows flicking the drawer without using the drag handles
+        
+    } else {
+        
+        if ((self.fromTopDragHandle && newPosition < self.restY) || (!self.fromTopDragHandle && newPosition > self.restY)) {
+            newPosition = self.restY;
+        }
+        
+        [self setDrawerPosition:newPosition];
+        
+        if (self.drawerDragMode != UIViewAnimation) {
+            [self.animator updateItemUsingCurrentState:self.view];
+        }
     }
 }
 
@@ -471,7 +603,7 @@
     
     // Resting position or initial position is when the top left corner of the drawer is up and outside the screen,
     // so that's why it's a negative value
-    self.restY = 324 - screenSize.height + Key_NavBarHeight;
+    self.restY = 384 - screenSize.height + Key_NavBarHeight;
     
     // When the drawer reveals the trash canvas, it is pulled up and outside the screen even more, and this represents
     // how far the drawer can be pulled up
@@ -706,8 +838,20 @@
     BOOL fromTopDrawer;
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
+        
+        [self.animator removeBehavior:self.gravity];
+        self.gravity = nil;
+        
         self.dragStart = touchPointRelativeToWindow;
         self.initialFrameY = self.view.frame.origin.y;
+        
+        // It is important to remove boundaries at the start of gesture or it'll be too late and the boundaries may
+        // persist and cause weird glitches.
+        if (self.drawerDragMode != UIViewAnimation) {
+            if ([self.collision.boundaryIdentifiers count] > 0) {
+                [self.collision removeAllBoundaries];
+            }
+        }
     }
     
     if (self.allowDrag) {
@@ -726,14 +870,54 @@
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
         if (fromTopDrawer && velocityDownwards) {
-            newPosition = self.maxY;
-        } else if (!fromTopDrawer && !velocityDownwards) {
-            newPosition = self.minY;
-        } else {
-            newPosition = self.restY;
+            
+            if (self.drawerDragMode == UIViewAnimation) {
+                self.newPosition = self.maxY;
+            } else {
+                [self physicsForTopHandleDraggedDownwards];
+            }
+            
+        } else if (fromTopDrawer && !velocityDownwards) {
+            
+            if (self.drawerDragMode == UIViewAnimation) {
+                self.newPosition = self.restY;
+            } else {
+                [self physicsForTopHandleDraggedUpwards];
+            }
+            
+        } else if (!fromTopDrawer && velocityDownwards) {
+            
+            if (self.drawerDragMode == UIViewAnimation) {
+                self.newPosition = self.restY;
+            } else {
+                [self physicsForBottomHandleDraggedDownwards];
+            }
+            
+        } else if (fromTopDrawer && !velocityDownwards) {
+            
+            if (self.drawerDragMode == UIViewAnimation) {
+                self.newPosition = self.minY;
+            } else {
+                [self physicsForBottomHandleDraggedUpwards];
+            }
         }
         
-        [self animateDrawerPosition:newPosition];
+        if (self.drawerDragMode == UIViewAnimation) {
+            [self animateDrawerPosition:self.newPosition];
+        }
+        
+        // Add throwable feel to the drawer
+        if (self.drawerDragMode == UIDynamicFreeSliding || self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
+            CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
+            verticalVelocity = CGPointMake(0, verticalVelocity.y);
+            
+            [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
+        }
+        
+        self.fromTopDragHandle = NO;
+        self.fromBotDragHandle = NO;
+        
+        // [self animateDrawerPosition:newPosition]; // Allows flicking the drawer up or down without using the handles
         
     } else {
         
@@ -742,6 +926,10 @@
         }
         
         [self setDrawerPosition:newPosition];
+        
+        if (self.drawerDragMode != UIViewAnimation) {
+            [self.animator updateItemUsingCurrentState:self.view];
+        }
     }
 }
 
