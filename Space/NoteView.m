@@ -42,6 +42,7 @@ const int NOTE_RADIUS = 30;
 
 -(void)dealloc {
     [_note removeObserver:self forKeyPath:@"title"];
+    [_note removeObserver:self forKeyPath:@"content"];
 }
 
 -(void)commonSetup {
@@ -85,14 +86,28 @@ const int NOTE_RADIUS = 30;
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
     if([keyPath isEqualToString:@"title"]) {
         self.titleLabel.text = self.note.title;
+    } else if ([keyPath isEqualToString:@"content"]) {
+        if ([self.titleLabel.text isEqualToString:@""]) {
+            NSLog(@"Title is empty");
+            self.titleLabel.text = self.note.content;
+        }
     }
 }
 
 -(void)setNote:(Note *)note {
     [_note removeObserver:self forKeyPath:@"title"];
+    [_note removeObserver:self forKeyPath:@"content"];
+    
     _note = note;
+    
     self.titleLabel.text = note.title;
+    if ([self.titleLabel.text isEqualToString:@""]) {
+        NSLog(@"Title is empty");
+        self.titleLabel.text = note.content;
+    }
+    
     [_note addObserver:self forKeyPath:@"title" options:0 context:NULL];
+    [_note addObserver:self forKeyPath:@"content" options:0 context:NULL];
 }
 
 -(Note*)note {
