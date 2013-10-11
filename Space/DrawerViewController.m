@@ -9,6 +9,7 @@
 #import "DrawerViewController.h"
 #import "Notifications.h"
 #import "Constants.h"
+#import "Note.h"
 
 @interface DrawerViewController () {
     CanvasViewController* _topDrawerContents;
@@ -46,6 +47,7 @@
 
 @property (nonatomic) BOOL focusModeChangeRequested;
 @property (nonatomic) BOOL isFocusModeDim;
+@property (nonatomic) BOOL slidePartially;
 @property (nonatomic) BOOL canvasesAreSlidOut;
 
 @property (nonatomic) DragMode drawerDragMode;
@@ -499,14 +501,24 @@
         self.isFocusModeDim = YES;
         self.focusModeChangeRequested = YES;
         
-        NSLog(@"Setting focus mode to dim.");
+        NSLog(@"Setting focus mode to Dimming.");
+        
+    } else if ([[notification.userInfo objectForKey:@"focusMode"] isEqualToString:@"slide"]) {
+        
+        self.isFocusModeDim = NO;
+        self.slidePartially = NO;
+        self.focusModeChangeRequested = YES;
+        
+        NSLog(@"Setting focus mode to Slide Out.");
         
     } else {
         
         self.isFocusModeDim = NO;
+        self.slidePartially = YES;
         self.focusModeChangeRequested = YES;
         
-        NSLog(@"Setting focus mode to slide.");
+        NSLog(@"Setting focus mode to Slide Partially.");
+        
     }
 }
 
@@ -1014,11 +1026,22 @@
         if (self.view.frame.origin.y == 0) {
             destination.origin.y = -(self.realScreenSize.height);
         } else {
-            
             if (self.drawerDragMode == UIViewAnimation) {
                 destination.origin.y = -(self.restY + self.realScreenSize.height);
             } else {
                  destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
+                
+                if (self.slidePartially) {
+                    NSLog(@"Currently zoomed in note Y = %f", self.topDrawerContents.currentlyZoomedInNoteView.note.originalY);
+                    destination.origin.y = -(self.topDrawerContents.currentlyZoomedInNoteView.note.originalY - NOTE_RADIUS * 2);
+                        
+                    NSLog(@"Destination = %f", destination.origin.y);
+                    
+                    if (destination.origin.y > 0) {
+                        destination.origin.y = self.topDrawerContents.view.frame.origin.y;
+                        NSLog(@"Destination = %f", destination.origin.y);
+                    }
+                }
             }
         }
         
@@ -1038,7 +1061,8 @@
 
 - (void)slideBackCanvases {
     
-    if (self.isFocusModeDim == NO && !CGRectEqualToRect(self.topDrawerContents.view.frame, self.topCanvasFrameBeforeSlidingOut)) {
+    if ( self.slidePartially == YES ||
+         (self.isFocusModeDim == NO && !CGRectEqualToRect(self.topDrawerContents.view.frame, self.topCanvasFrameBeforeSlidingOut)) ) {
         
         [UIView animateWithDuration:1 animations:^{
             self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;

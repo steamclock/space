@@ -33,7 +33,9 @@
 
 @property (nonatomic) int triggerFocusY;
 @property (nonatomic) int triggerTrashY;
+
 @property (nonatomic) BOOL dragToFocusRequested;
+@property (nonatomic) BOOL dragToTrashRequested;
 
 @property (nonatomic) UIView* topLevelView;
 
@@ -566,8 +568,8 @@
             [noteView setTransform:CGAffineTransformMakeScale(1.0, 1.0)];
             
             if (self.dragToFocusRequested) {
-                // NSLog(@"Returning to X = %f", noteView.note.originalX);
-                // NSLog(@"Returning to Y = %f", noteView.note.originalY);
+                NSLog(@"Returning to X = %f", noteView.note.originalX);
+                NSLog(@"Returning to Y = %f", noteView.note.originalY);
                 noteView.center = CGPointMake(noteView.note.originalX, noteView.note.originalY);
                 self.dragToFocusRequested = NO;
             } else {
@@ -656,8 +658,8 @@ static BOOL dragStarted = NO;
             
             [[Database sharedDatabase] save];
             
-            // NSLog(@"Original X = %f", view.note.originalX);
-            // NSLog(@"Original Y = %f", view.note.originalY);
+            NSLog(@"Original X = %f", view.note.originalX);
+            NSLog(@"Original Y = %f", view.note.originalY);
             
             dragStarted = YES;
         }
@@ -668,11 +670,6 @@ static BOOL dragStarted = NO;
     // Prevents dragging above the navigation bar
     if (self.isTrashMode == NO && view.center.y <= 0) {
         [view setCenter:CGPointMake(drag.x, 0) withReferenceBounds:self.view.bounds];
-    }
-    
-    if(recognizer.state == UIGestureRecognizerStateEnded) {
-        [view setBackgroundColor:[UIColor clearColor]];
-        dragStarted = NO;
     }
     
     if (self.isTrashMode) {
@@ -696,6 +693,7 @@ static BOOL dragStarted = NO;
         
         if (view.center.y > self.triggerTrashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
+                self.dragToTrashRequested = YES;
                 [self deleteNoteWithoutAsking:view];
             } else {
                 [view setBackgroundColor:[UIColor redColor]];
@@ -717,6 +715,18 @@ static BOOL dragStarted = NO;
             } else {
                 [view setBackgroundColor:[UIColor clearColor]];
             }
+        }
+    }
+    
+    if(recognizer.state == UIGestureRecognizerStateEnded) {
+        [view setBackgroundColor:[UIColor clearColor]];
+        dragStarted = NO;
+        
+        if (self.dragToFocusRequested == NO && self.dragToTrashRequested == NO) {
+            view.note.originalX = view.center.x;
+            view.note.originalY = view.center.y;
+            
+            [[Database sharedDatabase] save];
         }
     }
 }
@@ -798,6 +808,19 @@ static BOOL dragStarted = NO;
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    
+    for (UIView* subview in self.view.subviews) {
+        
+        if ([subview isKindOfClass:[NoteView class]]) {
+            
+            NoteView* noteView = (NoteView*)subview;
+            
+            noteView.note.originalX = noteView.center.x;
+            noteView.note.originalY = noteView.center.y;
+            
+            [[Database sharedDatabase] save];
+        }
+    }
     
     // Restore the behaviours after orientation changes and calculations are completed.
     [self.animator addBehavior:self.collision];

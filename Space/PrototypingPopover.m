@@ -85,7 +85,7 @@
                                                           delegate:(id<UIActionSheetDelegate>)self
                                                  cancelButtonTitle:@"Cancel"
                                             destructiveButtonTitle:nil
-                                                 otherButtonTitles:@"Dimming", @"Slide Out", nil];
+                                                 otherButtonTitles:@"Dimming", @"Slide Out", @"Slide Partially", nil];
     [self.focusModeSelection showInView:self.view];
 }
 
@@ -133,6 +133,10 @@
             NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"slide", @"focusMode", nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
             [self.focusButton setTitle:@"Focus: Slide Out" forState:UIControlStateNormal];
+        } else if (buttonIndex == 2) {
+            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"slidePartially", @"focusMode", nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
+            [self.focusButton setTitle:@"Focus: Slide Partially" forState:UIControlStateNormal];
         }
         
     } else if (actionSheet == self.dragModeSelection) {
