@@ -42,7 +42,7 @@
 @property (nonatomic) float bottomDrawerStart;
 
 @property (nonatomic) BOOL layoutChangeRequested;
-@property (nonatomic) BOOL isOriginalLayout;
+@property (nonatomic) BOOL isThreeSectionsLayout;
 
 @property (nonatomic) BOOL focusModeChangeRequested;
 @property (nonatomic) BOOL isFocusModeDim;
@@ -72,7 +72,7 @@
     [self setEdgesForExtendedLayout:UIRectEdgeNone];
     
     // Default prototype settings
-    self.isOriginalLayout = YES;
+    self.isThreeSectionsLayout = YES;
     self.isFocusModeDim = YES;
     self.drawerDragMode = UIViewAnimation;
     
@@ -374,9 +374,9 @@
                                           toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
     }
     
-    int gravityTriggerThreshold = (self.isOriginalLayout) ? self.restY + 100 : -100;
+    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? self.restY + 100 : -100;
     BOOL pastGravityThreshold;
-    if (self.isOriginalLayout) {
+    if (self.isThreeSectionsLayout) {
         pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
     } else {
         pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
@@ -403,9 +403,9 @@
                                           toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
     }
     
-    int gravityTriggerThreshold = (self.isOriginalLayout) ? self.maxY - 100 : -700;
+    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? self.maxY - 100 : -700;
     BOOL pastGravityThreshold;
-    if (self.isOriginalLayout) {
+    if (self.isThreeSectionsLayout) {
         pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
     } else {
         pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
@@ -426,7 +426,7 @@
     
     if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasBottomBoundary"]) {
         
-        if (self.isOriginalLayout) {
+        if (self.isThreeSectionsLayout) {
             [self.collision addBoundaryWithIdentifier:@"bottomCanvasBottomBoundary"
                                             fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
                                               toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
@@ -437,9 +437,9 @@
         }
     }
     
-    int gravityTriggerThreshold = (self.isOriginalLayout) ? self.minY + 100 : -100;
+    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? self.minY + 100 : -100;
     BOOL pastGravityThreshold;
-    if (self.isOriginalLayout) {
+    if (self.isThreeSectionsLayout) {
         pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
     } else {
         pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
@@ -460,7 +460,7 @@
     
     if (![[self.collision boundaryIdentifiers] containsObject:@"bottomCanvasTopBoundary"]) {
         
-        if (self.isOriginalLayout) {
+        if (self.isThreeSectionsLayout) {
             [self.collision addBoundaryWithIdentifier:@"bottomCanvasTopBoundary"
                                             fromPoint:CGPointMake(0, self.minY)
                                               toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
@@ -471,9 +471,9 @@
         }
     }
     
-    int gravityTriggerThreshold = (self.isOriginalLayout) ? self.maxY - 100 : self.minY + 100;
+    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? self.maxY - 100 : self.minY + 100;
     BOOL pastGravityThreshold;
-    if (self.isOriginalLayout) {
+    if (self.isThreeSectionsLayout) {
         pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
     } else {
         pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
@@ -536,7 +536,7 @@
     }
     
     self.layoutChangeRequested = YES;
-    self.isOriginalLayout = YES;
+    self.isThreeSectionsLayout = YES;
     
     [self drawCanvasLayout];
     
@@ -553,7 +553,7 @@
     }
     
     self.layoutChangeRequested = YES;
-    self.isOriginalLayout = NO;
+    self.isThreeSectionsLayout = NO;
     
     [self drawCanvasLayout];
     
@@ -613,7 +613,7 @@
     self.bottomDrawerStart = screenSize.height - self.restY;
     
     // Update values for alternative layout
-    if (self.isOriginalLayout == NO) {
+    if (self.isThreeSectionsLayout == NO) {
         
         // The empty space between the top canvas and the bottom of the screen at resting position
         int bottomSpace = 100;
@@ -654,7 +654,7 @@
     self.bottomDragHandle.layer.cornerRadius = 15;
     
     // Update some frames for alternative layout
-    if (self.isOriginalLayout == NO) {
+    if (self.isThreeSectionsLayout == NO) {
         
         // Remove the top drag handle as it is not needed in the alternative layout
         self.topDragHandle.frame = CGRectZero;
@@ -817,7 +817,13 @@
     UIView* targetView;
     
     if ([recognizer.view isEqual:_topDrawerContents.view]) {
-        targetView = self.topDragHandle;
+        
+        if (self.isThreeSectionsLayout) {
+            targetView = self.topDragHandle;
+        } else {
+            targetView = self.bottomDragHandle;
+        }
+        
     } else if ([recognizer.view isEqual:_bottomDrawerContents.view]) {
         targetView = self.bottomDragHandle;
     } else {
@@ -874,7 +880,12 @@
             if (self.drawerDragMode == UIViewAnimation) {
                 self.newPosition = self.maxY;
             } else {
-                [self physicsForTopHandleDraggedDownwards];
+                
+                if (self.isThreeSectionsLayout) {
+                    [self physicsForTopHandleDraggedDownwards];
+                } else {
+                    [self physicsForBottomHandleDraggedDownwards];
+                }
             }
             
         } else if (fromTopDrawer && !velocityDownwards) {
@@ -882,7 +893,12 @@
             if (self.drawerDragMode == UIViewAnimation) {
                 self.newPosition = self.restY;
             } else {
-                [self physicsForTopHandleDraggedUpwards];
+                
+                if (self.isThreeSectionsLayout) {
+                    [self physicsForTopHandleDraggedUpwards];
+                } else {
+                    [self physicsForBottomHandleDraggedUpwards];
+                }
             }
             
         } else if (!fromTopDrawer && velocityDownwards) {
@@ -893,7 +909,7 @@
                 [self physicsForBottomHandleDraggedDownwards];
             }
             
-        } else if (fromTopDrawer && !velocityDownwards) {
+        } else if (!fromTopDrawer && !velocityDownwards) {
             
             if (self.drawerDragMode == UIViewAnimation) {
                 self.newPosition = self.minY;
@@ -922,9 +938,13 @@
     } else {
         
         if ((fromTopDrawer && newPosition < self.restY) || (!fromTopDrawer && newPosition > self.restY)) {
-            newPosition = self.restY;
+            
+            if (self.isThreeSectionsLayout) {
+                newPosition = self.restY;
+            }
         }
         
+        NSLog(@"New position = %f", newPosition);
         [self setDrawerPosition:newPosition];
         
         if (self.drawerDragMode != UIViewAnimation) {
