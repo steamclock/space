@@ -24,8 +24,6 @@
 @property (nonatomic) UICollisionBehavior* collision;
 @property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
 
-@property (nonatomic) CGPoint noteOriginalPosition;
-
 @property (nonatomic) BOOL simulating;
 
 @property (nonatomic) NoteView* notePendingDelete;
@@ -149,8 +147,8 @@
     }
     
     if (self.isTrashMode == NO) {
-        NSLog(@"Canvas view center = %@", NSStringFromCGPoint(self.view.center));
-        NSLog(@"Canvas superview center = %@", NSStringFromCGPoint(self.view.superview.superview.center));
+        // NSLog(@"Canvas view center = %@", NSStringFromCGPoint(self.view.center));
+        // NSLog(@"Canvas superview center = %@", NSStringFromCGPoint(self.view.superview.superview.center));
     }
 }
 
@@ -167,7 +165,7 @@
     
     if (self.isTrashMode) {
         notes = [[Database sharedDatabase] trashedNotesInCanvas:self.currentCanvas];
-        // NSLog(@"Number of deleted notes = %d", [notes count]);
+        NSLog(@"Number of deleted notes = %d", [notes count]);
         
         self.emptyTrashButton = [UIButton buttonWithType:UIButtonTypeSystem];
         [self.emptyTrashButton setTitle:@"Empty Trash" forState:UIControlStateNormal];
@@ -180,7 +178,7 @@
         
     } else {
         notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
-        // NSLog(@"Number of saved notes = %d", [notes count]);
+        NSLog(@"Number of saved notes = %d", [notes count]);
     }
     
     for(Note* note in notes) {
@@ -245,8 +243,9 @@
     
     NoteView* noteView = [[NoteView alloc] init];
     noteView.animator = self.animator;
-    CGPoint unnomralizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
-    [noteView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+    
+    CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
+    [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
     
     // NSLog(@"Note position X = %f", note.positionX);
     // NSLog(@"Note position Y = %f", note.positionY);
@@ -254,13 +253,36 @@
     
     // If this is a trashed note, "flip" its y-coordinate so that for example, if it was originally 80% down the y-coordinate in the top canvas,
     // it should only be roughly 20% down in the bottom canvas.
-    if (note.trashed == YES && note.draggedToTrash != YES) {
-        unnomralizedCenter.y = self.view.bounds.size.height - unnomralizedCenter.y;
-        [noteView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
-    } else if (note.draggedToTrash == YES) {
-        // If this note was manually dragged to trash, place it near the top
-        unnomralizedCenter.y = NOTE_RADIUS;
-        [noteView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+    if ((self.isTrashMode == YES && note.trashed == YES && note.draggedToTrash != YES)) {
+        
+        unnormalizedCenter.y = self.view.bounds.size.height - unnormalizedCenter.y;
+        [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+        
+        NSLog(@"Dropped to Trash note view center = %@", NSStringFromCGPoint(noteView.center));
+        
+    } else if (self.isTrashMode == YES && note.trashed == YES && note.draggedToTrash == YES) {
+        
+        // If this note was manually dragged to trash, place it at the original position at the start of the drag
+        
+        float normalizedOriginalX = [Coordinate normalizeXCoord:note.originalX withReferenceBounds:self.view.bounds];
+        float normalizedOriginalY = [Coordinate normalizeYCoord:note.originalY withReferenceBounds:self.view.bounds];
+        
+        note.positionX = normalizedOriginalX;
+        note.positionY = normalizedOriginalY;
+        
+        unnormalizedCenter = [Coordinate unnormalizePoint:CGPointMake(normalizedOriginalX, normalizedOriginalY) withReferenceBounds:self.view.bounds];
+        
+        if ( self.view.bounds.size.height - unnormalizedCenter.y > 0 ) {
+            unnormalizedCenter.y = self.view.bounds.size.height - unnormalizedCenter.y;
+        }
+        
+        [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+        note.originalX = noteView.center.x;
+        note.originalY = noteView.center.y;
+        
+        [[Database sharedDatabase] save];
+        
+        NSLog(@"Dragged to Trash note view center = %@", NSStringFromCGPoint(noteView.center));
     }
     
     noteView.userInteractionEnabled = YES;
@@ -371,7 +393,9 @@
 
 - (void)recoverNote:(NoteView*)noteView {
     
-    NSDictionary* noteToRecoverInfo = [[NSDictionary alloc] initWithObjects:@[noteView.note, [NSValue valueWithCGPoint:self.noteOriginalPosition]] forKeys:@[Key_RecoveredNote, @"originalPosition"]];
+    NSDictionary* noteToRecoverInfo =
+    [[NSDictionary alloc] initWithObjects:@[noteView.note, [NSValue valueWithCGPoint:CGPointMake(noteView.note.originalX, noteView.note.originalY)]]
+                                  forKeys:@[Key_RecoveredNote, @"originalPosition"]];
     
     NSNotification* noteRecoveredNotification = [[NSNotification alloc] initWithName:kNoteRecoveredNotification object:self userInfo:noteToRecoverInfo];
     [[NSNotificationCenter defaultCenter] postNotification:noteRecoveredNotification];
@@ -616,15 +640,19 @@
     CGPoint drag = [recognizer locationInView:self.view];
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
-        if (!CGPointEqualToPoint(self.noteOriginalPosition, view.center)) {
-            self.noteOriginalPosition = view.center;
+        if (!CGPointEqualToPoint(CGPointMake(view.note.originalX, view.note.originalY), view.center)) {
+            view.note.originalX = view.center.x;
+            view.note.originalY = view.center.y;
+            NSLog(@"Note original position = %@", NSStringFromCGPoint(CGPointMake(view.note.originalX, view.note.originalY)));
+            
+            [[Database sharedDatabase] save];
         }
     }
     
     [view setCenter:drag withReferenceBounds:self.view.bounds];
     
     // Prevents dragging above the navigation bar
-    if (view.center.y <= 0) {
+    if (self.isTrashMode == NO && view.center.y <= 0) {
         [view setCenter:CGPointMake(drag.x, 0) withReferenceBounds:self.view.bounds];
     }
     
@@ -655,7 +683,7 @@
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self deleteNoteWithoutAsking:view];
             } else {
-                [view setBackgroundColor:[UIColor greenColor]];
+                [view setBackgroundColor:[UIColor redColor]];
             }
         } else if (view.center.y > self.editY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
@@ -721,7 +749,7 @@
         // NSLog(@"Move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
         // note.center = center;
         
-        note.center = self.noteOriginalPosition;
+        note.center = CGPointMake(note.originalPositionX, note.originalPositionY);
         
         [self.animator updateItemUsingCurrentState:note];
         [[Database sharedDatabase] save];
@@ -731,11 +759,16 @@
 -(void)updateLocationForNoteView:(NoteView*)noteView {
 
     CGPoint relativePosition = CGPointMake(noteView.note.positionX, noteView.note.positionY);
-    // NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
+    NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
     
     CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
+    
+    if (noteView.note.trashed == YES) {
+        unnormalizedCenter = CGPointMake(noteView.note.originalX, noteView.note.originalY);
+    }
+    
     [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
-    // NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
+    NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
     
     // NSLog(@"Circle frame in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.frame));
     // NSLog(@"Circle bounds in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.bounds));

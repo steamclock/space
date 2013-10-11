@@ -88,7 +88,7 @@ const int NOTE_RADIUS = 30;
         self.titleLabel.text = self.note.title;
     } else if ([keyPath isEqualToString:@"content"]) {
         if ([self.titleLabel.text isEqualToString:@""]) {
-            NSLog(@"Title is empty");
+            // NSLog(@"Title is empty");
             self.titleLabel.text = self.note.content;
         }
     }
@@ -102,7 +102,7 @@ const int NOTE_RADIUS = 30;
     
     self.titleLabel.text = note.title;
     if ([self.titleLabel.text isEqualToString:@""]) {
-        NSLog(@"Title is empty");
+        // NSLog(@"Title is empty");
         self.titleLabel.text = note.content;
     }
     

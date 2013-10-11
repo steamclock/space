@@ -16,6 +16,8 @@
 @property (nonatomic) BOOL trashed;
 @property (nonatomic) BOOL draggedToTrash;
 
+@property (nonatomic) float originalX;
+@property (nonatomic) float originalY;
 @property (nonatomic) float positionX;
 @property (nonatomic) float positionY;
 
