@@ -643,7 +643,6 @@
         if (!CGPointEqualToPoint(CGPointMake(view.note.originalX, view.note.originalY), view.center)) {
             view.note.originalX = view.center.x;
             view.note.originalY = view.center.y;
-            NSLog(@"Note original position = %@", NSStringFromCGPoint(CGPointMake(view.note.originalX, view.note.originalY)));
             
             [[Database sharedDatabase] save];
         }
@@ -845,6 +844,11 @@
             NoteView* noteView = (NoteView*)subview;
             noteView.note.positionX = [Coordinate normalizeXCoord:noteView.center.x withReferenceBounds:self.view.bounds];
             noteView.note.positionY = [Coordinate normalizeYCoord:noteView.center.y withReferenceBounds:self.view.bounds];
+            
+            noteView.note.originalX = noteView.center.x;
+            noteView.note.originalY = noteView.center.y;
+            
+            [[Database sharedDatabase] save];
         }
     }
 }
