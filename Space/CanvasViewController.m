@@ -31,9 +31,9 @@
 @property (nonatomic) int currentCanvas;
 @property (nonatomic) BOOL isTrashMode;
 
-// Almost-constant values that depend on the orientation and how the drawers are designed.
-@property (nonatomic) int editY;
-@property (nonatomic) int trashY;
+@property (nonatomic) int triggerFocusY;
+@property (nonatomic) int triggerTrashY;
+@property (nonatomic) BOOL dragToFocusRequested;
 
 @property (nonatomic) UIView* topLevelView;
 
@@ -63,8 +63,8 @@
 
 -(void)setYValuesWithTrashOffset:(int)trashY {
     // Trash offset is relative to superview
-    self.editY = self.view.bounds.size.height;
-    self.trashY = trashY - self.view.frame.origin.y - 100;
+    self.triggerFocusY = self.view.bounds.size.height;
+    self.triggerTrashY = trashY - self.view.frame.origin.y - 100;
 }
 
 - (void)emptyTrash {
@@ -565,7 +565,14 @@
             // Unzoom Circle
             [noteView setTransform:CGAffineTransformMakeScale(1.0, 1.0)];
             
-            noteView.frame = noteView.originalCircleFrame;
+            if (self.dragToFocusRequested) {
+                // NSLog(@"Returning to X = %f", noteView.note.originalX);
+                // NSLog(@"Returning to Y = %f", noteView.note.originalY);
+                noteView.center = CGPointMake(noteView.note.originalX, noteView.note.originalY);
+                self.dragToFocusRequested = NO;
+            } else {
+                noteView.frame = noteView.originalCircleFrame;
+            }
             
             [CATransaction begin]; {
                 
@@ -629,6 +636,8 @@
 
 #pragma mark - Drag Notes
 
+static BOOL dragStarted = NO;
+
 -(void)noteDrag:(UIPanGestureRecognizer*)recognizer {
     
     // Don't allow note drag if we're currently zoomed in, which can cause problematic behaviours
@@ -639,12 +648,18 @@
     NoteView* view = (NoteView*)recognizer.view;
     CGPoint drag = [recognizer locationInView:self.view];
     
-    if(recognizer.state == UIGestureRecognizerStateBegan) {
-        if (!CGPointEqualToPoint(CGPointMake(view.note.originalX, view.note.originalY), view.center)) {
+    if(dragStarted == NO) {
+        
+        if (!CGPointEqualToPoint(CGPointMake(view.note.originalX, view.note.originalY), view.center) && dragStarted == NO) {
             view.note.originalX = view.center.x;
             view.note.originalY = view.center.y;
             
             [[Database sharedDatabase] save];
+            
+            // NSLog(@"Original X = %f", view.note.originalX);
+            // NSLog(@"Original Y = %f", view.note.originalY);
+            
+            dragStarted = YES;
         }
     }
     
@@ -657,11 +672,12 @@
     
     if(recognizer.state == UIGestureRecognizerStateEnded) {
         [view setBackgroundColor:[UIColor clearColor]];
+        dragStarted = NO;
     }
     
     if (self.isTrashMode) {
         
-        if (view.center.y < self.trashY) {
+        if (view.center.y < self.triggerTrashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self returnNoteToBounds:view];
                 [self recoverNote:view];
@@ -678,17 +694,17 @@
         
     } else {
         
-        if (view.center.y > self.trashY) {
+        if (view.center.y > self.triggerTrashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [self deleteNoteWithoutAsking:view];
             } else {
                 [view setBackgroundColor:[UIColor redColor]];
             }
-        } else if (view.center.y > self.editY) {
+        } else if (view.center.y > self.triggerFocusY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
-                [self returnNoteToBounds:view];
+                self.dragToFocusRequested = YES;
                 [self.focus focusOn:view withTouchPoint:CGPointZero];
-                
+                [self toggleZoomForNoteView:view];
                 [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
             } else {
                 [view setBackgroundColor:[UIColor greenColor]];
@@ -758,7 +774,7 @@
 -(void)updateLocationForNoteView:(NoteView*)noteView {
 
     CGPoint relativePosition = CGPointMake(noteView.note.positionX, noteView.note.positionY);
-    NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
+    // NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
     
     CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
     
@@ -767,7 +783,7 @@
     }
     
     [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
-    NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
+    // NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
     
     // NSLog(@"Circle frame in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.frame));
     // NSLog(@"Circle bounds in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.bounds));
@@ -845,8 +861,10 @@
             noteView.note.positionX = [Coordinate normalizeXCoord:noteView.center.x withReferenceBounds:self.view.bounds];
             noteView.note.positionY = [Coordinate normalizeYCoord:noteView.center.y withReferenceBounds:self.view.bounds];
             
-            noteView.note.originalX = noteView.center.x;
-            noteView.note.originalY = noteView.center.y;
+            if (self.isTrashMode) {
+                noteView.note.originalX = noteView.center.x;
+                noteView.note.originalY = noteView.center.y;
+            }
             
             [[Database sharedDatabase] save];
         }
