@@ -76,6 +76,7 @@
     // Default prototype settings
     self.isThreeSectionsLayout = YES;
     self.isFocusModeDim = YES;
+    self.slidePartially = NO;
     self.drawerDragMode = UIViewAnimation;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadThreeSectionsLayout) name:kLoadThreeSectionsLayoutNotification object:nil];
@@ -499,6 +500,7 @@
     if ([[notification.userInfo objectForKey:@"focusMode"] isEqualToString:@"dim"]) {
         
         self.isFocusModeDim = YES;
+        self.slidePartially = NO;
         self.focusModeChangeRequested = YES;
         
         NSLog(@"Setting focus mode to Dimming.");
@@ -882,9 +884,6 @@
     
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         
-        self.allowDrag = NO;
-        self.allowedDragStartYAssigned = NO;
-        
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
         if (fromTopDrawer && velocityDownwards) {
@@ -894,9 +893,13 @@
             } else {
                 
                 if (self.isThreeSectionsLayout) {
-                    [self physicsForTopHandleDraggedDownwards];
+                    if (self.allowDrag) {
+                        [self physicsForTopHandleDraggedDownwards];
+                    }
                 } else {
-                    [self physicsForBottomHandleDraggedDownwards];
+                    if (self.allowDrag) {
+                        [self physicsForBottomHandleDraggedDownwards];
+                    }
                 }
             }
             
@@ -907,9 +910,13 @@
             } else {
                 
                 if (self.isThreeSectionsLayout) {
-                    [self physicsForTopHandleDraggedUpwards];
+                    if (self.allowDrag) {
+                        [self physicsForTopHandleDraggedUpwards];
+                    }
                 } else {
-                    [self physicsForBottomHandleDraggedUpwards];
+                    if (self.allowDrag) {
+                        [self physicsForBottomHandleDraggedUpwards];
+                    }
                 }
             }
             
@@ -918,7 +925,9 @@
             if (self.drawerDragMode == UIViewAnimation) {
                 self.newPosition = self.restY;
             } else {
-                [self physicsForBottomHandleDraggedDownwards];
+                if (self.allowDrag) {
+                    [self physicsForBottomHandleDraggedDownwards];
+                }
             }
             
         } else if (!fromTopDrawer && !velocityDownwards) {
@@ -926,7 +935,9 @@
             if (self.drawerDragMode == UIViewAnimation) {
                 self.newPosition = self.minY;
             } else {
-                [self physicsForBottomHandleDraggedUpwards];
+                if (self.allowDrag) {
+                    [self physicsForBottomHandleDraggedUpwards];
+                }
             }
         }
         
@@ -939,8 +950,13 @@
             CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
             verticalVelocity = CGPointMake(0, verticalVelocity.y);
             
-            [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
+            if (self.allowDrag) {
+                [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
+            }
         }
+        
+        self.allowDrag = NO;
+        self.allowedDragStartYAssigned = NO;
         
         self.fromTopDragHandle = NO;
         self.fromBotDragHandle = NO;
