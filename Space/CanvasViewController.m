@@ -590,6 +590,13 @@
     } else {
         
         self.isCurrentlyZoomedIn = NO;
+        
+        if (self.canvasWillSlide) {
+            noteView.frame = CGRectMake(noteView.frame.origin.x,
+                                        noteView.frame.origin.y - self.slideOffset,
+                                        noteView.frame.size.width,
+                                        noteView.frame.size.height);
+        }
         noteView.alpha = 1;
         
         // Ask focus view to save the note

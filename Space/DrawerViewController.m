@@ -490,6 +490,8 @@
         self.slidePartially = NO;
         self.focusModeChangeRequested = YES;
         
+        self.topDrawerContents.canvasWillSlide = NO;
+        
         NSLog(@"Setting focus mode to Dimming.");
         
     } else if ([[notification.userInfo objectForKey:Key_FocusMode] isEqual:[NSNumber numberWithInt:SlideOut]]) {
@@ -498,6 +500,8 @@
         self.slidePartially = NO;
         self.focusModeChangeRequested = YES;
         
+        self.topDrawerContents.canvasWillSlide = YES;
+        
         NSLog(@"Setting focus mode to Slide Out.");
         
     } else {
@@ -505,6 +509,8 @@
         self.isFocusModeDim = NO;
         self.slidePartially = YES;
         self.focusModeChangeRequested = YES;
+        
+        self.topDrawerContents.canvasWillSlide = YES;
         
         NSLog(@"Setting focus mode to Slide Partially.");
     }
@@ -1048,6 +1054,9 @@
         if (self.view.frame.origin.y < Key_NavBarHeight) {
             destination.origin.y += Key_NavBarHeight - self.view.frame.origin.y;
         }
+        
+        self.topDrawerContents.slideOffset = destination.origin.y;
+        NSLog(@"Slide offset = %f", self.topDrawerContents.slideOffset);
         
         [UIView animateWithDuration:1 animations:^{
             self.topDrawerContents.view.frame = destination;
