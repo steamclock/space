@@ -112,7 +112,7 @@
 }
 
 -(void)tapOutsideOfCanvases:(UITapGestureRecognizer*)recognizer {
-    if(self.topDrawerContents.isCurrentlyZoomedIn) {
+    if(self.topDrawerContents.isCurrentlyZoomedIn && self.topDrawerContents.isRunningZoomAnimation == NO) {
         [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
     }
 }

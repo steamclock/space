@@ -503,7 +503,12 @@
         
         // Create a temporary circle view that shows the zoomed in note's original location
         if (self.showOriginalNoteLocation) {
-            self.originalNoteCircleIndicator = [self drawCircleWithFrame:self.currentlyZoomedInNoteView.originalCircleFrame];
+            self.originalNoteCircleIndicator = [self drawCircleWithFrame:noteView.originalCircleFrame];
+            
+            if (self.dragToFocusRequested) {
+                self.originalNoteCircleIndicator.center = CGPointMake(noteView.note.originalX, noteView.note.originalY);
+            }
+            
             [self.view addSubview:self.originalNoteCircleIndicator];
         }
         
@@ -705,84 +710,84 @@ static BOOL dragStarted = NO;
         return;
     }
     
-    NoteView* view = (NoteView*)recognizer.view;
+    NoteView* noteView = (NoteView*)recognizer.view;
     CGPoint drag = [recognizer locationInView:self.view];
     
     if(dragStarted == NO) {
         
-        if (!CGPointEqualToPoint(CGPointMake(view.note.originalX, view.note.originalY), view.center) && dragStarted == NO) {
-            view.note.originalX = view.center.x;
-            view.note.originalY = view.center.y;
+        if (!CGPointEqualToPoint(CGPointMake(noteView.note.originalX, noteView.note.originalY), noteView.center) && dragStarted == NO) {
+            noteView.note.originalX = noteView.center.x;
+            noteView.note.originalY = noteView.center.y;
             
             [[Database sharedDatabase] save];
             
-            NSLog(@"Original X = %f", view.note.originalX);
-            NSLog(@"Original Y = %f", view.note.originalY);
+            NSLog(@"Original X = %f", noteView.note.originalX);
+            NSLog(@"Original Y = %f", noteView.note.originalY);
             
             dragStarted = YES;
         }
     }
     
-    [view setCenter:drag withReferenceBounds:self.view.bounds];
+    [noteView setCenter:drag withReferenceBounds:self.view.bounds];
     
     // Prevents dragging above the navigation bar
-    if (self.isTrashMode == NO && view.center.y <= 0) {
-        [view setCenter:CGPointMake(drag.x, 0) withReferenceBounds:self.view.bounds];
+    if (self.isTrashMode == NO && noteView.center.y <= 0) {
+        [noteView setCenter:CGPointMake(drag.x, 0) withReferenceBounds:self.view.bounds];
     }
     
     if (self.isTrashMode) {
         
-        if (view.center.y < self.triggerTrashY) {
+        if (noteView.center.y < self.triggerTrashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
-                [self returnNoteToBounds:view];
-                [self recoverNote:view];
+                [self returnNoteToBounds:noteView];
+                [self recoverNote:noteView];
             } else {
-                [view setBackgroundColor:[UIColor greenColor]];
+                [noteView setBackgroundColor:[UIColor greenColor]];
             }
         } else if(recognizer.state == UIGestureRecognizerStateEnded) {
             [[Database sharedDatabase] save];
             CGPoint velocity = [recognizer velocityInView:self.view];
-            [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
+            [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
         } else {
-            [view setBackgroundColor:[UIColor clearColor]];
+            [noteView setBackgroundColor:[UIColor clearColor]];
         }
         
     } else {
         
-        if (view.center.y > self.triggerTrashY) {
+        if (noteView.center.y > self.triggerTrashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 self.dragToTrashRequested = YES;
-                [self deleteNoteWithoutAsking:view];
+                [self deleteNoteWithoutAsking:noteView];
             } else {
-                [view setBackgroundColor:[UIColor redColor]];
+                [noteView setBackgroundColor:[UIColor redColor]];
             }
-        } else if (view.center.y > self.triggerFocusY) {
+        } else if (noteView.center.y > self.triggerFocusY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 self.dragToFocusRequested = YES;
-                [self.focus focusOn:view withTouchPoint:CGPointZero];
-                [self toggleZoomForNoteView:view];
+                [self.focus focusOn:noteView withTouchPoint:CGPointZero];
+                [self toggleZoomForNoteView:noteView];
                 [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
             } else {
-                [view setBackgroundColor:[UIColor greenColor]];
+                [noteView setBackgroundColor:[UIColor greenColor]];
             }
         } else {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [[Database sharedDatabase] save];
                 CGPoint velocity = [recognizer velocityInView:self.view];
-                [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
+                [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
             } else {
-                [view setBackgroundColor:[UIColor clearColor]];
+                [noteView setBackgroundColor:[UIColor clearColor]];
             }
         }
     }
     
     if(recognizer.state == UIGestureRecognizerStateEnded) {
-        [view setBackgroundColor:[UIColor clearColor]];
+        [noteView setBackgroundColor:[UIColor clearColor]];
         dragStarted = NO;
         
         if (self.dragToFocusRequested == NO && self.dragToTrashRequested == NO) {
-            view.note.originalX = view.center.x;
-            view.note.originalY = view.center.y;
+            noteView.note.originalX = noteView.center.x;
+            noteView.note.originalY = noteView.center.y;
             
             [[Database sharedDatabase] save];
         }
