@@ -20,6 +20,7 @@
 
 // These properties help manage zoom focus animation
 
+@property (nonatomic) BOOL isRunningZoomAnimation;
 @property (strong, nonatomic) NoteView* currentlyZoomedInNoteView;
 @property (nonatomic) BOOL isCurrentlyZoomedIn;
 @property (nonatomic) float zoomAnimationDuration;

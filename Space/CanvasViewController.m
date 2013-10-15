@@ -432,8 +432,8 @@
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
     
-    // Don't allow focus if the animator is running
-    if (self.animator.running) {
+    // Don't allow focus if the animator is still running, or if a zoom animation is still animating
+    if (self.animator.running || self.isRunningZoomAnimation) {
         return;
     }
     
@@ -484,6 +484,8 @@
 }
 
 -(void)toggleZoomForNoteView:(NoteView*)noteView {
+    
+    self.isRunningZoomAnimation = YES;
     
     if (self.isCurrentlyZoomedIn) {
         noteView = self.currentlyZoomedInNoteView;
@@ -544,6 +546,7 @@
             } completion:^(BOOL finished) {
                 noteView.alpha = 0;
                 [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
+                self.isRunningZoomAnimation = NO;
             }];
             
             // NSLog(@"Circle frame after zoomed in = %@", NSStringFromCGRect(noteView.frame));
@@ -614,6 +617,8 @@
             
             [UIView animateWithDuration:0.5 animations:^{
                 noteView.titleLabel.alpha = 1;
+            } completion:^(BOOL finished) {
+                self.isRunningZoomAnimation = NO;
             }];
         }];
     }
