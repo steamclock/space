@@ -21,6 +21,7 @@
 // These properties help manage zoom focus animation
 
 @property (nonatomic) BOOL isRunningZoomAnimation;
+
 @property (strong, nonatomic) NoteView* currentlyZoomedInNoteView;
 @property (nonatomic) BOOL isCurrentlyZoomedIn;
 @property (nonatomic) float zoomAnimationDuration;
@@ -29,6 +30,8 @@
 @property (nonatomic) BOOL noteCreated;
 @property (nonatomic) BOOL shouldZoomInAfterCreatingNewNote;
 @property (nonatomic) BOOL shouldLoadCanvasAfterZoomOut;
+
+@property (strong, nonatomic) UIView* originalNoteCircleIndicator;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -27,4 +27,5 @@ NSString* kNoteDismissedNotification = @"noteDismissed";
 
 NSString* kChangeFocusModeNotification = @"changeFocusMode";
 NSString* kChangeDragModeNotification = @"changeDragMode";
+NSString* kChangeNoteCircleModeNotification = @"changeNoteCircleMode";
 NSString* kChangeEditorModeNotification = @"changeEditorMode";

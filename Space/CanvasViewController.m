@@ -24,8 +24,6 @@
 @property (nonatomic) UICollisionBehavior* collision;
 @property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
 
-@property (nonatomic) BOOL simulating;
-
 @property (nonatomic) NoteView* notePendingDelete;
 
 @property (nonatomic) int currentCanvas;
@@ -33,13 +31,13 @@
 
 @property (nonatomic) int triggerFocusY;
 @property (nonatomic) int triggerTrashY;
-
 @property (nonatomic) BOOL dragToFocusRequested;
 @property (nonatomic) BOOL dragToTrashRequested;
 
 @property (nonatomic) UIView* topLevelView;
-
 @property (strong, nonatomic) UIButton* emptyTrashButton;
+
+@property (nonatomic) BOOL showOriginalNoteLocation;
 
 @end
 
@@ -123,6 +121,8 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteCreated:) name:kNoteCreatedNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(layoutChanged:) name:kLayoutChangedNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toggleZoomForNoteView:) name:kDismissNoteNotification object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toggleNoteCircleMode:) name:kChangeNoteCircleModeNotification object:nil];
     }
     
     self.currentCanvas = 0;
@@ -131,6 +131,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChanged:) name:kCanvasChangedNotification object:nil];
     
     self.zoomAnimationDuration = 0.5;
+    self.showOriginalNoteLocation = YES;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -153,6 +154,18 @@
         // NSLog(@"Canvas superview center = %@", NSStringFromCGPoint(self.view.superview.superview.center));
     }
 }
+
+#pragma mark - Show / Hide Original Note Circle Location
+
+-(void)toggleNoteCircleMode:(NSNotification*)notification {
+    if ([[notification.userInfo objectForKey:Key_NoteCircleMode] isEqual:[NSNumber numberWithInt:ShowOriginalLocation]]) {
+        self.showOriginalNoteLocation = YES;
+    } else {
+        self.showOriginalNoteLocation = NO;
+    }
+}
+
+#pragma mark - Change Canvas
 
 -(void)loadCurrentCanvas {
     
@@ -210,8 +223,8 @@
 
 -(void)spaceTap:(UITapGestureRecognizer *)recognizer {
     
-    // Don't allow note creation when the animator is still active
-    if (self.animator.running) {
+    // Don't allow space tap if the animator is still running, or if a zoom animation is still animating
+    if (self.animator.running || self.isRunningZoomAnimation) {
         return;
     }
     
@@ -462,27 +475,6 @@
 
 #pragma mark - Zoom Focus Animation
 
--(CGPoint)findCenterOfScreen {
-    // Self.view.superview == DrawerView, DrawerView's superview is the Container view, which has the correct and current bounds of the screen,
-    // so we can use that to find the absolute center of the screen.
-    return [self.view.superview.superview convertPoint:self.view.superview.superview.center fromView:self.view.superview.superview.superview];
-}
-
--(void)updateCurrentlyZoomedInNoteViewCenter {
-    
-    // When the drawer is dragged or has changed position while a note view is zoomed in, we want to update the center of the note view so that
-    // when we unzoom the note circle, it will start the unzoom from the correct location
-    if (self.isCurrentlyZoomedIn) {
-        UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
-        CGPoint centerOfScreen = [self findCenterOfScreen];
-        if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
-            self.currentlyZoomedInNoteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment);
-        } else {
-            self.currentlyZoomedInNoteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
-        }
-    }
-}
-
 -(void)toggleZoomForNoteView:(NoteView*)noteView {
     
     self.isRunningZoomAnimation = YES;
@@ -508,6 +500,12 @@
         self.shouldZoomInAfterCreatingNewNote = NO;
         
         noteView.layer.zPosition = 1000;
+        
+        // Create a temporary circle view that shows the zoomed in note's original location
+        if (self.showOriginalNoteLocation) {
+            self.originalNoteCircleIndicator = [self drawCircleWithFrame:self.currentlyZoomedInNoteView.originalCircleFrame];
+            [self.view addSubview:self.originalNoteCircleIndicator];
+        }
         
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Zoom Circle
@@ -543,6 +541,10 @@
             [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
                 self.focus.view.alpha = 1.0;
                 [self.focus focusOn:noteView withTouchPoint:CGPointZero];
+                
+                // Show original note circle location indicator
+                self.originalNoteCircleIndicator.alpha = 1;
+                
             } completion:^(BOOL finished) {
                 noteView.alpha = 0;
                 [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
@@ -563,7 +565,7 @@
         // Ask focus view to save the note
         [[NSNotificationCenter defaultCenter] postNotificationName:kSaveNoteNotification object:self];
         
-        // Hide editor
+        // Hide editor and
         self.focus.view.alpha = 0;
         
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
@@ -571,8 +573,8 @@
             [noteView setTransform:CGAffineTransformMakeScale(1.0, 1.0)];
             
             if (self.dragToFocusRequested) {
-                NSLog(@"Returning to X = %f", noteView.note.originalX);
-                NSLog(@"Returning to Y = %f", noteView.note.originalY);
+                // NSLog(@"Returning to X = %f", noteView.note.originalX);
+                // NSLog(@"Returning to Y = %f", noteView.note.originalY);
                 noteView.center = CGPointMake(noteView.note.originalX, noteView.note.originalY);
                 self.dragToFocusRequested = NO;
             } else {
@@ -617,11 +619,62 @@
             
             [UIView animateWithDuration:0.5 animations:^{
                 noteView.titleLabel.alpha = 1;
+                
+                // Remove original note circle location indicator
+                if (self.originalNoteCircleIndicator) {
+                    [self.originalNoteCircleIndicator removeFromSuperview];
+                    self.originalNoteCircleIndicator = nil;
+                }
+                
             } completion:^(BOOL finished) {
                 self.isRunningZoomAnimation = NO;
             }];
         }];
     }
+}
+
+-(CGPoint)findCenterOfScreen {
+    // Self.view.superview == DrawerView, DrawerView's superview is the Container view, which has the correct and current bounds of the screen,
+    // so we can use that to find the absolute center of the screen.
+    return [self.view.superview.superview convertPoint:self.view.superview.superview.center fromView:self.view.superview.superview.superview];
+}
+
+-(void)updateCurrentlyZoomedInNoteViewCenter {
+    
+    // When the drawer is dragged or has changed position while a note view is zoomed in, we want to update the center of the note view so that
+    // when we unzoom the note circle, it will start the unzoom from the correct location
+    if (self.isCurrentlyZoomedIn) {
+        UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+        CGPoint centerOfScreen = [self findCenterOfScreen];
+        if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+            self.currentlyZoomedInNoteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment);
+        } else {
+            self.currentlyZoomedInNoteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
+        }
+    }
+}
+
+-(UIView*)drawCircleWithFrame:(CGRect)frame {
+    
+    UIView* circle = [[UIView alloc] initWithFrame:frame];
+    circle.backgroundColor = [UIColor clearColor];
+    
+    CAShapeLayer* circleShape = [CAShapeLayer layer];
+    
+    CGRect circleFrame = circle.bounds;
+    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:NOTE_RADIUS];
+    
+    circleShape.path = circlePath.CGPath;
+    
+    circleShape.fillColor = [UIColor clearColor].CGColor;
+    circleShape.strokeColor = [UIColor lightGrayColor].CGColor;
+    circleShape.lineWidth = 2.0f;
+    
+    circleShape.frame = circleFrame;
+    
+    [circle.layer addSublayer:circleShape];
+    
+    return circle;
 }
 
 -(void)noteCreated:(NSNotification*)notification {

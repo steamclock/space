@@ -15,11 +15,13 @@
 @property (strong, nonatomic) UIActionSheet* drawerLayoutSelection;
 @property (strong, nonatomic) UIActionSheet* focusModeSelection;
 @property (strong, nonatomic) UIActionSheet* dragModeSelection;
+@property (strong, nonatomic) UIActionSheet* noteCircleSelection;
 @property (strong, nonatomic) UIActionSheet* editorModeSelection;
 
 @property (strong, nonatomic) UIButton* layoutButton;
 @property (strong, nonatomic) UIButton* focusButton;
 @property (strong, nonatomic) UIButton* dragButton;
+@property (strong, nonatomic) UIButton* noteCircleButton;
 @property (strong, nonatomic) UIButton* editorButton;
 
 @end
@@ -39,14 +41,12 @@
     self.layoutButton.frame = layoutButtonFrame;
     [self.layoutButton addTarget:self action:@selector(showDrawerLayoutSelection) forControlEvents:UIControlEventTouchUpInside];
     
-    
     self.focusButton = [UIButton buttonWithType:UIButtonTypeSystem];
     [self.focusButton setTitle:@"Focus: Dimming" forState:UIControlStateNormal];
     self.focusButton.titleLabel.font = [UIFont systemFontOfSize:20];
     CGRect focusButtonFrame = CGRectMake(5, 80, 300, 50);
     self.focusButton.frame = focusButtonFrame;
     [self.focusButton addTarget:self action:@selector(showFocusModeSelection) forControlEvents:UIControlEventTouchUpInside];
-    
     
     self.dragButton = [UIButton buttonWithType:UIButtonTypeSystem];
     [self.dragButton setTitle:@"Drag: Gravity" forState:UIControlStateNormal];
@@ -55,10 +55,17 @@
     self.dragButton.frame = dragButtonFrame;
     [self.dragButton addTarget:self action:@selector(showDragModeSelection) forControlEvents:UIControlEventTouchUpInside];
     
+    self.noteCircleButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    [self.noteCircleButton setTitle:@"Note Circle: Show Original" forState:UIControlStateNormal];
+    self.noteCircleButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    CGRect noteCircleButtonFrame = CGRectMake(5, 220, 300, 50);
+    self.noteCircleButton.frame = noteCircleButtonFrame;
+    [self.noteCircleButton addTarget:self action:@selector(showNoteCircleSelection) forControlEvents:UIControlEventTouchUpInside];
+    
     self.editorButton = [UIButton buttonWithType:UIButtonTypeSystem];
     [self.editorButton setTitle:@"Editor: Show Title" forState:UIControlStateNormal];
     self.editorButton.titleLabel.font = [UIFont systemFontOfSize:20];
-    CGRect editorButtonFrame = CGRectMake(5, 220, 300, 50);
+    CGRect editorButtonFrame = CGRectMake(5, 290, 300, 50);
     self.editorButton.frame = editorButtonFrame;
     [self.editorButton addTarget:self action:@selector(showEditorModeSelection) forControlEvents:UIControlEventTouchUpInside];
     
@@ -66,6 +73,7 @@
     [self.view addSubview:self.layoutButton];
     [self.view addSubview:self.focusButton];
     [self.view addSubview:self.dragButton];
+    [self.view addSubview:self.noteCircleButton];
     [self.view addSubview:self.editorButton];
 }
 
@@ -97,6 +105,16 @@
                                             destructiveButtonTitle:nil
                                                  otherButtonTitles:@"Basic Animation", @"Free Sliding", @"Gravity", nil];
     [self.dragModeSelection showInView:self.view];
+}
+
+- (void)showNoteCircleSelection {
+    
+    self.noteCircleSelection = [[UIActionSheet alloc] initWithTitle:@"Choose a Note Circle Display Mode"
+                                                           delegate:(id<UIActionSheetDelegate>)self
+                                                  cancelButtonTitle:@"Cancel"
+                                             destructiveButtonTitle:nil
+                                                  otherButtonTitles:@"Show Original Location", @"Don't Show Original Location", nil];
+    [self.noteCircleSelection showInView:self.view];
 }
 
 - (void)showEditorModeSelection {
@@ -155,6 +173,18 @@
             [self.dragButton setTitle:@"Drag: Gravity" forState:UIControlStateNormal];
         }
 
+    } else if (actionSheet == self.noteCircleSelection) {
+        
+        if (buttonIndex == 0) {
+            NSDictionary *noteCircleMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:ShowOriginalLocation], Key_NoteCircleMode, nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeNoteCircleModeNotification object:nil userInfo:noteCircleMode];
+            [self.noteCircleButton setTitle:@"Note Circle: Show Original" forState:UIControlStateNormal];
+        } else if (buttonIndex == 1) {
+            NSDictionary *noteCircleMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:HideOriginalLocation], Key_NoteCircleMode, nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeNoteCircleModeNotification object:nil userInfo:noteCircleMode];
+            [self.noteCircleButton setTitle:@"Note Circle: Hide Original" forState:UIControlStateNormal];
+        }
+        
     } else if (actionSheet == self.editorModeSelection) {
         
         if (buttonIndex == 0) {

@@ -27,4 +27,5 @@ extern NSString* kNoteDismissedNotification;
 
 extern NSString* kChangeFocusModeNotification;
 extern NSString* kChangeDragModeNotification;
+extern NSString* kChangeNoteCircleModeNotification;
 extern NSString* kChangeEditorModeNotification;

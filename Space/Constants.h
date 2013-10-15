@@ -40,3 +40,10 @@ typedef enum DragModeEnum {
     UIDynamicFreeSliding,
     UIDynamicFreeSlidingWithGravity
 } DragMode;
+
+extern NSString* const Key_NoteCircleMode;
+
+typedef enum NoteCircleModeEnum {
+    ShowOriginalLocation,
+    HideOriginalLocation
+} NoteCircleMode;
