@@ -526,6 +526,17 @@
             [self.view addSubview:self.originalNoteCircleIndicator];
         }
         
+        // Fade out all other note views
+        for (UIView* view in self.view.subviews) {
+            if ([view isKindOfClass:[NoteView class]]) {
+                NoteView* notZoomedInNoteView = (NoteView*)view;
+                
+                if (notZoomedInNoteView != self.currentlyZoomedInNoteView) {
+                    notZoomedInNoteView.circleShape.strokeColor = [UIColor lightGrayColor].CGColor;
+                }
+            }
+         }
+        
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Zoom Circle
             [noteView setTransform:CGAffineTransformMakeScale(SCALE_FACTOR, SCALE_FACTOR)];
@@ -584,8 +595,19 @@
         // Ask focus view to save the note
         [[NSNotificationCenter defaultCenter] postNotificationName:kSaveNoteNotification object:self];
         
-        // Hide editor and
+        // Hide editor
         self.focus.view.alpha = 0;
+        
+        // Fade back all note views
+        for (UIView* view in self.view.subviews) {
+            if ([view isKindOfClass:[NoteView class]]) {
+                NoteView* notZoomedInNoteView = (NoteView*)view;
+                
+                if (notZoomedInNoteView != self.currentlyZoomedInNoteView) {
+                    notZoomedInNoteView.circleShape.strokeColor = [UIColor blackColor].CGColor;
+                }
+            }
+        }
         
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             // Unzoom Circle
@@ -689,7 +711,7 @@
     circleShape.path = circlePath.CGPath;
     
     circleShape.fillColor = [UIColor clearColor].CGColor;
-    circleShape.strokeColor = [UIColor lightGrayColor].CGColor;
+    circleShape.strokeColor = [UIColor blackColor].CGColor;
     circleShape.lineWidth = 2.0f;
     
     circleShape.frame = circleFrame;
@@ -697,6 +719,10 @@
     [circle.layer addSublayer:circleShape];
     
     return circle;
+}
+
+-(void)fadeOutNoteView:(NoteView*)noteView {
+    noteView.circleShape.strokeColor = [UIColor grayColor].CGColor;
 }
 
 -(void)noteCreated:(NSNotification*)notification {

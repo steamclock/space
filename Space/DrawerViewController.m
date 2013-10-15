@@ -145,6 +145,7 @@
         }
         
         self.allowDrag = YES;
+        
     }
     
     float newPosition;
@@ -216,24 +217,10 @@
             [self animateDrawerPosition:self.newPosition];
         }
         
-        // Add throwable feel to the drawer
-        if (self.drawerDragMode == UIDynamicFreeSliding || self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
-            verticalVelocity = CGPointMake(0, verticalVelocity.y);
-            
-            [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
-        }
-        
         self.fromTopDragHandle = NO;
         self.fromBotDragHandle = NO;
         
-        // [self animateDrawerPosition:newPosition]; // Allows flicking the drawer without using the drag handles
-        
     } else {
-        
-        if ((self.fromTopDragHandle && newPosition < self.restY) || (!self.fromTopDragHandle && newPosition > self.restY)) {
-            newPosition = self.restY;
-        }
         
         [self setDrawerPosition:newPosition];
         
@@ -710,7 +697,7 @@
     
     self.view.frame = frame;
     
-    NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
     [self.delegate updateCurrentlyZoomedInNoteViewCenter];
 }
 
