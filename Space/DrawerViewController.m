@@ -710,7 +710,7 @@
     
     self.view.frame = frame;
     
-    // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
     [self.delegate updateCurrentlyZoomedInNoteViewCenter];
 }
 
@@ -1016,7 +1016,7 @@
     }
 }
 
-- (void)slideOutCanvases {
+-(void)slideOutCanvases {
     
     // NSLog(@"Checking focus mode to see if drawer should slide out.");
     
@@ -1026,7 +1026,7 @@
     
     if (self.isFocusModeDim == NO && self.focusModeChangeRequested == YES) {
         
-        NSLog(@"Focus mode is set to slide, slide out canvases now.");
+        NSLog(@"Slide out canvases now.");
         
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
         
@@ -1041,8 +1041,11 @@
                  destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
                 
                 if (self.slidePartially) {
-                    // NSLog(@"Currently zoomed in note Y = %f", self.topDrawerContents.currentlyZoomedInNoteView.note.originalY);
-                    destination.origin.y = -(self.topDrawerContents.currentlyZoomedInNoteView.note.originalY - NOTE_RADIUS * 2);
+                    float targetedNoteY = self.topDrawerContents.currentlyZoomedInNoteView.note.originalY;
+                    
+                    // NSLog(@"Targeted note Y = %f", targetedNoteY);
+                    
+                    destination.origin.y = -(targetedNoteY - NOTE_RADIUS * 2);
                         
                     // NSLog(@"Destination = %f", destination.origin.y);
                     
@@ -1054,6 +1057,11 @@
             }
         }
         
+        // Handle cases where the drawer is not completely drawn out or closed
+        if (self.view.frame.origin.y < Key_NavBarHeight) {
+            destination.origin.y += Key_NavBarHeight - self.view.frame.origin.y;
+        }
+        
         [UIView animateWithDuration:1 animations:^{
             self.topDrawerContents.view.frame = destination;
             self.topDragHandle.alpha = 0;
@@ -1063,7 +1071,7 @@
         
     } else {
         
-        NSLog(@"Focus mode is set to dim, don't slide out canvases.");
+        // NSLog(@"Focus mode is set to dim, don't slide out canvases.");
         
     }
 }
