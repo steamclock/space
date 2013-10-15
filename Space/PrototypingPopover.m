@@ -144,15 +144,15 @@
     } else if (actionSheet == self.focusModeSelection) {
         
         if (buttonIndex == 0) {
-            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"dim", @"focusMode", nil];
+            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:Dimming], Key_FocusMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
             [self.focusButton setTitle:@"Focus: Dimming" forState:UIControlStateNormal];
         } else if (buttonIndex == 1) {
-            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"slide", @"focusMode", nil];
+            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:SlideOut], Key_FocusMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
             [self.focusButton setTitle:@"Focus: Slide Out" forState:UIControlStateNormal];
         } else if (buttonIndex == 2) {
-            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"slidePartially", @"focusMode", nil];
+            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:SlidePartially], Key_FocusMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
             [self.focusButton setTitle:@"Focus: Slide Partially" forState:UIControlStateNormal];
         }
@@ -160,15 +160,15 @@
     } else if (actionSheet == self.dragModeSelection) {
         
         if (buttonIndex == 0) {
-            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIViewAnimation], @"dragMode", nil];
+            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIViewAnimation], Key_DragMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
             [self.dragButton setTitle:@"Drag: Basic Animation" forState:UIControlStateNormal];
         } else if (buttonIndex == 1) {
-            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSliding], @"dragMode", nil];
+            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSliding], Key_DragMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
             [self.dragButton setTitle:@"Drag: Free Sliding" forState:UIControlStateNormal];
         } else if (buttonIndex == 2) {
-            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], @"dragMode", nil];
+            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], Key_DragMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
             [self.dragButton setTitle:@"Drag: Gravity" forState:UIControlStateNormal];
         }
@@ -188,11 +188,11 @@
     } else if (actionSheet == self.editorModeSelection) {
         
         if (buttonIndex == 0) {
-            NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"showTitle", @"editorMode", nil];
+            NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:ShowTitle], Key_EditorMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeEditorModeNotification object:nil userInfo:editorMode];
             [self.editorButton setTitle:@"Editor: Show Title" forState:UIControlStateNormal];
         } else if (buttonIndex == 1) {
-            NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:@"noTitle", @"editorMode", nil];
+            NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:NoTitle], Key_EditorMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeEditorModeNotification object:nil userInfo:editorMode];
             [self.editorButton setTitle:@"Editor: No Title" forState:UIControlStateNormal];
         }

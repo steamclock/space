@@ -495,9 +495,9 @@
 
 #pragma mark - Prototyping Options
 
-- (void)changeFocusMode:(NSNotification *)notification {
+-(void)changeFocusMode:(NSNotification*)notification {
     
-    if ([[notification.userInfo objectForKey:@"focusMode"] isEqualToString:@"dim"]) {
+    if ([[notification.userInfo objectForKey:Key_FocusMode] isEqual:[NSNumber numberWithInt:Dimming]]) {
         
         self.isFocusModeDim = YES;
         self.slidePartially = NO;
@@ -505,7 +505,7 @@
         
         NSLog(@"Setting focus mode to Dimming.");
         
-    } else if ([[notification.userInfo objectForKey:@"focusMode"] isEqualToString:@"slide"]) {
+    } else if ([[notification.userInfo objectForKey:Key_FocusMode] isEqual:[NSNumber numberWithInt:SlideOut]]) {
         
         self.isFocusModeDim = NO;
         self.slidePartially = NO;
@@ -520,29 +520,22 @@
         self.focusModeChangeRequested = YES;
         
         NSLog(@"Setting focus mode to Slide Partially.");
-        
     }
 }
 
-- (void)changeDragMode:(NSNotification *)notification {
-    
-    self.drawerDragMode = [[notification.userInfo objectForKey:@"dragMode"] intValue];
+-(void)changeDragMode:(NSNotification*)notification {
+    self.drawerDragMode = [[notification.userInfo objectForKey:Key_DragMode] intValue];
     
     if (self.drawerDragMode == UIViewAnimation) {
-        
-        // Kill UIDynamics
         [self stopPhysicsEngine];
-        
     } else {
-        
-        // Revive UIDynamics
         [self startPhysicsEngine];
     }
     
     // NSLog(@"Drawer Drag Mode = %d", self.drawerDragMode);
 }
 
-- (void)loadThreeSectionsLayout {
+-(void)loadThreeSectionsLayout {
     NSLog(@"Loading three sections layout drawer.");
     
     if (self.drawerDragMode != UIViewAnimation) {
@@ -1048,14 +1041,14 @@
                  destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
                 
                 if (self.slidePartially) {
-                    NSLog(@"Currently zoomed in note Y = %f", self.topDrawerContents.currentlyZoomedInNoteView.note.originalY);
+                    // NSLog(@"Currently zoomed in note Y = %f", self.topDrawerContents.currentlyZoomedInNoteView.note.originalY);
                     destination.origin.y = -(self.topDrawerContents.currentlyZoomedInNoteView.note.originalY - NOTE_RADIUS * 2);
                         
-                    NSLog(@"Destination = %f", destination.origin.y);
+                    // NSLog(@"Destination = %f", destination.origin.y);
                     
                     if (destination.origin.y > 0) {
                         destination.origin.y = self.topDrawerContents.view.frame.origin.y;
-                        NSLog(@"Destination = %f", destination.origin.y);
+                        // NSLog(@"Destination = %f", destination.origin.y);
                     }
                 }
             }

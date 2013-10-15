@@ -14,7 +14,6 @@
 #import "Notifications.h"
 #import "Constants.h"
 #import "HelperMethods.h"
-#import "UIView+Genie.h"
 
 #define FOCUS_SIZE 480
 
@@ -102,7 +101,7 @@
 }
 
 -(void)toggleTitle:(NSNotification*)notification {
-    if ([[notification.userInfo objectForKey:@"editorMode"] isEqualToString:@"showTitle"]) {
+    if ([[notification.userInfo objectForKey:Key_EditorMode] isEqual:[NSNumber numberWithInt:ShowTitle]]) {
         self.isShowingTitleField = YES;
         
         [self.titleField setHidden:NO];
@@ -199,28 +198,6 @@
         //edit the title
         [self.titleField becomeFirstResponder];
     }
-
-    // self.view.hidden = NO;
-    
-    /*
-    NSLog(@"Focus frame = %@", NSStringFromCGRect(self.focus.frame));
-    self.touchPoint = pointOfTouch;
-    
-    BCRectEdge rectEdge;
-    
-    if (pointOfTouch.y < [UIScreen mainScreen].bounds.size.height / 2) {
-        rectEdge = BCRectEdgeBottom;
-    } else if (pointOfTouch.y > [UIScreen mainScreen].bounds.size.height / 2) {
-        rectEdge = BCRectEdgeTop;
-    } else {
-        rectEdge = BCRectEdgeBottom;
-    }
-    
-    [self.focus genieOutTransitionWithDuration:0.5
-                                     startRect:CGRectMake(pointOfTouch.x, pointOfTouch.y, view.frame.size.width, view.frame.size.height)
-                                     startEdge:rectEdge
-                                    completion:nil];
-    */
 }
 
 - (void)didReceiveMemoryWarning

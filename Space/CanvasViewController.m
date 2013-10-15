@@ -428,8 +428,8 @@
     
     CGPoint originalCenter = [originalPosition CGPointValue];
     
-    NSLog(@"Recovered note position X = %f",originalCenter.x);
-    NSLog(@"Recovered note position Y = %f",originalCenter.y);
+    // NSLog(@"Recovered note position X = %f",originalCenter.x);
+    // NSLog(@"Recovered note position Y = %f",originalCenter.y);
     
     recoveredNote.positionX = [Coordinate normalizeXCoord:originalCenter.x withReferenceBounds:self.view.bounds];
     recoveredNote.positionY = [Coordinate normalizeYCoord:originalCenter.y withReferenceBounds:self.view.bounds];
@@ -721,8 +721,8 @@ static BOOL dragStarted = NO;
             
             [[Database sharedDatabase] save];
             
-            NSLog(@"Original X = %f", noteView.note.originalX);
-            NSLog(@"Original Y = %f", noteView.note.originalY);
+            // NSLog(@"Original X = %f", noteView.note.originalX);
+            // NSLog(@"Original Y = %f", noteView.note.originalY);
             
             dragStarted = YES;
         }

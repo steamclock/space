@@ -35,6 +35,18 @@ extern int const Key_NoteContentFieldHeight;
 extern int const Key_NoteLargeContentFieldWidth;
 extern int const Key_NoteLargeContentFieldHeight;
 
+/* Prototyping Modes */
+
+extern NSString* const Key_FocusMode;
+
+typedef enum FocusModeEnum {
+    Dimming,
+    SlideOut,
+    SlidePartially
+} FocusMode;
+
+extern NSString* const Key_DragMode;
+
 typedef enum DragModeEnum {
     UIViewAnimation,
     UIDynamicFreeSliding,
@@ -47,3 +59,10 @@ typedef enum NoteCircleModeEnum {
     ShowOriginalLocation,
     HideOriginalLocation
 } NoteCircleMode;
+
+extern NSString* const Key_EditorMode;
+
+typedef enum EditorModeEnum {
+    ShowTitle,
+    NoTitle
+} EditorMode;

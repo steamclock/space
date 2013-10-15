@@ -34,7 +34,6 @@
 		B83D02C1180765C1003A2C7B /* HelperMethods.m in Sources */ = {isa = PBXBuildFile; fileRef = B83D02C0180765C1003A2C7B /* HelperMethods.m */; };
 		B83D42D517D8F5E800409BBF /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = B83D42D417D8F5E800409BBF /* Constants.m */; };
 		B84E6E4D17F25A9A005A78D6 /* PrototypingPopover.m in Sources */ = {isa = PBXBuildFile; fileRef = B84E6E4C17F25A9A005A78D6 /* PrototypingPopover.m */; };
-		B86B75FD17FDD60E00235E9A /* UIView+Genie.m in Sources */ = {isa = PBXBuildFile; fileRef = B86B75FC17FDD60E00235E9A /* UIView+Genie.m */; };
 		B8CFC07317EA4B7B000F0853 /* Coordinate.m in Sources */ = {isa = PBXBuildFile; fileRef = B8CFC07217EA4B7B000F0853 /* Coordinate.m */; };
 		CA0F8356E0134BAC8244836C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1842E80713F540AB860880DC /* libPods.a */; };
 /* End PBXBuildFile section */
@@ -94,8 +93,6 @@
 		B83D42D417D8F5E800409BBF /* Constants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Constants.m; sourceTree = "<group>"; };
 		B84E6E4B17F25A9A005A78D6 /* PrototypingPopover.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrototypingPopover.h; sourceTree = "<group>"; };
 		B84E6E4C17F25A9A005A78D6 /* PrototypingPopover.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrototypingPopover.m; sourceTree = "<group>"; };
-		B86B75FB17FDD60E00235E9A /* UIView+Genie.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIView+Genie.h"; sourceTree = "<group>"; };
-		B86B75FC17FDD60E00235E9A /* UIView+Genie.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIView+Genie.m"; sourceTree = "<group>"; };
 		B8CFC07117EA4B7B000F0853 /* Coordinate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Coordinate.h; sourceTree = "<group>"; };
 		B8CFC07217EA4B7B000F0853 /* Coordinate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Coordinate.m; sourceTree = "<group>"; };
 		D6C0872E37B24A98876C9A8E /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -184,8 +181,6 @@
 				B8270B5717D7C605007B6EBB /* CanvasMenuPopover.m */,
 				B84E6E4B17F25A9A005A78D6 /* PrototypingPopover.h */,
 				B84E6E4C17F25A9A005A78D6 /* PrototypingPopover.m */,
-				B86B75FB17FDD60E00235E9A /* UIView+Genie.h */,
-				B86B75FC17FDD60E00235E9A /* UIView+Genie.m */,
 				A6F5540517BD737200728B8C /* Images.xcassets */,
 				A6F5540217BD737200728B8C /* Space.xcdatamodeld */,
 				A6F553F717BD737200728B8C /* Supporting Files */,
@@ -391,7 +386,6 @@
 				A6EF0DE517C56310005EF2A0 /* NoteView.m in Sources */,
 				A699F2F817CC06830001E6B0 /* CanvasSelectionViewController.m in Sources */,
 				A62D413917BD7BE80073DDB4 /* Note.m in Sources */,
-				B86B75FD17FDD60E00235E9A /* UIView+Genie.m in Sources */,
 				B8CFC07317EA4B7B000F0853 /* Coordinate.m in Sources */,
 				A62D413C17BD7D850073DDB4 /* CanvasViewController.m in Sources */,
 				B84E6E4D17F25A9A005A78D6 /* PrototypingPopover.m in Sources */,

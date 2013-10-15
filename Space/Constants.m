@@ -35,4 +35,9 @@ int const Key_NoteContentFieldHeight = 200;
 int const Key_NoteLargeContentFieldWidth = 300;
 int const Key_NoteLargeContentFieldHeight = 280;
 
+/* Prototyping Modes */
+
+NSString* const Key_FocusMode = @"focusMode";
+NSString* const Key_DragMode = @"dragMode";
 NSString* const Key_NoteCircleMode = @"noteCircleMode";
+NSString* const Key_EditorMode = @"editorMode";
