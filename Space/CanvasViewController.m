@@ -945,11 +945,8 @@ static BOOL dragStarted = NO;
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     for (UIView* subview in self.view.subviews) {
-        
         if ([subview isKindOfClass:[NoteView class]]) {
-            
             NoteView* noteView = (NoteView*)subview;
-            
             noteView.note.originalX = noteView.center.x;
             noteView.note.originalY = noteView.center.y;
             
@@ -957,30 +954,37 @@ static BOOL dragStarted = NO;
         }
     }
     
+    if (self.isCurrentlyZoomedIn) {
+        [self repositionZoomedInNoteView:self.currentlyZoomedInNoteView];
+    } else {
+        [self repositionFocusView];
+    }
+    
     // Restore the behaviours after orientation changes and calculations are completed.
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
-    
-    if (self.isCurrentlyZoomedIn) {
-        [self repositionZoomedInNoteView:self.currentlyZoomedInNoteView];
-    }
-    
-    [self repositionFocusView];
 }
 
 -(void)repositionZoomedInNoteView:(NoteView*)noteView {
-    
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     CGPoint centerOfScreen = [self findCenterOfScreen];
     
+    // Handle cases where the drawer is not completely drawn out.
+    int drawerOffset = self.view.superview.frame.origin.y;
+    if (drawerOffset < Key_NavBarHeight) {
+        drawerOffset = Key_NavBarHeight - self.view.superview.frame.origin.y;
+    } else {
+        drawerOffset = 0;
+    }
+    
     if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
         [UIView animateWithDuration:0.5 animations:^{
-            noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_LandscapeFocusViewAdjustment);
+            noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_LandscapeFocusViewAdjustment + drawerOffset);
             self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
         }];
     } else {
         [UIView animateWithDuration:0.5 animations:^{
-            noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_PortraitFocusViewAdjustment);
+            noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_PortraitFocusViewAdjustment + drawerOffset);
             self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
         }];
     }
