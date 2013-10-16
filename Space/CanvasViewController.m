@@ -921,15 +921,19 @@ static BOOL dragStarted = NO;
 }
 
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    
     // Remove behaviours to prevent the animator from setting the incorrect center positions for noteViews after we've already
     // calculated and set them. We're not sure why the animator does this, but we're doing a lot of custom view positioning,
     // and it could be a result of some custom view handling logic that don't play well with the animator.
     [self.animator removeAllBehaviors];
 }
 
+-(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    if (self.isTrashMode) {
+        self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
+    }
+}
+
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    
     for (UIView* subview in self.view.subviews) {
         
         if ([subview isKindOfClass:[NoteView class]]) {
@@ -946,10 +950,6 @@ static BOOL dragStarted = NO;
     // Restore the behaviours after orientation changes and calculations are completed.
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
-    
-    if (self.isTrashMode) {
-        self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
-    }
     
     if (self.isCurrentlyZoomedIn) {
         self.currentlyZoomedInNoteView.originalCircleFrame = [Coordinate frameWithCenterXByFactor:self.currentlyZoomedInNoteView.originalPositionX

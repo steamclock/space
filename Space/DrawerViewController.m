@@ -50,6 +50,8 @@
 @property (nonatomic) BOOL slidePartially;
 @property (nonatomic) BOOL canvasesAreSlidOut;
 
+@property (nonatomic) float currentDrawerYInPercentage;
+
 @property (nonatomic) DragMode drawerDragMode;
 
 @property (nonatomic) CGRect topCanvasFrameBeforeSlidingOut;
@@ -336,6 +338,8 @@
         [self.animator removeBehavior:self.gravity];
         self.gravity = nil;
     }
+    
+    self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
 }
 
 - (void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {
@@ -703,7 +707,10 @@
     
     self.view.frame = frame;
     
+    self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
+    // NSLog(@"Drawer current Y in percentage = %f", self.currentDrawerYInPercentage);
     // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    
     [self.delegate updateCurrentlyZoomedInNoteViewCenter];
 }
 
@@ -978,15 +985,29 @@
     
     // Hide the ugly and unnecessary animations when the slid-out canvas is updating its frames to fit the new orientations
     if (self.isFocusModeDim == NO && self.canvasesAreSlidOut == YES) {
-        
         self.topDrawerContents.view.alpha = 0;
     }
+}
+
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    
+    CGFloat newY = self.currentDrawerYInPercentage * self.view.frame.size.height;
+    NSLog(@"New Y = %f", newY);
+    
+    if ((self.view.frame.origin.y - newY) < self.minY) {
+        newY = self.view.frame.origin.y - self.minY;
+    }
+    
+    self.view.frame = CGRectMake(self.view.frame.origin.x,
+                                 self.view.frame.origin.y - newY,
+                                 self.view.frame.size.width,
+                                 self.view.frame.size.height);
 }
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     
     // Update the frames of the slid-out canvas after a change in orientation to allow us to slide it back properly
-    if (self.isFocusModeDim == NO && self.canvasesAreSlidOut == YES) {
+    if (self.isFocusModeDim == NO && self.slidePartially == NO && self.canvasesAreSlidOut == YES) {
         
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
         
@@ -1001,6 +1022,25 @@
         }
         
         self.topDrawerContents.view.frame = destination;
+        
+    } else if (self.slidePartially == YES) {
+        
+        self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
+        
+        self.topDrawerContents.view.alpha = 1;
+        
+        CGRect destination = self.topDrawerContents.view.frame;
+        
+        /*
+        if (self.view.frame.origin.y == 0) {
+            destination.origin.y = -(self.realScreenSize.height);
+        } else {
+            destination.origin.y = -(self.restY + self.realScreenSize.height);
+        }
+        */
+        
+        self.topDrawerContents.view.frame = destination;
+        
     }
     
     if (self.drawerDragMode != UIViewAnimation) {
