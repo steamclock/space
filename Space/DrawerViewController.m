@@ -85,7 +85,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadTwoSectionsLayout) name:kLoadTwoSectionsLayoutNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideOutCanvases) name:kFocusNoteNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideBackCanvases) name:kNoteDismissedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideInCanvases) name:kNoteDismissedNotification object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeFocusMode:) name:kChangeFocusModeNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeDragMode:) name:kChangeDragModeNotification object:nil];
@@ -708,8 +708,8 @@
     self.view.frame = frame;
     
     self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
-    // NSLog(@"Drawer current Y in percentage = %f", self.currentDrawerYInPercentage);
-    // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    NSLog(@"Drawer current Y in percentage = %f", self.currentDrawerYInPercentage);
+    NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
     
     [self.delegate updateCurrentlyZoomedInNoteViewCenter];
 }
@@ -974,12 +974,11 @@
     }
 }
 
-#pragma mark - Alternate Layout Sliding Logic
+#pragma mark - Drawer Rotation
 
-- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    
+-(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    // Prevents animator from overriding our custom updates to views that are needed for orientation changes
     if (self.drawerDragMode != UIViewAnimation) {
-        // Prevents animator from overriding our custom updates to views that are needed for orientation changes
         [self stopPhysicsEngine];
     }
     
@@ -989,32 +988,55 @@
     }
 }
 
-- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    
+-(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    // Calculates the drawer's current y coordinate relatively, and reposition the drawer during device rotation animation
+    // in order to persist the drawer's current scroll.
     CGFloat newY = self.currentDrawerYInPercentage * self.view.frame.size.height;
-    NSLog(@"New Y = %f", newY);
+    // NSLog(@"New Y = %f", newY);
     
+    // Occasionally, the calculated offset can be less than minY, which would cause the canvas to reposition incorrectly,
+    // so we readjust newY by the amount it would go past minY.
     if ((self.view.frame.origin.y - newY) < self.minY) {
         newY = self.view.frame.origin.y - self.minY;
     }
     
-    self.view.frame = CGRectMake(self.view.frame.origin.x,
-                                 self.view.frame.origin.y - newY,
-                                 self.view.frame.size.width,
-                                 self.view.frame.size.height);
+    if (self.isThreeSectionsLayout == NO) {
+        self.view.frame = CGRectMake(self.view.frame.origin.x,
+                                     self.view.frame.origin.y - newY,
+                                     self.view.frame.size.width,
+                                     self.view.frame.size.height);
+    } else {
+        // Three sections layout is a bit problematic due to a varying distance between the top and bottom canvases
+        // in different orientations, as well as a varying starting position since it doesn't start out fully revealing
+        // the top canvas like in two sections layout. As a result, relative adjustment isn't going to work well here,
+        // so we will instead use a preset system. For example, we will detect the current drawer position, then
+        // determine which preset location it is closest to. For now, the preset locations include
+        // default resting position, top canvas revealed, and bottom canvas revealed.
+        
+        // Use the NSLog in setDrawerPosition to help debug and determine threshold values.
+        
+        if (self.currentDrawerYInPercentage < 0.17) {
+            newY = Key_NavBarHeight; // Reveal top canvas
+        } else if (self.currentDrawerYInPercentage >= 0.5) {
+            newY = self.minY; // Reveal bottom canvas
+        } else {
+            newY = self.view.frame.origin.y; // Default resting position
+        }
+        
+        self.view.frame = CGRectMake(self.view.frame.origin.x,
+                                     newY,
+                                     self.view.frame.size.width,
+                                     self.view.frame.size.height);
+    }
 }
 
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    
-    // Update the frames of the slid-out canvas after a change in orientation to allow us to slide it back properly
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    // Update the frames of the slid-out canvas after a change in orientation to allow us to slide it back properly.
     if (self.isFocusModeDim == NO && self.slidePartially == NO && self.canvasesAreSlidOut == YES) {
-        
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
-        
         self.topDrawerContents.view.alpha = 1;
         
         CGRect destination = self.topDrawerContents.view.frame;
-        
         if (self.view.frame.origin.y == 0) {
             destination.origin.y = -(self.realScreenSize.height);
         } else {
@@ -1024,9 +1046,7 @@
         self.topDrawerContents.view.frame = destination;
         
     } else if (self.slidePartially == YES) {
-        
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
-        
         self.topDrawerContents.view.alpha = 1;
         
         CGRect destination = self.topDrawerContents.view.frame;
@@ -1040,7 +1060,6 @@
         */
         
         self.topDrawerContents.view.frame = destination;
-        
     }
     
     if (self.drawerDragMode != UIViewAnimation) {
@@ -1049,54 +1068,40 @@
     }
 }
 
+#pragma mark - Canvas Sliding
+
 -(void)slideOutCanvases {
-    
-    // NSLog(@"Checking focus mode to see if drawer should slide out.");
-    
     if (self.drawerDragMode != UIViewAnimation && self.isFocusModeDim == NO) {
+        // UIDynamic overwrites manual frame positioning, so it needs to be turned off first.
         [self stopPhysicsEngine];
     }
     
     if (self.isFocusModeDim == NO && self.focusModeChangeRequested == YES) {
-        
-        NSLog(@"Slide out canvases now.");
-        
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
         
         CGRect destination = self.topDrawerContents.view.frame;
-        
-        if (self.view.frame.origin.y == 0) {
-            destination.origin.y = -(self.realScreenSize.height);
-        } else {
-            if (self.drawerDragMode == UIViewAnimation) {
-                destination.origin.y = -(self.restY + self.realScreenSize.height);
-            } else {
-                 destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
-                
-                if (self.slidePartially) {
-                    float targetedNoteY = self.topDrawerContents.currentlyZoomedInNoteView.note.originalY;
-                    
-                    // NSLog(@"Targeted note Y = %f", targetedNoteY);
-                    
-                    destination.origin.y = -(targetedNoteY - NOTE_RADIUS * 2);
-                        
-                    // NSLog(@"Destination = %f", destination.origin.y);
-                    
-                    if (destination.origin.y > 0) {
-                        destination.origin.y = self.topDrawerContents.view.frame.origin.y;
-                        // NSLog(@"Destination = %f", destination.origin.y);
-                    }
-                }
+        destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
+ 
+        if (self.slidePartially) {
+            // Find how far down the canvas the selected note circle is located at to help determine how far the
+            // canvas should slide out.
+            float targetedNoteY = self.topDrawerContents.currentlyZoomedInNoteView.note.originalY;
+            
+            // Give some room between the bottom of the nav bar and the note circle that the canvas is sliding up to.
+            destination.origin.y = -(targetedNoteY - NOTE_RADIUS * 2);
+            
+            if (destination.origin.y > 0) {
+                destination.origin.y = self.topDrawerContents.view.frame.origin.y;
+            }
+            
+            // Handle cases where the drawer is not completely drawn out or closed.
+            if (self.view.frame.origin.y < Key_NavBarHeight) {
+                destination.origin.y += Key_NavBarHeight - self.view.frame.origin.y;
             }
         }
         
-        // Handle cases where the drawer is not completely drawn out or closed
-        if (self.view.frame.origin.y < Key_NavBarHeight) {
-            destination.origin.y += Key_NavBarHeight - self.view.frame.origin.y;
-        }
-        
+        // Stores current amount of slide to help with device rotation.
         self.topDrawerContents.slideOffset = destination.origin.y;
-        NSLog(@"Slide offset = %f", self.topDrawerContents.slideOffset);
         
         [UIView animateWithDuration:1 animations:^{
             self.topDrawerContents.view.frame = destination;
@@ -1106,14 +1111,11 @@
         self.canvasesAreSlidOut = YES;
         
     } else {
-        
-        // NSLog(@"Focus mode is set to dim, don't slide out canvases.");
-        
+        // NSLog(@"Focus mode is not set to slide, don't slide out canvases.");
     }
 }
 
-- (void)slideBackCanvases {
-    
+-(void)slideInCanvases {
     if ( self.slidePartially == YES ||
          (self.isFocusModeDim == NO && !CGRectEqualToRect(self.topDrawerContents.view.frame, self.topCanvasFrameBeforeSlidingOut)) ) {
         
@@ -1121,7 +1123,6 @@
             self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;
             self.topDragHandle.alpha = 1;
         } completion:^(BOOL finished) {
-            
             if (finished) {
                 if (self.drawerDragMode != UIViewAnimation) {
                     [self startPhysicsEngine];
