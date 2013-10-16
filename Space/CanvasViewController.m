@@ -931,6 +931,16 @@ static BOOL dragStarted = NO;
     if (self.isTrashMode) {
         self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
     }
+    
+    if (self.isCurrentlyZoomedIn) {
+        self.currentlyZoomedInNoteView.originalCircleFrame = [Coordinate frameWithCenterXByFactor:self.currentlyZoomedInNoteView.originalPositionX
+                                                                                  centerYByFactor:self.currentlyZoomedInNoteView.originalPositionY
+                                                                                            width:self.currentlyZoomedInNoteView.originalCircleFrame.size.width
+                                                                                           height:self.currentlyZoomedInNoteView.originalCircleFrame.size.height
+                                                                              withReferenceBounds:self.view.bounds];
+        
+        self.originalNoteCircleIndicator.frame = self.currentlyZoomedInNoteView.originalCircleFrame;
+    }
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
@@ -952,12 +962,6 @@ static BOOL dragStarted = NO;
     [self.animator addBehavior:self.dynamicProperties];
     
     if (self.isCurrentlyZoomedIn) {
-        self.currentlyZoomedInNoteView.originalCircleFrame = [Coordinate frameWithCenterXByFactor:self.currentlyZoomedInNoteView.originalPositionX
-                                                                                  centerYByFactor:self.currentlyZoomedInNoteView.originalPositionY
-                                                                                            width:self.currentlyZoomedInNoteView.originalCircleFrame.size.width
-                                                                                           height:self.currentlyZoomedInNoteView.originalCircleFrame.size.height
-                                                                              withReferenceBounds:self.view.bounds];
-        
         [self repositionZoomedInNoteView:self.currentlyZoomedInNoteView];
     }
     

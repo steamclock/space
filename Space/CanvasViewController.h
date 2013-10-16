@@ -33,7 +33,7 @@
 
 @property (strong, nonatomic) UIView* originalNoteCircleIndicator;
 
-// How far away is the drawer from its fully opened position; used to assist zoom animation with slide focus mode.
+// How far away is the drawer from its fully opened position; used to assist zoom animation in slide focus modes.
 @property (nonatomic) float slideOffset;
 @property (nonatomic) BOOL canvasWillSlide;
 

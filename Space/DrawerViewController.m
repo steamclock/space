@@ -982,8 +982,8 @@
         [self stopPhysicsEngine];
     }
     
-    // Hide the ugly and unnecessary animations when the slid-out canvas is updating its frames to fit the new orientations
-    if (self.isFocusModeDim == NO && self.canvasesAreSlidOut == YES) {
+    // Hide the ugly and unnecessary animations when the completely slid-out canvas is updating its frames to fit the new orientations
+    if (self.isFocusModeDim == NO && self.slidePartially == NO && self.canvasesAreSlidOut == YES) {
         self.topDrawerContents.view.alpha = 0;
     }
 }
@@ -1000,12 +1000,12 @@
         newY = self.view.frame.origin.y - self.minY;
     }
     
-    if (self.isThreeSectionsLayout == NO) {
+    if (self.isThreeSectionsLayout == NO && self.canvasesAreSlidOut == NO) {
         self.view.frame = CGRectMake(self.view.frame.origin.x,
                                      self.view.frame.origin.y - newY,
                                      self.view.frame.size.width,
                                      self.view.frame.size.height);
-    } else {
+    } else if (self.isThreeSectionsLayout && self.canvasesAreSlidOut == NO) {
         // Three sections layout is a bit problematic due to a varying distance between the top and bottom canvases
         // in different orientations, as well as a varying starting position since it doesn't start out fully revealing
         // the top canvas like in two sections layout. As a result, relative adjustment isn't going to work well here,
@@ -1050,15 +1050,6 @@
         self.topDrawerContents.view.alpha = 1;
         
         CGRect destination = self.topDrawerContents.view.frame;
-        
-        /*
-        if (self.view.frame.origin.y == 0) {
-            destination.origin.y = -(self.realScreenSize.height);
-        } else {
-            destination.origin.y = -(self.restY + self.realScreenSize.height);
-        }
-        */
-        
         self.topDrawerContents.view.frame = destination;
     }
     
