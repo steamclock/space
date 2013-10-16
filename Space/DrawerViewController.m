@@ -10,6 +10,7 @@
 #import "Notifications.h"
 #import "Constants.h"
 #import "Note.h"
+#import "Coordinate.h"
 
 @interface DrawerViewController () {
     CanvasViewController* _topDrawerContents;
@@ -47,8 +48,10 @@
 
 @property (nonatomic) BOOL focusModeChangeRequested;
 @property (nonatomic) BOOL isFocusModeDim;
+
 @property (nonatomic) BOOL slidePartially;
 @property (nonatomic) BOOL canvasesAreSlidOut;
+@property (nonatomic) float slideAmountInPercentage;
 
 @property (nonatomic) float currentDrawerYInPercentage;
 
@@ -115,6 +118,7 @@
 
 -(void)tapOutsideOfCanvases:(UITapGestureRecognizer*)recognizer {
     if(self.topDrawerContents.isCurrentlyZoomedIn && self.topDrawerContents.isRunningZoomAnimation == NO) {
+        self.topDrawerContents.isRefocus = NO;
         [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
     }
 }
@@ -238,8 +242,14 @@
     
     // Load default settings for demo
     if (self.hasLoaded == NO) {
-        NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], @"dragMode", nil];
+        NSDictionary* focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:SlidePartially], Key_FocusMode, nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
+        
+        NSDictionary* dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], Key_DragMode, nil];
         [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
+        
+        NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:NoTitle], Key_EditorMode, nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kChangeEditorModeNotification object:nil userInfo:editorMode];
         
         [[NSNotificationCenter defaultCenter] postNotificationName:kLoadTwoSectionsLayoutNotification object:nil];
         
@@ -1005,6 +1015,29 @@
                                      self.view.frame.origin.y - newY,
                                      self.view.frame.size.width,
                                      self.view.frame.size.height);
+        
+    } else if (self.canvasesAreSlidOut == YES) {
+        // NSLog(@"Slide amount = %f", self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage);
+        self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
+        
+        // The focus view shifts up or down using Key_Landscape or Key_Portrait adjustments when device orientation changes, so
+        // in addition to reposition the actual note view frame that's underneath the focus view using the new slide offset, we
+        // also need to take the focus view's shifting values into consideration.
+        if (toInterfaceOrientation == UIInterfaceOrientationLandscapeLeft || toInterfaceOrientation == UIInterfaceOrientationLandscapeRight) {
+            self.topDrawerContents.slideOffset =
+            self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage + (Key_LandscapeFocusViewAdjustment - Key_PortraitFocusViewAdjustment);
+        } else {
+            self.topDrawerContents.slideOffset =
+            self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage - (Key_LandscapeFocusViewAdjustment - Key_PortraitFocusViewAdjustment);
+        }
+        
+        if (self.slidePartially) {
+            self.topDrawerContents.view.frame = CGRectMake(self.topDrawerContents.view.frame.origin.x,
+                                                           self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage,
+                                                           self.topDrawerContents.view.frame.size.width,
+                                                           self.topDrawerContents.view.frame.size.height);
+        }
+        
     } else if (self.isThreeSectionsLayout && self.canvasesAreSlidOut == NO) {
         // Three sections layout is a bit problematic due to a varying distance between the top and bottom canvases
         // in different orientations, as well as a varying starting position since it doesn't start out fully revealing
@@ -1046,11 +1079,13 @@
         self.topDrawerContents.view.frame = destination;
         
     } else if (self.slidePartially == YES) {
-        self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
+        // self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
+        // self.topCanvasFrameBeforeSlidingOut = CGRectMake(0, 0, self.topDrawerContents.view.frame.size.width, self.topDrawerContents.view.frame.size.height);
+        
         self.topDrawerContents.view.alpha = 1;
         
-        CGRect destination = self.topDrawerContents.view.frame;
-        self.topDrawerContents.view.frame = destination;
+        // CGRect destination = self.topDrawerContents.view.frame;
+        // self.topDrawerContents.view.frame = destination;
     }
     
     if (self.drawerDragMode != UIViewAnimation) {
@@ -1068,7 +1103,10 @@
     }
     
     if (self.isFocusModeDim == NO && self.focusModeChangeRequested == YES) {
-        self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
+        
+        if (self.topDrawerContents.isRefocus == NO) {
+            self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
+        }
         
         CGRect destination = self.topDrawerContents.view.frame;
         destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
@@ -1093,6 +1131,8 @@
         
         // Stores current amount of slide to help with device rotation.
         self.topDrawerContents.slideOffset = destination.origin.y;
+        self.slideAmountInPercentage = [Coordinate normalizeYCoord:destination.origin.y withReferenceBounds:self.topDrawerContents.view.bounds];
+        NSLog(@"Normalized slide amount = %f", self.slideAmountInPercentage);
         
         [UIView animateWithDuration:1 animations:^{
             self.topDrawerContents.view.frame = destination;
@@ -1100,13 +1140,18 @@
         }];
         
         self.canvasesAreSlidOut = YES;
-        
+
     } else {
         // NSLog(@"Focus mode is not set to slide, don't slide out canvases.");
     }
 }
 
 -(void)slideInCanvases {
+    if (self.topDrawerContents.isRefocus) {
+        [self adjustSlide];
+        return;
+    }
+    
     if ( self.slidePartially == YES ||
          (self.isFocusModeDim == NO && !CGRectEqualToRect(self.topDrawerContents.view.frame, self.topCanvasFrameBeforeSlidingOut)) ) {
         
@@ -1123,6 +1168,10 @@
         
         self.canvasesAreSlidOut = NO;
     }
+}
+
+-(void)adjustSlide {
+    
 }
 
 @end

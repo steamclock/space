@@ -135,9 +135,9 @@ const int NOTE_RADIUS = 30;
 
 -(void)setHighlighted:(BOOL)highlighted {
     if (highlighted) {
-        [self setBackgroundColor:[UIColor blueColor]];
+        // [self setBackgroundColor:[UIColor blueColor]];
     } else {
-        [self setBackgroundColor:[UIColor clearColor]];
+        // [self setBackgroundColor:[UIColor clearColor]];
     }
 }
 

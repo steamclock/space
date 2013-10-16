@@ -42,7 +42,7 @@
     [self.layoutButton addTarget:self action:@selector(showDrawerLayoutSelection) forControlEvents:UIControlEventTouchUpInside];
     
     self.focusButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [self.focusButton setTitle:@"Focus: Dimming" forState:UIControlStateNormal];
+    [self.focusButton setTitle:@"Focus: Slide Partially" forState:UIControlStateNormal];
     self.focusButton.titleLabel.font = [UIFont systemFontOfSize:20];
     CGRect focusButtonFrame = CGRectMake(5, 80, 300, 50);
     self.focusButton.frame = focusButtonFrame;
@@ -63,7 +63,7 @@
     [self.noteCircleButton addTarget:self action:@selector(showNoteCircleSelection) forControlEvents:UIControlEventTouchUpInside];
     
     self.editorButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    [self.editorButton setTitle:@"Editor: Show Title" forState:UIControlStateNormal];
+    [self.editorButton setTitle:@"Editor: No Title" forState:UIControlStateNormal];
     self.editorButton.titleLabel.font = [UIFont systemFontOfSize:20];
     CGRect editorButtonFrame = CGRectMake(5, 290, 300, 50);
     self.editorButton.frame = editorButtonFrame;
@@ -83,7 +83,7 @@
                                                              delegate:(id<UIActionSheetDelegate>)self
                                                     cancelButtonTitle:@"Cancel"
                                                destructiveButtonTitle:nil
-                                                    otherButtonTitles:@"3 Sections", @"2 Sections", nil];
+                                                    otherButtonTitles:@"2 Sections", @"3 Sections", nil];
     [self.drawerLayoutSelection showInView:self.view];
 }
 
@@ -93,7 +93,7 @@
                                                           delegate:(id<UIActionSheetDelegate>)self
                                                  cancelButtonTitle:@"Cancel"
                                             destructiveButtonTitle:nil
-                                                 otherButtonTitles:@"Dimming", @"Slide Out", @"Slide Partially", nil];
+                                                 otherButtonTitles:@"Slide Partially", @"Slide Out", @"No Slide", nil];
     [self.focusModeSelection showInView:self.view];
 }
 
@@ -103,7 +103,7 @@
                                                           delegate:(id<UIActionSheetDelegate>)self
                                                  cancelButtonTitle:@"Cancel"
                                             destructiveButtonTitle:nil
-                                                 otherButtonTitles:@"Basic Animation", @"Free Sliding", @"Gravity", nil];
+                                                 otherButtonTitles:@"Gravity", @"Free Sliding", @"Basic Animation", nil];
     [self.dragModeSelection showInView:self.view];
 }
 
@@ -123,7 +123,7 @@
                                                          delegate:(id<UIActionSheetDelegate>)self
                                                 cancelButtonTitle:@"Cancel"
                                            destructiveButtonTitle:nil
-                                                otherButtonTitles:@"Show Title", @"No Title", nil];
+                                                otherButtonTitles:@"No Title", @"Show Title", nil];
     [self.editorModeSelection showInView:self.view];
 }
 
@@ -132,11 +132,11 @@
     if (actionSheet == self.drawerLayoutSelection) {
         
         if (buttonIndex == 0) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadThreeSectionsLayoutNotification object:nil];
-            [self.layoutButton setTitle:@"Layout: 3 Sections" forState:UIControlStateNormal];
-        } else if (buttonIndex == 1) {
             [[NSNotificationCenter defaultCenter] postNotificationName:kLoadTwoSectionsLayoutNotification object:nil];
             [self.layoutButton setTitle:@"Layout: 2 Sections" forState:UIControlStateNormal];
+        } else if (buttonIndex == 1) {
+            [[NSNotificationCenter defaultCenter] postNotificationName:kLoadThreeSectionsLayoutNotification object:nil];
+            [self.layoutButton setTitle:@"Layout: 3 Sections" forState:UIControlStateNormal];
         }
         
         [[NSNotificationCenter defaultCenter] postNotificationName:kLayoutChangedNotification object:nil];
@@ -144,33 +144,33 @@
     } else if (actionSheet == self.focusModeSelection) {
         
         if (buttonIndex == 0) {
-            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:Dimming], Key_FocusMode, nil];
+            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:SlidePartially], Key_FocusMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
-            [self.focusButton setTitle:@"Focus: Dimming" forState:UIControlStateNormal];
+            [self.focusButton setTitle:@"Focus: Slide Partially" forState:UIControlStateNormal];
         } else if (buttonIndex == 1) {
             NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:SlideOut], Key_FocusMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
             [self.focusButton setTitle:@"Focus: Slide Out" forState:UIControlStateNormal];
         } else if (buttonIndex == 2) {
-            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:SlidePartially], Key_FocusMode, nil];
+            NSDictionary *focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:Dimming], Key_FocusMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
-            [self.focusButton setTitle:@"Focus: Slide Partially" forState:UIControlStateNormal];
+            [self.focusButton setTitle:@"Focus: No Sliding" forState:UIControlStateNormal];
         }
         
     } else if (actionSheet == self.dragModeSelection) {
         
         if (buttonIndex == 0) {
-            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIViewAnimation], Key_DragMode, nil];
+            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], Key_DragMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
-            [self.dragButton setTitle:@"Drag: Basic Animation" forState:UIControlStateNormal];
+            [self.dragButton setTitle:@"Drag: Gravity" forState:UIControlStateNormal];
         } else if (buttonIndex == 1) {
             NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSliding], Key_DragMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
             [self.dragButton setTitle:@"Drag: Free Sliding" forState:UIControlStateNormal];
         } else if (buttonIndex == 2) {
-            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], Key_DragMode, nil];
+            NSDictionary *dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIViewAnimation], Key_DragMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
-            [self.dragButton setTitle:@"Drag: Gravity" forState:UIControlStateNormal];
+            [self.dragButton setTitle:@"Drag: Basic Animation" forState:UIControlStateNormal];
         }
 
     } else if (actionSheet == self.noteCircleSelection) {
@@ -188,13 +188,13 @@
     } else if (actionSheet == self.editorModeSelection) {
         
         if (buttonIndex == 0) {
-            NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:ShowTitle], Key_EditorMode, nil];
-            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeEditorModeNotification object:nil userInfo:editorMode];
-            [self.editorButton setTitle:@"Editor: Show Title" forState:UIControlStateNormal];
-        } else if (buttonIndex == 1) {
             NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:NoTitle], Key_EditorMode, nil];
             [[NSNotificationCenter defaultCenter] postNotificationName:kChangeEditorModeNotification object:nil userInfo:editorMode];
             [self.editorButton setTitle:@"Editor: No Title" forState:UIControlStateNormal];
+        } else if (buttonIndex == 1) {
+            NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:ShowTitle], Key_EditorMode, nil];
+            [[NSNotificationCenter defaultCenter] postNotificationName:kChangeEditorModeNotification object:nil userInfo:editorMode];
+            [self.editorButton setTitle:@"Editor: Show Title" forState:UIControlStateNormal];
         }
     }
 }

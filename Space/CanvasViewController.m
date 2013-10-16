@@ -210,6 +210,7 @@
     
     // Don't create a note when an empty space is tapped while we're zoomed in, instead, zoom out.
     if (self.isCurrentlyZoomedIn) {
+        self.isRefocus = NO;
         [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
         return;
     }
@@ -447,16 +448,24 @@
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
     
-    // Don't allow focus if the animator is still running, or if a zoom animation is still animating
+    // Don't allow focus if the animator is still running, or if a zoom animation is still animating.
     if (self.animator.running || self.isRunningZoomAnimation) {
         return;
     }
     
     NoteView* noteView = (NoteView*)recognizer.view;
     
+    // Update the original X and Y everytime a note is tapped to help with partial slide zoom animation
+    noteView.note.originalX = noteView.center.x;
+    noteView.note.originalY = noteView.center.y;
+    
     // If we're already zoomed in and another note is tapped, dismiss the currently zoomed in note, then zoom in the newly selected note
     if (self.isCurrentlyZoomedIn == YES && self.currentlyZoomedInNoteView != noteView) {
+        
+        self.isRefocus = YES;
+        
         self.currentlyZoomedInNoteView.layer.zPosition = 500;
+        
         [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:^(void) {
             self.currentlyZoomedInNoteView = noteView;
             
@@ -543,10 +552,18 @@
             CGPoint centerOfScreen = [self findCenterOfScreen];
             
             if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
-                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment);
+                if (self.isRefocus) {
+                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment - self.slideOffset);
+                } else {
+                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment);
+                }
                 self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
             } else {
-                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
+                if (self.isRefocus) {
+                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment - self.slideOffset);
+                } else {
+                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
+                }
                 self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
                 
                 // NSLog(@"Drawer Y = %f", self.view.superview.frame.origin.y);
@@ -591,12 +608,21 @@
         
         self.isCurrentlyZoomedIn = NO;
         
-        if (self.canvasWillSlide) {
+        CGPoint centerOfScreen = [self findCenterOfScreen];
+        
+        if (self.isRefocus || self.canvasWillSlide) {
+            if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment - self.slideOffset);
+            } else {
+                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment - self.slideOffset);
+            }
+        } else {
             noteView.frame = CGRectMake(noteView.frame.origin.x,
                                         noteView.frame.origin.y - self.slideOffset,
                                         noteView.frame.size.width,
                                         noteView.frame.size.height);
         }
+        
         noteView.alpha = 1;
         
         // Ask focus view to save the note

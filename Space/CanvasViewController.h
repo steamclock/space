@@ -37,6 +37,9 @@
 @property (nonatomic) float slideOffset;
 @property (nonatomic) BOOL canvasWillSlide;
 
+// Refocus is the case for an attempt to zoom in another note while one is already zoomed in.
+@property (nonatomic) BOOL isRefocus;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 -(id)initWithTopLevelView:(UIView*)view;
