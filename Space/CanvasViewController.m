@@ -466,11 +466,11 @@
         
         self.currentlyZoomedInNoteView.layer.zPosition = 500;
         
+        // Prevents double tap
+        [self.currentlyZoomedInNoteView setUserInteractionEnabled:NO];
+        
         [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:^(void) {
             self.currentlyZoomedInNoteView = noteView;
-            
-            // Prevents double tap
-            [self.currentlyZoomedInNoteView setUserInteractionEnabled:NO];
             
             if (self.isCurrentlyZoomedIn == NO) {
                 self.currentlyZoomedInNoteView.originalCircleFrame = self.currentlyZoomedInNoteView.frame;
@@ -580,9 +580,6 @@
             } [CATransaction commit];
             
         } completion:^(BOOL finished) {
-            // Allows unzoom after animation is completed
-            [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
-            
             // Show editor
             [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
                 self.focus.view.alpha = 1.0;
@@ -595,6 +592,9 @@
                 noteView.alpha = 0;
                 [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
                 self.isRunningZoomAnimation = NO;
+                
+                // Allows unzoom after animation is completed
+                [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
             }];
             
             // NSLog(@"Circle frame after zoomed in = %@", NSStringFromCGRect(noteView.frame));
@@ -664,9 +664,6 @@
             
         } completion:^(BOOL finished) {
             
-            // Allows zoom after animation is completed
-            [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
-            
             // Reset the zPosition back to default so it can be overlapped by other circles that are zooming in
             noteView.layer.zPosition = 0;
             
@@ -696,14 +693,17 @@
                 self.originalNoteCircleIndicator = nil;
             }
             
-            if (zoomCompleted) {
-                zoomCompleted();
-            }
-            
             [UIView animateWithDuration:0.5 animations:^{
                 noteView.titleLabel.alpha = 1;
             } completion:^(BOOL finished) {
                 self.isRunningZoomAnimation = NO;
+                
+                // Allows zoom after animation is completed
+                [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
+                
+                if (zoomCompleted) {
+                    zoomCompleted();
+                }
             }];
         }];
     }
@@ -771,6 +771,7 @@
 }
 
 -(void)dismissNote:(NSNotification*)notification {
+
     [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
 }
 
@@ -848,6 +849,7 @@ static BOOL dragStarted = NO;
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 self.dragToFocusRequested = YES;
                 [self.focus focusOn:noteView withTouchPoint:CGPointZero];
+                self.currentlyZoomedInNoteView = noteView;
                 [self toggleZoomForNoteView:noteView completion:nil];
             } else {
                 [noteView setBackgroundColor:[UIColor greenColor]];
