@@ -12,19 +12,19 @@
 #import <QuartzCore/QuartzCore.h>
 #import "Coordinate.h"
 #import "Notifications.h"
-#import "UIView+Genie.h"
+#import "Constants.h"
+#import "HelperMethods.h"
 
-#define FOCUS_SIZE 400
+#define FOCUS_SIZE 480
 
 @interface FocusViewController ()
 
 @property (nonatomic) Note* note;
 @property (nonatomic) NoteView* noteView;
 @property (nonatomic) UIView* focus;
-@property (nonatomic) UITextField* titleField;
-@property (nonatomic) UITextView* contentField;
-
 @property (nonatomic) CGPoint touchPoint;
+
+@property (nonatomic) BOOL isShowingTitleField;
 
 @end
 
@@ -34,8 +34,21 @@
 {
     [super viewDidLoad];
     
-    self.view.frame = self.view.bounds;
-    self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveNote) name:kSaveNoteNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toggleTitle:) name:kChangeEditorModeNotification object:nil];
+    self.isShowingTitleField = YES;
+    
+    // self.view.frame = self.view.bounds;
+    self.view.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                           centerYByFactor:0.5
+                                                     width:FOCUS_SIZE
+                                                    height:FOCUS_SIZE
+                                       withReferenceBounds:self.view.bounds];
+    
+    // self.view.backgroundColor = [UIColor colorWithRed:0.1 green:0.1 blue:0.1 alpha:0.3];
+    self.view.backgroundColor = [UIColor clearColor];
+    
+    [self drawCircle];
     
     self.focus = [[UIView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                     centerYByFactor:0.5
@@ -43,13 +56,14 @@
                                                                              height:FOCUS_SIZE
                                                                 withReferenceBounds:self.view.bounds]];
     
-    self.focus.backgroundColor = [UIColor lightGrayColor];
+    // self.focus.backgroundColor = [UIColor lightGrayColor];
+    self.focus.backgroundColor = [UIColor clearColor];
     self.focus.layer.cornerRadius = FOCUS_SIZE / 2;
     
     self.titleField = [[UITextField alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                               centerYByFactor:0.15
-                                                                                        width:250
-                                                                                       height:50
+                                                                                        width:Key_NoteTitleFieldWidth
+                                                                                       height:Key_NoteTitleFieldHeight
                                                                           withReferenceBounds:self.focus.bounds]];
     
     self.titleField.placeholder = @"Title";
@@ -57,8 +71,8 @@
     
     self.contentField = [[UITextView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                                centerYByFactor:0.55
-                                                                                         width:280
-                                                                                        height:200
+                                                                                         width:Key_NoteContentFieldWidth
+                                                                                        height:Key_NoteContentFieldHeight
                                                                            withReferenceBounds:self.focus.bounds]];
     
     self.contentField.backgroundColor = [UIColor colorWithWhite:1 alpha:0.8];
@@ -69,24 +83,84 @@
     [self.focus addSubview:self.contentField];
     
     [self.view addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOutside:)]];
+    
+    self.view.autoresizingMask =
+    UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
 }
 
-- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     
-    if (toInterfaceOrientation == UIInterfaceOrientationLandscapeLeft || toInterfaceOrientation == UIInterfaceOrientationLandscapeRight) {
-     
-        self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
-                                             centerYByFactor:0.25
-                                                       width:FOCUS_SIZE
-                                                      height:FOCUS_SIZE
-                                         withReferenceBounds:self.view.bounds];
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    CGPoint centerOfScreen = self.view.superview.center;
+    if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+        self.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
     } else {
-        [self updateFocusViewFrame];
+        self.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
     }
 }
 
--(void)tapOutside:(UITapGestureRecognizer*)guesture {
+-(void)toggleTitle:(NSNotification*)notification {
+    if ([[notification.userInfo objectForKey:Key_EditorMode] isEqual:[NSNumber numberWithInt:ShowTitle]]) {
+        self.isShowingTitleField = YES;
+        
+        [self.titleField setHidden:NO];
+        
+        self.contentField.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                                       centerYByFactor:0.55
+                                                                 width:Key_NoteContentFieldWidth
+                                                                height:Key_NoteContentFieldHeight
+                                                   withReferenceBounds:self.focus.bounds];
+        
+        if (self.view.alpha == 1) {
+            [self.titleField becomeFirstResponder];
+        }
+        
+    } else {
+        self.isShowingTitleField = NO;
+        
+        [self.titleField setHidden:YES];
+        
+        self.contentField.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                                       centerYByFactor:0.5
+                                                                 width:Key_NoteLargeContentFieldWidth
+                                                                height:Key_NoteLargeContentFieldHeight
+                                                   withReferenceBounds:self.focus.bounds];
+        
+        if (self.view.alpha == 1) {
+            [self.contentField becomeFirstResponder];
+        }
+    }
+}
+
+-(void)drawCircle {
+    UIView* circle = [[UIView alloc] initWithFrame:self.view.frame];
+    circle.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:circle];
     
+    self.circleShape = [CAShapeLayer layer];
+    
+    CGRect circleFrame = self.view.bounds;
+    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:FOCUS_SIZE];
+    
+    self.circleShape.path = circlePath.CGPath;
+    
+    self.circleShape.fillColor = [HelperMethods circleFillColor];
+    self.circleShape.strokeColor = [UIColor blackColor].CGColor;
+    self.circleShape.lineWidth = 0.0f;
+    
+    self.circleShape.frame = self.view.bounds;
+    
+    [self.view.layer addSublayer:self.circleShape];
+}
+
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    
+    NSLog(@"Focus view center = %@", NSStringFromCGPoint(self.view.center));
+    NSLog(@"Focus view superview center = %@", NSStringFromCGPoint(self.view.superview.center));
+}
+
+-(void)saveNote {
     [self.titleField resignFirstResponder];
     [self.contentField resignFirstResponder];
     
@@ -94,71 +168,35 @@
     self.note.content = self.contentField.text;
     
     [[Database sharedDatabase] save];
-
+    
     [self.noteView setHighlighted:NO];
     [self.noteView setUserInteractionEnabled:YES];
+}
+
+-(void)tapOutside:(UITapGestureRecognizer*)guesture {
+    
+    [self saveNote];
     
     // NSLog(@"Self noteView frame = %@", NSStringFromCGRect(self.noteView.frame));
-    self.view.hidden = YES;
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:kFocusDismissedNotification object:self];
+    // self.view.hidden = YES;
 }
 
 -(void)focusOn:(NoteView *)view withTouchPoint:(CGPoint)pointOfTouch {
     self.noteView = view;
-    [self.noteView setHighlighted:YES];
+    // [self.noteView setHighlighted:YES];
     // NSLog(@"Note view frame = %@", NSStringFromCGRect(view.frame));
-    
-    [self updateFocusViewFrame];
     
     self.note = view.note;
     
     self.titleField.text = self.note.title;
     self.contentField.text = self.note.content;
 
-    if ([view.note.title length]) {
+    if ([view.note.title length] || self.isShowingTitleField == NO) {
         //title exists; edit the content
         [self.contentField becomeFirstResponder];
     } else {
         //edit the title
         [self.titleField becomeFirstResponder];
-    }
-
-    self.view.hidden = NO;
-    
-    NSLog(@"Focus frame = %@", NSStringFromCGRect(self.focus.frame));
-    self.touchPoint = pointOfTouch;
-    
-    BCRectEdge rectEdge;
-    
-    if (pointOfTouch.y < [UIScreen mainScreen].bounds.size.height / 2) {
-        rectEdge = BCRectEdgeBottom;
-    } else if (pointOfTouch.y > [UIScreen mainScreen].bounds.size.height / 2) {
-        rectEdge = BCRectEdgeTop;
-    } else {
-        rectEdge = BCRectEdgeBottom;
-    }
-    
-    [self.focus genieOutTransitionWithDuration:0.5
-                                     startRect:CGRectMake(pointOfTouch.x, pointOfTouch.y, view.frame.size.width, view.frame.size.height)
-                                     startEdge:rectEdge
-                                    completion:nil];
-}
-
-- (void)updateFocusViewFrame {
-    
-    if([UIApplication sharedApplication].statusBarOrientation == UIInterfaceOrientationPortrait) {
-        self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
-                                                centerYByFactor:0.5
-                                                          width:FOCUS_SIZE
-                                                         height:FOCUS_SIZE
-                                            withReferenceBounds:self.view.bounds];
-    } else {
-        self.focus.frame = [Coordinate frameWithCenterXByFactor:0.5
-                                                centerYByFactor:0.25
-                                                          width:FOCUS_SIZE
-                                                         height:FOCUS_SIZE
-                                            withReferenceBounds:self.view.bounds];
     }
 }
 

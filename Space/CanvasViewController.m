@@ -10,37 +10,34 @@
 #import "FocusViewController.h"
 #import "Database.h"
 #import "Note.h"
-#import "NoteView.h"
 #import "QBPopupMenu.h"
 #import "Notifications.h"
 #import "Constants.h"
 #import "Coordinate.h"
+#import "HelperMethods.h"
+
+#define SCALE_FACTOR 8.0
 
 @interface CanvasViewController ()
 
 @property (nonatomic) UIDynamicAnimator* animator;
 @property (nonatomic) UICollisionBehavior* collision;
 @property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
-@property (nonatomic) UIDynamicItemBehavior* activeDrag;
-
-@property (nonatomic) CGPoint noteOriginalPosition;
-
-@property (nonatomic) BOOL simulating;
 
 @property (nonatomic) NoteView* notePendingDelete;
 
 @property (nonatomic) int currentCanvas;
 @property (nonatomic) BOOL isTrashMode;
 
-//almost-constant values that depend on the orientation and how the drawers are designed.
-@property (nonatomic) int editY;
-@property (nonatomic) int trashY;
+@property (nonatomic) int triggerFocusY;
+@property (nonatomic) int triggerTrashY;
+@property (nonatomic) BOOL dragToFocusRequested;
+@property (nonatomic) BOOL dragToTrashRequested;
 
 @property (nonatomic) UIView* topLevelView;
-
-@property (nonatomic) BOOL newNoteCreated;
-
 @property (strong, nonatomic) UIButton* emptyTrashButton;
+
+@property (nonatomic) BOOL showOriginalNoteLocation;
 
 @end
 
@@ -60,33 +57,13 @@
         self.topLevelView = view;
         self.isTrashMode = YES;
     }
-    
     return self;
 }
 
 -(void)setYValuesWithTrashOffset:(int)trashY {
-    //trash offset is relative to superview
-    self.editY = self.view.bounds.size.height;
-    self.trashY = trashY - self.view.frame.origin.y - 100;
-}
-
-- (void)emptyTrash {
-    
-    // NSLog(@"Emptying trash...");
-    
-    NSArray* notes;
-    
-    if (self.isTrashMode) {
-        notes = [[Database sharedDatabase] trashedNotesInCanvas:self.currentCanvas];
-    }
-    
-    for (int i = 0; i < [notes count]; i++) {
-        Note* note = [notes objectAtIndex:i];
-        [note removeFromDatabase];
-        [[Database sharedDatabase] save];
-    }
-    
-    [self loadCurrentCanvas];
+    // Trash offset is relative to superview
+    self.triggerFocusY = self.view.bounds.size.height;
+    self.triggerTrashY = trashY - self.view.frame.origin.y - 100;
 }
 
 -(void)viewDidLoad
@@ -103,7 +80,7 @@
     self.collision.translatesReferenceBoundsIntoBoundary = YES;
     self.dynamicProperties = [[UIDynamicItemBehavior alloc] init];
     self.dynamicProperties.allowsRotation = NO;
-    self.dynamicProperties.resistance = 8;
+    self.dynamicProperties.resistance = 10;
 
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
@@ -119,12 +96,22 @@
         
         // Catch the recovered notes
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteRecoveredNotification:) name:kNoteRecoveredNotification object:nil];
+        
+        // Help manage note circle zoom animation
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteCreated:) name:kNoteCreatedNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(layoutChanged:) name:kLayoutChangedNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(dismissNote:) name:kDismissNoteNotification object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toggleNoteCircleMode:) name:kChangeNoteCircleModeNotification object:nil];
     }
     
     self.currentCanvas = 0;
     [self loadCurrentCanvas];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChangedNotification:) name:kCanvasChangedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChanged:) name:kCanvasChangedNotification object:nil];
+    
+    self.zoomAnimationDuration = 0.5;
+    self.showOriginalNoteLocation = YES;
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -141,7 +128,24 @@
         [self.view addSubview:self.emptyTrashButton];
         // NSLog(@"Empty Trash Button Frame = %@", NSStringFromCGRect(self.emptyTrashButton.frame));
     }
+    
+    if (self.isTrashMode == NO) {
+        // NSLog(@"Canvas view center = %@", NSStringFromCGPoint(self.view.center));
+        // NSLog(@"Canvas superview center = %@", NSStringFromCGPoint(self.view.superview.superview.center));
+    }
 }
+
+#pragma mark - Show / Hide Original Note Circle Location
+
+-(void)toggleNoteCircleMode:(NSNotification*)notification {
+    if ([[notification.userInfo objectForKey:Key_NoteCircleMode] isEqual:[NSNumber numberWithInt:ShowOriginalLocation]]) {
+        self.showOriginalNoteLocation = YES;
+    } else {
+        self.showOriginalNoteLocation = NO;
+    }
+}
+
+#pragma mark - Change Canvas
 
 -(void)loadCurrentCanvas {
     
@@ -169,7 +173,7 @@
         
     } else {
         notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
-        NSLog(@"%d saved notes", [notes count]);
+        NSLog(@"Number of saved notes = %d", [notes count]);
     }
     
     for(Note* note in notes) {
@@ -177,33 +181,58 @@
     }
 }
 
--(void)canvasChangedNotification:(NSNotification*)notification {
+-(void)canvasChanged:(NSNotification*)notification {
 
     self.currentCanvas = [notification.userInfo[Key_CanvasNumber] intValue];
-    NSLog(@"Current canvas = %d", self.currentCanvas);
+    // NSLog(@"Current canvas = %d", self.currentCanvas);
     
-    [self loadCurrentCanvas];
+    if (self.isCurrentlyZoomedIn) {
+        
+        self.shouldLoadCanvasAfterZoomOut = YES;
+        
+        self.zoomAnimationDuration = 0;
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
+        self.zoomAnimationDuration = 0.5;
+        
+    } else {
+        [self loadCurrentCanvas];
+    }
 }
 
 #pragma mark - Add Notes
 
 -(void)spaceTap:(UITapGestureRecognizer *)recognizer {
     
+    // Don't allow space tap if the animator is still running, or if a zoom animation is still animating
+    if (self.animator.running || self.isRunningZoomAnimation) {
+        return;
+    }
+    
+    // Don't create a note when an empty space is tapped while we're zoomed in, instead, zoom out.
+    if (self.isCurrentlyZoomedIn) {
+        self.isRefocus = NO;
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
+        return;
+    }
+    
     Note* note = [[Database sharedDatabase] createNote];
     
     CGPoint position = [recognizer locationInView:self.view];
-    NSLog(@"Creating a note at %@", NSStringFromCGPoint(position));
+    // NSLog(@"Creating a note at %@", NSStringFromCGPoint(position));
     
     note.canvas = self.currentCanvas;
     note.positionX = [Coordinate normalizeXCoord:position.x withReferenceBounds:self.view.bounds]; // position.x;
     note.positionY = [Coordinate normalizeYCoord:position.y withReferenceBounds:self.view.bounds]; // position.y;
     
-    NSLog(@"Normalized X coord = %f", [Coordinate normalizeXCoord:position.x withReferenceBounds:self.view.bounds]);
-    NSLog(@"Normalized Y coord = %f", [Coordinate normalizeYCoord:position.y withReferenceBounds:self.view.bounds]);
+    // NSLog(@"Normalized X coord = %f", [Coordinate normalizeXCoord:position.x withReferenceBounds:self.view.bounds]);
+    // NSLog(@"Normalized Y coord = %f", [Coordinate normalizeYCoord:position.y withReferenceBounds:self.view.bounds]);
     
-    NSLog(@"Unnormalized coord = %@", NSStringFromCGPoint([Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds]));
+    CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
+    note.originalX = unnormalizedCenter.x;
+    note.originalY = unnormalizedCenter.y;
+    // NSLog(@"Unnormalized coord = %@", NSStringFromCGPoint([Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds]));
     
-    self.newNoteCreated = YES;
+    self.noteCreated = YES;
     [self addViewForNote:note];
     
     [[Database sharedDatabase] save];
@@ -211,47 +240,73 @@
 
 -(void)addViewForNote:(Note*)note {
     
-    NoteView* imageView = [[NoteView alloc] initWithImage:[UIImage imageNamed:@"Circle"]];
-    imageView.animator = self.animator;
-    CGPoint unnomralizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
-    [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+    NoteView* noteView = [[NoteView alloc] init];
+    noteView.animator = self.animator;
     
-    NSLog(@"Note position X = %f", note.positionX);
-    NSLog(@"Note position Y = %f", note.positionY);
-    NSLog(@"Adding note at %@", NSStringFromCGPoint(imageView.center));
+    CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
+    [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+    
+    // NSLog(@"Note position X = %f", note.positionX);
+    // NSLog(@"Note position Y = %f", note.positionY);
+    // NSLog(@"Adding note at %@", NSStringFromCGPoint(noteView.center));
     
     // If this is a trashed note, "flip" its y-coordinate so that for example, if it was originally 80% down the y-coordinate in the top canvas,
     // it should only be roughly 20% down in the bottom canvas.
-    if (note.trashed == YES && note.draggedToTrash != YES) {
-        unnomralizedCenter.y = self.view.bounds.size.height - unnomralizedCenter.y;
-        [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
-    } else if (note.draggedToTrash == YES) {
-        // If this note was manually dragged to trash, place it near the top
-        unnomralizedCenter.y = NOTE_RADIUS;
-        [imageView setCenter:unnomralizedCenter withReferenceBounds:self.view.bounds];
+    if ((self.isTrashMode == YES && note.trashed == YES && note.draggedToTrash != YES)) {
+        
+        unnormalizedCenter.y = self.view.bounds.size.height - unnormalizedCenter.y;
+        [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+        
+        NSLog(@"Dropped to Trash note view center = %@", NSStringFromCGPoint(noteView.center));
+        
+    } else if (self.isTrashMode == YES && note.trashed == YES && note.draggedToTrash == YES) {
+        
+        // If this note was manually dragged to trash, place it at the original position at the start of the drag
+        
+        float normalizedOriginalX = [Coordinate normalizeXCoord:note.originalX withReferenceBounds:self.view.bounds];
+        float normalizedOriginalY = [Coordinate normalizeYCoord:note.originalY withReferenceBounds:self.view.bounds];
+        
+        note.positionX = normalizedOriginalX;
+        note.positionY = normalizedOriginalY;
+        
+        unnormalizedCenter = [Coordinate unnormalizePoint:CGPointMake(normalizedOriginalX, normalizedOriginalY) withReferenceBounds:self.view.bounds];
+        
+        if ( self.view.bounds.size.height - unnormalizedCenter.y > 0 ) {
+            unnormalizedCenter.y = self.view.bounds.size.height - unnormalizedCenter.y;
+        }
+        
+        [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+        note.originalX = noteView.center.x;
+        note.originalY = noteView.center.y;
+        
+        [[Database sharedDatabase] save];
+        
+        NSLog(@"Dragged to Trash note view center = %@", NSStringFromCGPoint(noteView.center));
     }
     
-    imageView.userInteractionEnabled = YES;
+    noteView.userInteractionEnabled = YES;
     
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(noteTap:)];
-    [imageView addGestureRecognizer:tapGestureRecognizer];
+    [noteView addGestureRecognizer:tapGestureRecognizer];
     
     UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(noteDrag:)];
-    [imageView addGestureRecognizer:panGestureRecognizer];
+    [noteView addGestureRecognizer:panGestureRecognizer];
 
     UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(noteLongPress:)];
-    [imageView addGestureRecognizer:longPress];
+    [noteView addGestureRecognizer:longPress];
 
-    [self.view addSubview:imageView];
-    [self.collision addItem:imageView];
-    [self.dynamicProperties addItem:imageView];
+    [self.view addSubview:noteView];
+    [self.collision addItem:noteView];
+    [self.dynamicProperties addItem:noteView];
 
-    imageView.note = note;
+    noteView.note = note;
     
-    if (self.newNoteCreated == YES) {
-        [self.focus focusOn:imageView withTouchPoint:unnomralizedCenter];
-        [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
-        self.newNoteCreated = NO;
+    if (self.noteCreated == YES) {
+        // [self.focus focusOn:imageView withTouchPoint:unnomralizedCenter];
+        self.newlyCreatedNoteView = noteView;
+        self.shouldZoomInAfterCreatingNewNote = YES;
+        [[NSNotificationCenter defaultCenter] postNotificationName:kNoteCreatedNotification object:self];
+        self.noteCreated = NO;
     }
 }
 
@@ -335,9 +390,11 @@
     }
 }
 
-- (void)recoverNote:(NoteView*)noteView {
+-(void)recoverNote:(NoteView*)noteView {
     
-    NSDictionary* noteToRecoverInfo = [[NSDictionary alloc] initWithObjects:@[noteView.note, [NSValue valueWithCGPoint:self.noteOriginalPosition]] forKeys:@[Key_RecoveredNote, @"originalPosition"]];
+    NSDictionary* noteToRecoverInfo =
+    [[NSDictionary alloc] initWithObjects:@[noteView.note, [NSValue valueWithCGPoint:CGPointMake(noteView.note.originalX, noteView.note.originalY)]]
+                                  forKeys:@[Key_RecoveredNote, @"originalPosition"]];
     
     NSNotification* noteRecoveredNotification = [[NSNotification alloc] initWithName:kNoteRecoveredNotification object:self userInfo:noteToRecoverInfo];
     [[NSNotificationCenter defaultCenter] postNotification:noteRecoveredNotification];
@@ -348,15 +405,15 @@
     [self.dynamicProperties removeItem:noteView];
 }
 
-- (void)noteRecoveredNotification:(NSNotification*)notification {
+-(void)noteRecoveredNotification:(NSNotification*)notification {
    
     Note* recoveredNote = [notification.userInfo objectForKey:Key_RecoveredNote];
     NSValue *originalPosition = [notification.userInfo objectForKey:@"originalPosition"];
     
     CGPoint originalCenter = [originalPosition CGPointValue];
     
-    NSLog(@"Recovered note position X = %f",originalCenter.x);
-    NSLog(@"Recovered note position Y = %f",originalCenter.y);
+    // NSLog(@"Recovered note position X = %f",originalCenter.x);
+    // NSLog(@"Recovered note position Y = %f",originalCenter.y);
     
     recoveredNote.positionX = [Coordinate normalizeXCoord:originalCenter.x withReferenceBounds:self.view.bounds];
     recoveredNote.positionY = [Coordinate normalizeYCoord:originalCenter.y withReferenceBounds:self.view.bounds];
@@ -368,91 +425,455 @@
     [[Database sharedDatabase] save];
 }
 
+-(void)emptyTrash {
+    
+    // NSLog(@"Emptying trash...");
+    
+    NSArray* notes;
+    
+    if (self.isTrashMode) {
+        notes = [[Database sharedDatabase] trashedNotesInCanvas:self.currentCanvas];
+    }
+    
+    for (int i = 0; i < [notes count]; i++) {
+        Note* note = [notes objectAtIndex:i];
+        [note removeFromDatabase];
+        [[Database sharedDatabase] save];
+    }
+    
+    [self loadCurrentCanvas];
+}
+
 #pragma mark - Focus Notes
 
 -(void)noteTap: (UITapGestureRecognizer *)recognizer {
     
-    NoteView* view = (NoteView*)recognizer.view;
+    // Don't allow focus if the animator is still running, or if a zoom animation is still animating.
+    if (self.animator.running || self.isRunningZoomAnimation) {
+        return;
+    }
     
-    // Prevents double tap
-    [view setUserInteractionEnabled:NO];
+    NoteView* noteView = (NoteView*)recognizer.view;
     
-    [self.focus focusOn:view withTouchPoint:[recognizer locationInView:self.topLevelView]];
-    NSLog(@"Point of touch = %@", NSStringFromCGPoint([recognizer locationInView:self.topLevelView]));
+    // Update the original X and Y everytime a note is tapped to help with partial slide zoom animation
+    noteView.note.originalX = noteView.center.x;
+    noteView.note.originalY = noteView.center.y;
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
+    // If we're already zoomed in and another note is tapped, dismiss the currently zoomed in note, then zoom in the newly selected note
+    if (self.isCurrentlyZoomedIn == YES && self.currentlyZoomedInNoteView != noteView) {
+        
+        self.isRefocus = YES;
+        
+        self.currentlyZoomedInNoteView.layer.zPosition = 500;
+        
+        // Prevents double tap
+        [self.currentlyZoomedInNoteView setUserInteractionEnabled:NO];
+        
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:^(void) {
+            self.currentlyZoomedInNoteView = noteView;
+            
+            if (self.isCurrentlyZoomedIn == NO) {
+                self.currentlyZoomedInNoteView.originalCircleFrame = self.currentlyZoomedInNoteView.frame;
+            }
+            
+            [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
+        }];
+    } else {
+    
+        self.currentlyZoomedInNoteView = noteView;
+        
+        // Prevents double tap
+        [self.currentlyZoomedInNoteView setUserInteractionEnabled:NO];
+        
+        if (self.isCurrentlyZoomedIn == NO) {
+            self.currentlyZoomedInNoteView.originalCircleFrame = self.currentlyZoomedInNoteView.frame;
+        }
+        
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
+        
+        // [self.focus focusOn:noteView withTouchPoint:[recognizer locationInView:self.topLevelView]];
+        // NSLog(@"Point of touch = %@", NSStringFromCGPoint([recognizer locationInView:self.topLevelView]));
+    }
+}
+
+#pragma mark - Zoom Focus Animation
+
+-(void)toggleZoomForNoteView:(NoteView*)noteView completion:(void (^)(void))zoomCompleted {
+    
+    self.isRunningZoomAnimation = YES;
+    
+    if (self.isCurrentlyZoomedIn) {
+        noteView = self.currentlyZoomedInNoteView;
+    }
+    
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    
+    if (CGRectEqualToRect(noteView.frame, noteView.originalCircleFrame) || self.shouldZoomInAfterCreatingNewNote == YES || self.isCurrentlyZoomedIn == NO) {
+        
+        noteView.titleLabel.alpha = 0;
+        
+        noteView.originalPositionX = noteView.note.positionX;
+        noteView.originalPositionY = noteView.note.positionY;
+        
+        // Cannot transform properly when the view is being controlled by the animator
+        [self.collision removeItem:noteView];
+        [self.dynamicProperties removeItem:noteView];
+        
+        self.isCurrentlyZoomedIn = YES;
+        self.shouldZoomInAfterCreatingNewNote = NO;
+        
+        noteView.layer.zPosition = 1000;
+        
+        // Create a temporary circle view that shows the zoomed in note's original location
+        if (self.showOriginalNoteLocation) {
+            self.originalNoteCircleIndicator = [self drawCircleWithFrame:noteView.originalCircleFrame];
+            
+            if (self.dragToFocusRequested) {
+                self.originalNoteCircleIndicator.center = CGPointMake(noteView.note.originalX, noteView.note.originalY);
+            }
+            
+            [self.view addSubview:self.originalNoteCircleIndicator];
+        }
+        
+        // Fade out all other note views
+        for (UIView* view in self.view.subviews) {
+            if ([view isKindOfClass:[NoteView class]]) {
+                NoteView* notZoomedInNoteView = (NoteView*)view;
+                
+                if (notZoomedInNoteView != self.currentlyZoomedInNoteView) {
+                    notZoomedInNoteView.circleShape.strokeColor = [UIColor lightGrayColor].CGColor;
+                }
+            }
+         }
+        
+        [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
+            // Zoom Circle
+            [noteView setTransform:CGAffineTransformMakeScale(SCALE_FACTOR, SCALE_FACTOR)];
+            CGPoint centerOfScreen = [self findCenterOfScreen];
+            
+            if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+                if (self.isRefocus) {
+                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment - self.slideOffset);
+                } else {
+                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment);
+                }
+                self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
+            } else {
+                if (self.isRefocus) {
+                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment - self.slideOffset);
+                } else {
+                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
+                }
+                self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
+                
+                // NSLog(@"Drawer Y = %f", self.view.superview.frame.origin.y);
+                // NSLog(@"Note view center = %@", NSStringFromCGPoint(noteView.center));
+                // NSLog(@"Focus view center = %@", NSStringFromCGPoint(self.focus.view.center));
+            }
+            
+            [CATransaction begin]; {
+                
+                [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
+                noteView.circleShape.lineWidth = 0;
+                noteView.circleShape.fillColor = [HelperMethods circleFillColor];
+                
+            } [CATransaction commit];
+            
+        } completion:^(BOOL finished) {
+            // Show editor
+            [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
+                self.focus.view.alpha = 1.0;
+                [self.focus focusOn:noteView withTouchPoint:CGPointZero];
+                
+                // Show original note circle location indicator
+                self.originalNoteCircleIndicator.alpha = 1;
+                
+            } completion:^(BOOL finished) {
+                noteView.alpha = 0;
+                [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
+                self.isRunningZoomAnimation = NO;
+                
+                // Allows unzoom after animation is completed
+                [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
+            }];
+            
+            // NSLog(@"Circle frame after zoomed in = %@", NSStringFromCGRect(noteView.frame));
+            // NSLog(@"Circle bounds after zoomed in = %@", NSStringFromCGRect(noteView.bounds));
+            
+            // NSLog(@"NoteView's Note positionX after zoomed in = %f", noteView.note.positionX);
+            // NSLog(@"NoteView's Note positionY after zoomed in = %f", noteView.note.positionY);
+        }];
+    } else {
+        
+        self.isCurrentlyZoomedIn = NO;
+        
+        CGPoint centerOfScreen = [self findCenterOfScreen];
+        
+        if (self.isRefocus || self.canvasWillSlide) {
+            if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment - self.slideOffset);
+            } else {
+                noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment - self.slideOffset);
+            }
+        } else {
+            noteView.frame = CGRectMake(noteView.frame.origin.x,
+                                        noteView.frame.origin.y - self.slideOffset,
+                                        noteView.frame.size.width,
+                                        noteView.frame.size.height);
+        }
+        
+        noteView.alpha = 1;
+        
+        // Ask focus view to save the note
+        [[NSNotificationCenter defaultCenter] postNotificationName:kSaveNoteNotification object:self];
+        
+        // Hide editor
+        self.focus.view.alpha = 0;
+        
+        // Fade back all note views
+        for (UIView* view in self.view.subviews) {
+            if ([view isKindOfClass:[NoteView class]]) {
+                NoteView* notZoomedInNoteView = (NoteView*)view;
+                
+                if (notZoomedInNoteView != self.currentlyZoomedInNoteView) {
+                    notZoomedInNoteView.circleShape.strokeColor = [UIColor blackColor].CGColor;
+                }
+            }
+        }
+        
+        [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
+            // Unzoom Circle
+            [noteView setTransform:CGAffineTransformMakeScale(1.0, 1.0)];
+            
+            if (self.dragToFocusRequested) {
+                // NSLog(@"Returning to X = %f", noteView.note.originalX);
+                // NSLog(@"Returning to Y = %f", noteView.note.originalY);
+                noteView.center = CGPointMake(noteView.note.originalX, noteView.note.originalY);
+                self.dragToFocusRequested = NO;
+            } else {
+                noteView.frame = noteView.originalCircleFrame;
+            }
+            
+            [CATransaction begin]; {
+                
+                [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
+                noteView.circleShape.lineWidth = 2.0;
+                noteView.circleShape.fillColor = [UIColor clearColor].CGColor;
+                
+            } [CATransaction commit];
+            
+        } completion:^(BOOL finished) {
+            
+            // Reset the zPosition back to default so it can be overlapped by other circles that are zooming in
+            noteView.layer.zPosition = 0;
+            
+            // NSLog(@"Circle frame after zoomed out = %@", NSStringFromCGRect(noteView.frame));
+            // NSLog(@"Circle bounds after zoomed out = %@", NSStringFromCGRect(noteView.bounds));
+            
+            [self.collision addItem:noteView];
+            [self.dynamicProperties addItem:noteView];
+            
+            noteView.note.positionX = [Coordinate normalizeXCoord:noteView.center.x withReferenceBounds:self.view.bounds];
+            noteView.note.positionY = [Coordinate normalizeYCoord:noteView.center.y withReferenceBounds:self.view.bounds];
+            [[Database sharedDatabase] save];
+            
+            if (self.shouldLoadCanvasAfterZoomOut) {
+                [self loadCurrentCanvas];
+                self.shouldLoadCanvasAfterZoomOut = NO;
+            }
+            
+            // NSLog(@"NoteView's Note positionX after zoomed out = %f", noteView.note.positionX);
+            // NSLog(@"NoteView's Note positionY after zoomed out = %f", noteView.note.positionY);
+            
+            [[NSNotificationCenter defaultCenter] postNotificationName:kNoteDismissedNotification object:self];
+            
+            // Remove original note circle location indicator
+            if (self.originalNoteCircleIndicator) {
+                [self.originalNoteCircleIndicator removeFromSuperview];
+                self.originalNoteCircleIndicator = nil;
+            }
+            
+            [UIView animateWithDuration:0.5 animations:^{
+                noteView.titleLabel.alpha = 1;
+            } completion:^(BOOL finished) {
+                self.isRunningZoomAnimation = NO;
+                
+                // Allows zoom after animation is completed
+                [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
+                
+                if (zoomCompleted) {
+                    zoomCompleted();
+                }
+            }];
+        }];
+    }
+}
+
+-(CGPoint)findCenterOfScreen {
+    // Self.view.superview == DrawerView, DrawerView's superview is the Container view, which has the correct and current bounds of the screen,
+    // so we can use that to find the absolute center of the screen.
+    return [self.view.superview.superview convertPoint:self.view.superview.superview.center fromView:self.view.superview.superview.superview];
+}
+
+-(void)updateCurrentlyZoomedInNoteViewCenter {
+    
+    // When the drawer is dragged or has changed position while a note view is zoomed in, we want to update the center of the note view so that
+    // when we unzoom the note circle, it will start the unzoom from the correct location
+    if (self.isCurrentlyZoomedIn) {
+        UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+        CGPoint centerOfScreen = [self findCenterOfScreen];
+        if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+            self.currentlyZoomedInNoteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment);
+        } else {
+            self.currentlyZoomedInNoteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
+        }
+    }
+}
+
+-(UIView*)drawCircleWithFrame:(CGRect)frame {
+    
+    UIView* circle = [[UIView alloc] initWithFrame:frame];
+    circle.backgroundColor = [UIColor clearColor];
+    
+    CAShapeLayer* circleShape = [CAShapeLayer layer];
+    
+    CGRect circleFrame = circle.bounds;
+    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:NOTE_RADIUS];
+    
+    circleShape.path = circlePath.CGPath;
+    
+    circleShape.fillColor = [UIColor clearColor].CGColor;
+    circleShape.strokeColor = [UIColor blackColor].CGColor;
+    circleShape.lineWidth = 2.0f;
+    
+    circleShape.frame = circleFrame;
+    
+    [circle.layer addSublayer:circleShape];
+    
+    return circle;
+}
+
+-(void)fadeOutNoteView:(NoteView*)noteView {
+    noteView.circleShape.strokeColor = [UIColor grayColor].CGColor;
+}
+
+-(void)noteCreated:(NSNotification*)notification {
+    if (self.newlyCreatedNoteView != nil) {
+        self.currentlyZoomedInNoteView = self.newlyCreatedNoteView;
+        self.currentlyZoomedInNoteView.originalCircleFrame = self.newlyCreatedNoteView.frame;
+        // Slight delay is required to wait for the animator to pause
+        [self performSelector:@selector(zoomNote:) withObject:self.newlyCreatedNoteView afterDelay:1.0];
+    }
+}
+
+-(void)zoomNote:(NoteView*)noteView {
+    [self toggleZoomForNoteView:noteView completion:nil];
+}
+
+-(void)dismissNote:(NSNotification*)notification {
+
+    [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
+}
+
+-(void)layoutChanged:(NSNotification*)notification {
+    if (self.isCurrentlyZoomedIn) {
+        self.zoomAnimationDuration = 0;
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
+        self.zoomAnimationDuration = 0.5;
+    }
 }
 
 #pragma mark - Drag Notes
 
+static BOOL dragStarted = NO;
+
 -(void)noteDrag:(UIPanGestureRecognizer*)recognizer {
     
-    NoteView* view = (NoteView*)recognizer.view;
+    // Don't allow note drag if we're currently zoomed in, which can cause problematic behaviours
+    if (self.isCurrentlyZoomedIn) {
+        return;
+    }
+    
+    NoteView* noteView = (NoteView*)recognizer.view;
     CGPoint drag = [recognizer locationInView:self.view];
     
-    if(recognizer.state == UIGestureRecognizerStateBegan) {
-        self.activeDrag = [[UIDynamicItemBehavior alloc] init];
-        self.activeDrag.density = 1000000.0f;
-        [self.animator addBehavior:self.activeDrag];
-        [self.activeDrag addItem:view];
+    if(dragStarted == NO) {
         
-        if (!CGPointEqualToPoint(self.noteOriginalPosition, view.center)) {
-            self.noteOriginalPosition = view.center;
+        if (!CGPointEqualToPoint(CGPointMake(noteView.note.originalX, noteView.note.originalY), noteView.center) && dragStarted == NO) {
+            noteView.note.originalX = noteView.center.x;
+            noteView.note.originalY = noteView.center.y;
+            
+            [[Database sharedDatabase] save];
+            
+            // NSLog(@"Original X = %f", noteView.note.originalX);
+            // NSLog(@"Original Y = %f", noteView.note.originalY);
+            
+            dragStarted = YES;
         }
     }
     
-    [view setCenter:drag withReferenceBounds:self.view.bounds];
+    [noteView setCenter:drag withReferenceBounds:self.view.bounds];
     
-    //clean up the drag operation (and ONLY the drag operation. do all other ending actions below the isTrashMode check)
-    if(recognizer.state == UIGestureRecognizerStateEnded) {
-        [view setBackgroundColor:[UIColor clearColor]];
-        [self.activeDrag removeItem:view];
-        [self.animator removeBehavior:self.activeDrag];
-        self.activeDrag = nil;
+    // Prevents dragging above the navigation bar
+    if (self.isTrashMode == NO && noteView.center.y <= 0) {
+        [noteView setCenter:CGPointMake(drag.x, 0) withReferenceBounds:self.view.bounds];
     }
     
     if (self.isTrashMode) {
         
-        if (view.center.y < self.trashY) {
+        if (noteView.center.y < self.triggerTrashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
-                [self returnNoteToBounds:view];
-                [self recoverNote:view];
+                [self returnNoteToBounds:noteView];
+                [self recoverNote:noteView];
             } else {
-                [view setBackgroundColor:[UIColor greenColor]];
+                [noteView setBackgroundColor:[UIColor greenColor]];
             }
         } else if(recognizer.state == UIGestureRecognizerStateEnded) {
             [[Database sharedDatabase] save];
             CGPoint velocity = [recognizer velocityInView:self.view];
-            [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
+            [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
         } else {
-            [view setBackgroundColor:[UIColor clearColor]];
+            [noteView setBackgroundColor:[UIColor clearColor]];
         }
         
     } else {
         
-        if (view.center.y > self.trashY) {
+        if (noteView.center.y > self.triggerTrashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
-                [self deleteNoteWithoutAsking:view];
+                self.dragToTrashRequested = YES;
+                [self deleteNoteWithoutAsking:noteView];
             } else {
-                [view setBackgroundColor:[UIColor greenColor]];
+                [noteView setBackgroundColor:[UIColor redColor]];
             }
-        } else if (view.center.y > self.editY) {
+        } else if (noteView.center.y > self.triggerFocusY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
-                [self returnNoteToBounds:view];
-                [self.focus focusOn:view withTouchPoint:CGPointZero];
-                
-                [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
+                self.dragToFocusRequested = YES;
+                [self.focus focusOn:noteView withTouchPoint:CGPointZero];
+                self.currentlyZoomedInNoteView = noteView;
+                [self toggleZoomForNoteView:noteView completion:nil];
             } else {
-                [view setBackgroundColor:[UIColor greenColor]];
+                [noteView setBackgroundColor:[UIColor greenColor]];
             }
         } else {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [[Database sharedDatabase] save];
                 CGPoint velocity = [recognizer velocityInView:self.view];
-                [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:view];
+                [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
             } else {
-                [view setBackgroundColor:[UIColor clearColor]];
+                [noteView setBackgroundColor:[UIColor clearColor]];
             }
+        }
+    }
+    
+    if(recognizer.state == UIGestureRecognizerStateEnded) {
+        [noteView setBackgroundColor:[UIColor clearColor]];
+        dragStarted = NO;
+        
+        if (self.dragToFocusRequested == NO && self.dragToTrashRequested == NO) {
+            noteView.note.originalX = noteView.center.x;
+            noteView.note.originalY = noteView.center.y;
+            
+            [[Database sharedDatabase] save];
         }
     }
 }
@@ -461,13 +882,20 @@
 
 -(void)updateNotesForBoundsChange {
     
-    NSLog(@"New bounds = %@", NSStringFromCGRect(self.view.bounds));
+    // NSLog(@"New bounds = %@", NSStringFromCGRect(self.view.bounds));
     
     for (UIView* subview in self.view.subviews) {
         
         if ([subview isKindOfClass:[NoteView class]]) {
             [self returnNoteToBounds:(NoteView*)subview];
             [self updateLocationForNoteView:(NoteView*)subview];
+            
+            /*
+            if (subview == self.currentlyZoomedInNoteView) {
+                NSLog(@"Circle frame in updateNotesForBoundsChange = %@", NSStringFromCGRect(subview.frame));
+                NSLog(@"Circle bounds in updateNotesForBoundsChange = %@", NSStringFromCGRect(subview.bounds));
+            }
+            */
         }
     }
 }
@@ -490,10 +918,10 @@
             center.x = self.view.bounds.size.width - NOTE_RADIUS;
         }
         
-        NSLog(@"move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
+        // NSLog(@"Move from %@ to %@", NSStringFromCGPoint(note.center), NSStringFromCGPoint(center));
         // note.center = center;
         
-        note.center = self.noteOriginalPosition;
+        note.center = CGPointMake(note.originalPositionX, note.originalPositionY);
         
         [self.animator updateItemUsingCurrentState:note];
         [[Database sharedDatabase] save];
@@ -501,31 +929,100 @@
 }
 
 -(void)updateLocationForNoteView:(NoteView*)noteView {
-    
+
     CGPoint relativePosition = CGPointMake(noteView.note.positionX, noteView.note.positionY);
-    NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
+    // NSLog(@"Relative position = %@", NSStringFromCGPoint(relativePosition));
     
     CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:relativePosition withReferenceBounds:self.view.bounds];
+    
+    if (noteView.note.trashed == YES) {
+        unnormalizedCenter = CGPointMake(noteView.note.originalX, noteView.note.originalY);
+    }
+    
     [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
-    NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));    
+    // NSLog(@"New actual center = %@", NSStringFromCGPoint(noteView.center));
+    
+    // NSLog(@"Circle frame in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.frame));
+    // NSLog(@"Circle bounds in updateLocationForNoteView = %@", NSStringFromCGRect(noteView.bounds));
 }
 
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    
     // Remove behaviours to prevent the animator from setting the incorrect center positions for noteViews after we've already
     // calculated and set them. We're not sure why the animator does this, but we're doing a lot of custom view positioning,
     // and it could be a result of some custom view handling logic that don't play well with the animator.
     [self.animator removeAllBehaviors];
 }
 
+-(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    if (self.isTrashMode) {
+        self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
+    }
+    
+    if (self.isCurrentlyZoomedIn) {
+        self.currentlyZoomedInNoteView.originalCircleFrame = [Coordinate frameWithCenterXByFactor:self.currentlyZoomedInNoteView.originalPositionX
+                                                                                  centerYByFactor:self.currentlyZoomedInNoteView.originalPositionY
+                                                                                            width:self.currentlyZoomedInNoteView.originalCircleFrame.size.width
+                                                                                           height:self.currentlyZoomedInNoteView.originalCircleFrame.size.height
+                                                                              withReferenceBounds:self.view.bounds];
+        
+        self.originalNoteCircleIndicator.frame = self.currentlyZoomedInNoteView.originalCircleFrame;
+    }
+}
+
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    for (UIView* subview in self.view.subviews) {
+        if ([subview isKindOfClass:[NoteView class]]) {
+            NoteView* noteView = (NoteView*)subview;
+            noteView.note.originalX = noteView.center.x;
+            noteView.note.originalY = noteView.center.y;
+            
+            [[Database sharedDatabase] save];
+        }
+    }
+    
+    if (self.isCurrentlyZoomedIn) {
+        [self repositionZoomedInNoteView:self.currentlyZoomedInNoteView];
+    } else {
+        [self repositionFocusView];
+    }
     
     // Restore the behaviours after orientation changes and calculations are completed.
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.dynamicProperties];
+}
+
+-(void)repositionZoomedInNoteView:(NoteView*)noteView {
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    CGPoint centerOfScreen = [self findCenterOfScreen];
     
-    if (self.isTrashMode) {
-        self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
+    // Handle cases where the drawer is not completely drawn out.
+    int drawerOffset = self.view.superview.frame.origin.y;
+    if (drawerOffset < Key_NavBarHeight) {
+        drawerOffset = Key_NavBarHeight - self.view.superview.frame.origin.y;
+    } else {
+        drawerOffset = 0;
+    }
+    
+    if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+        [UIView animateWithDuration:0.5 animations:^{
+            noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_LandscapeFocusViewAdjustment + drawerOffset);
+            self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
+        }];
+    } else {
+        [UIView animateWithDuration:0.5 animations:^{
+            noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_NavBarHeight - Key_PortraitFocusViewAdjustment + drawerOffset);
+            self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
+        }];
+    }
+}
+
+-(void)repositionFocusView {
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    CGPoint centerOfScreen = [self findCenterOfScreen];
+    if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
+        self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
+    } else {
+        self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
     }
 }
 
@@ -539,9 +1036,15 @@
         if ([subview isKindOfClass:[NoteView class]]) {
             
             NoteView* noteView = (NoteView*)subview;
-            
             noteView.note.positionX = [Coordinate normalizeXCoord:noteView.center.x withReferenceBounds:self.view.bounds];
             noteView.note.positionY = [Coordinate normalizeYCoord:noteView.center.y withReferenceBounds:self.view.bounds];
+            
+            if (self.isTrashMode) {
+                noteView.note.originalX = noteView.center.x;
+                noteView.note.originalY = noteView.center.y;
+            }
+            
+            [[Database sharedDatabase] save];
         }
     }
 }
