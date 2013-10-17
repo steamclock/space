@@ -580,7 +580,6 @@
             } [CATransaction commit];
             
         } completion:^(BOOL finished) {
-    
             // Allows unzoom after animation is completed
             [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
             
@@ -850,7 +849,6 @@ static BOOL dragStarted = NO;
                 self.dragToFocusRequested = YES;
                 [self.focus focusOn:noteView withTouchPoint:CGPointZero];
                 [self toggleZoomForNoteView:noteView completion:nil];
-                [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
             } else {
                 [noteView setBackgroundColor:[UIColor greenColor]];
             }
