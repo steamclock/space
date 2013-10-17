@@ -30,12 +30,21 @@
 
 @implementation FocusViewController
 
-- (void)viewDidLoad
+#pragma mark - Focus View Setup
+
+-(void)viewDidLoad
 {
     [super viewDidLoad];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(saveNote) name:kSaveNoteNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toggleTitle:) name:kChangeEditorModeNotification object:nil];
+    
+    // Listens for system-wide text size changes.
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(preferredContentSizeChanged:)
+                                                 name:UIContentSizeCategoryDidChangeNotification
+                                               object:nil];
+    
     self.isShowingTitleField = YES;
     
     // self.view.frame = self.view.bounds;
@@ -68,6 +77,7 @@
     
     self.titleField.placeholder = @"Title";
     [self.titleField setTextAlignment:NSTextAlignmentCenter];
+    self.titleField.font = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
     
     self.contentField = [[UITextView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                                centerYByFactor:0.55
@@ -77,6 +87,7 @@
     
     self.contentField.backgroundColor = [UIColor colorWithWhite:1 alpha:0.8];
     self.contentField.layer.cornerRadius = 15;
+    self.contentField.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
     
     [self.view addSubview:self.focus];
     [self.focus addSubview:self.titleField];
@@ -99,6 +110,35 @@
         self.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
     }
 }
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+-(void)drawCircle {
+    UIView* circle = [[UIView alloc] initWithFrame:self.view.frame];
+    circle.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:circle];
+    
+    self.circleShape = [CAShapeLayer layer];
+    
+    CGRect circleFrame = self.view.bounds;
+    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:FOCUS_SIZE];
+    
+    self.circleShape.path = circlePath.CGPath;
+    
+    self.circleShape.fillColor = [HelperMethods circleFillColor];
+    self.circleShape.strokeColor = [UIColor blackColor].CGColor;
+    self.circleShape.lineWidth = 0.0f;
+    
+    self.circleShape.frame = self.view.bounds;
+    
+    [self.view.layer addSublayer:self.circleShape];
+}
+
+#pragma mark - Show / Hide Title Field
 
 -(void)toggleTitle:(NSNotification*)notification {
     if ([[notification.userInfo objectForKey:Key_EditorMode] isEqual:[NSNumber numberWithInt:ShowTitle]]) {
@@ -133,32 +173,28 @@
     }
 }
 
--(void)drawCircle {
-    UIView* circle = [[UIView alloc] initWithFrame:self.view.frame];
-    circle.backgroundColor = [UIColor clearColor];
-    [self.view addSubview:circle];
+#pragma mark - Show Note
+
+-(void)focusOn:(NoteView *)view withTouchPoint:(CGPoint)pointOfTouch {
+    self.noteView = view;
+    // [self.noteView setHighlighted:YES];
+    // NSLog(@"Note view frame = %@", NSStringFromCGRect(view.frame));
     
-    self.circleShape = [CAShapeLayer layer];
+    self.note = view.note;
     
-    CGRect circleFrame = self.view.bounds;
-    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:FOCUS_SIZE];
+    self.titleField.text = self.note.title;
+    self.contentField.text = self.note.content;
     
-    self.circleShape.path = circlePath.CGPath;
-    
-    self.circleShape.fillColor = [HelperMethods circleFillColor];
-    self.circleShape.strokeColor = [UIColor blackColor].CGColor;
-    self.circleShape.lineWidth = 0.0f;
-    
-    self.circleShape.frame = self.view.bounds;
-    
-    [self.view.layer addSublayer:self.circleShape];
+    if ([view.note.title length] || self.isShowingTitleField == NO) {
+        // Title exists or title is not displayed, so edit the content
+        [self.contentField becomeFirstResponder];
+    } else {
+        // Title is empty and title is displayed, so edit the title
+        [self.titleField becomeFirstResponder];
+    }
 }
 
--(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    
-    NSLog(@"Focus view center = %@", NSStringFromCGPoint(self.view.center));
-    NSLog(@"Focus view superview center = %@", NSStringFromCGPoint(self.view.superview.center));
-}
+#pragma mark - Save Note
 
 -(void)saveNote {
     [self.titleField resignFirstResponder];
@@ -174,36 +210,14 @@
 }
 
 -(void)tapOutside:(UITapGestureRecognizer*)guesture {
-    
     [self saveNote];
-    
-    // NSLog(@"Self noteView frame = %@", NSStringFromCGRect(self.noteView.frame));
-    // self.view.hidden = YES;
 }
 
--(void)focusOn:(NoteView *)view withTouchPoint:(CGPoint)pointOfTouch {
-    self.noteView = view;
-    // [self.noteView setHighlighted:YES];
-    // NSLog(@"Note view frame = %@", NSStringFromCGRect(view.frame));
-    
-    self.note = view.note;
-    
-    self.titleField.text = self.note.title;
-    self.contentField.text = self.note.content;
+#pragma mark - Update System-wide Text Size
 
-    if ([view.note.title length] || self.isShowingTitleField == NO) {
-        //title exists; edit the content
-        [self.contentField becomeFirstResponder];
-    } else {
-        //edit the title
-        [self.titleField becomeFirstResponder];
-    }
-}
-
-- (void)didReceiveMemoryWarning
-{
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+-(void)preferredContentSizeChanged:(NSNotification*)notification {
+    self.titleField.font = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
+    self.contentField.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
 }
 
 @end
