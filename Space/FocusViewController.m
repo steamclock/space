@@ -45,7 +45,7 @@
                                                  name:UIContentSizeCategoryDidChangeNotification
                                                object:nil];
     
-    self.isShowingTitleField = YES;
+    self.isShowingTitleField = NO;
     
     // self.view.frame = self.view.bounds;
     self.view.frame = [Coordinate frameWithCenterXByFactor:0.5
@@ -79,7 +79,7 @@
     [self.titleField setTextAlignment:NSTextAlignmentCenter];
     self.titleField.font = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
     
-    self.contentField = [[UITextView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
+    self.contentField = [[RichTextEditor alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                                centerYByFactor:0.55
                                                                                          width:Key_NoteContentFieldWidth
                                                                                         height:Key_NoteContentFieldHeight
@@ -184,6 +184,12 @@
     
     self.titleField.text = self.note.title;
     self.contentField.text = self.note.content;
+    if (![self.contentField.text isEqualToString:@""]) {
+        NSKeyedUnarchiver* unarchiver = [[NSKeyedUnarchiver alloc] initForReadingWithData:self.note.contentData];
+        NSAttributedString* theAttrString = [unarchiver decodeObjectForKey:@"attrs"];
+        [unarchiver finishDecoding];
+        [self.contentField.textStorage setAttributedString:theAttrString];
+    }
     
     if ([view.note.title length] || self.isShowingTitleField == NO) {
         // Title exists or title is not displayed, so edit the content
@@ -203,6 +209,12 @@
     self.note.title = self.titleField.text;
     self.note.content = self.contentField.text;
     
+    NSMutableData* data = [[NSMutableData alloc] init];
+    NSKeyedArchiver* archiver = [[NSKeyedArchiver alloc] initForWritingWithMutableData:data];
+    [archiver encodeObject:self.contentField.textStorage forKey:@"attrs"];
+    [archiver finishEncoding];
+    self.note.contentData = data;
+    
     [[Database sharedDatabase] save];
     
     [self.noteView setHighlighted:NO];
@@ -218,6 +230,10 @@
 -(void)preferredContentSizeChanged:(NSNotification*)notification {
     self.titleField.font = [UIFont preferredFontForTextStyle:UIFontTextStyleHeadline];
     self.contentField.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+}
+
+- (RichTextEditorFeature)featuresEnabledForRichTextEditor:(RichTextEditor *)richTextEditor {
+	return RichTextEditorFeatureFontSize | RichTextEditorFeatureFont | RichTextEditorFeatureAll;
 }
 
 @end

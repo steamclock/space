@@ -22,6 +22,7 @@
 
 @property (nonatomic) NSString* title;
 @property (nonatomic) NSString* content;
+@property (nonatomic) NSData* contentData;
 
 -(void)markAsTrashed;
 -(void)removeFromDatabase;

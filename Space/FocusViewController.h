@@ -7,15 +7,16 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "RichTextEditor.h"
 
 @class NoteView;
 
-@interface FocusViewController : UIViewController
+@interface FocusViewController : UIViewController <RichTextEditorDataSource>
 
 @property (nonatomic) CAShapeLayer* circleShape;
 
 @property (nonatomic) UITextField* titleField;
-@property (nonatomic) UITextView* contentField;
+@property (nonatomic) RichTextEditor* contentField;
 
 -(void)focusOn:(NoteView*)note withTouchPoint:(CGPoint)pointOfTouch;
 
