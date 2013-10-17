@@ -31,24 +31,26 @@
     CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvasWithTopLevelView:container.view];
     
     DrawerViewController* drawer = [[DrawerViewController alloc] init];
-    drawer.topDrawerContents = canvas;
     drawer.bottomDrawerContents = trash;
+    drawer.topDrawerContents = canvas;
+    drawer.delegate = canvas;
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     
     [container addChildViewController:drawer];
     [container.view addSubview:drawer.view];
     
-    CanvasSelectionViewController* canvasSelect = [[CanvasSelectionViewController alloc] init];
-    [container addChildViewController:canvasSelect];
-    [container.view addSubview:canvasSelect.view];
-
     FocusViewController* focus = [[FocusViewController alloc] init];
     canvas.focus = focus;
     
     [container addChildViewController:focus];
     [container.view addSubview:focus.view];
-    focus.view.hidden = YES;
+    
+    focus.view.alpha = 0;
+    
+    CanvasSelectionViewController* canvasSelect = [[CanvasSelectionViewController alloc] init];
+    [container addChildViewController:canvasSelect];
+    [container.view addSubview:canvasSelect.view];
     
     self.window.rootViewController = container;
     

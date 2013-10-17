@@ -11,7 +11,7 @@
 
 @implementation Note
 
-@dynamic canvas, content, positionX, positionY, title, trashed, draggedToTrash;
+@dynamic canvas, content, originalX, originalY, positionX, positionY, title, trashed, draggedToTrash;
 
 -(void)markAsTrashed {
     self.trashed = YES;

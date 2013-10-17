@@ -9,13 +9,14 @@
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
 
-
 @interface Note : NSManagedObject
 
 @property (nonatomic) int canvas;
 @property (nonatomic) BOOL trashed;
 @property (nonatomic) BOOL draggedToTrash;
 
+@property (nonatomic) float originalX;
+@property (nonatomic) float originalY;
 @property (nonatomic) float positionX;
 @property (nonatomic) float positionY;
 

@@ -12,6 +12,11 @@
 
 @interface FocusViewController : UIViewController
 
+@property (nonatomic) CAShapeLayer* circleShape;
+
+@property (nonatomic) UITextField* titleField;
+@property (nonatomic) UITextView* contentField;
+
 -(void)focusOn:(NoteView*)note withTouchPoint:(CGPoint)pointOfTouch;
 
 @end
