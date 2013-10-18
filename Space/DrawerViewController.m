@@ -227,6 +227,9 @@
                                                 fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
                                                   toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
         }
+    } else {
+        // Three section layout does not require initial gravity.
+        [self.animator removeBehavior:self.gravity];
     }
 }
 
@@ -239,20 +242,10 @@
 }
 
 -(void)dynamicAnimatorDidPause:(UIDynamicAnimator *)animator {
-    
-    // When gravity is affecting the drawer, resistance is turned off to allow a smoother free-falling of the drawer,
-    // so we'll restore resistance to our default value once the gravity is done animating.
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-        // self.drawerBehavior.resistance = 10;
-        // [self.animator removeBehavior:self.gravity];
-        // self.gravity = nil;
-    }
-    
     self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
 }
 
 -(void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {
-    
 }
 
 -(void)collisionBehavior:(UICollisionBehavior *)behavior
@@ -267,60 +260,84 @@
 }
 
 -(void)physicsForTopHandleDraggedDownwards {
-    
-    // If we're adding downward velocity to the top canvas, we want to create a boundary at the bottom to
-    // prevent the top canvas from sliding out of sight
-    if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasBottomBoundary"]) {
-        [self.collision addBoundaryWithIdentifier:@"topCanvasBottomBoundary"
-                                        fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
-                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
-    }
-    
-    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? self.restY + 100 : -100;
+    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? -400 : -100;
     BOOL pastGravityThreshold;
     if (self.isThreeSectionsLayout) {
-        pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
+        pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
     } else {
         pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
     }
     
-    // Let gravity pull the drawer down when the drawer is dragged past a certain point
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
-        
+    if (self.isThreeSectionsLayout) {
+        if (self.isDownwardGravity) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = NO;
+        }
         self.drawerBehavior.resistance = 0;
         
-        self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-        [self.gravity setMagnitude:5.0];
-        [self.animator addBehavior:self.gravity];
-    }
-}
-
--(void)physicsForTopHandleDraggedUpwards {
-    
-    // If we're adding upward velocity to the top canvas, we want to create a boundary at the top to
-    // prevent the top canvas from sliding out of sight
-    if (![[self.collision boundaryIdentifiers] containsObject:@"topCanvasTopBoundary"]) {
-        [self.collision addBoundaryWithIdentifier:@"topCanvasTopBoundary"
+        [self.collision removeAllBoundaries];
+        [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasTopBoundary
                                         fromPoint:CGPointMake(0, self.restY)
                                           toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
     }
     
-    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? self.maxY - 100 : -700;
+    // Let gravity pull the drawer down when the drawer is dragged past a certain point.
+    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+        
+        if (self.isThreeSectionsLayout) {
+            if (self.isDownwardGravity == NO) {
+                [self.gravity setMagnitude:-5.0];
+                self.isDownwardGravity = YES;
+            }
+            self.drawerBehavior.resistance = 0;
+            
+            [self.collision removeAllBoundaries];
+            [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasBotBoundary
+                                            fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
+                                              toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
+        }
+    }
+}
+
+-(void)physicsForTopHandleDraggedUpwards {
+    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? -150 : -700;
     BOOL pastGravityThreshold;
     if (self.isThreeSectionsLayout) {
-        pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
+        pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
     } else {
         pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
     }
     
-    // Let gravity pull the drawer up when the drawer is dragged past a certain point
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
-        
+    if (self.isThreeSectionsLayout) {
+        if (self.isDownwardGravity == NO) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = YES;
+        }
         self.drawerBehavior.resistance = 0;
         
-        self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-        [self.gravity setMagnitude:-5.0];
-        [self.animator addBehavior:self.gravity];
+        [self.collision removeAllBoundaries];
+        [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasBotBoundary
+                                        fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
+                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
+    }
+    
+    // Let gravity pull the drawer up when the drawer is dragged past a certain point.
+    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+        
+        if (self.isThreeSectionsLayout) {
+            if (self.isDownwardGravity) {
+                [self.gravity setMagnitude:-5.0];
+                self.isDownwardGravity = NO;
+            }
+            self.drawerBehavior.resistance = 0;
+        }
+        
+        if (self.isThreeSectionsLayout) {
+            [self.collision removeAllBoundaries];
+            [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasTopBoundary
+                                            fromPoint:CGPointMake(0, self.restY)
+                                              toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
+        }
     }
 }
 
@@ -333,11 +350,31 @@
         pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
     }
     
+    if (self.isThreeSectionsLayout) {
+        if (self.isDownwardGravity) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = NO;
+        }
+        self.drawerBehavior.resistance = 0;
+        
+        [self.collision removeAllBoundaries];
+        [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsTrashTopBoundary
+                                        fromPoint:CGPointMake(0, self.minY)
+                                          toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
+    }
+    
     // Let gravity pull the drawer down when the drawer is dragged past a certain point.
     if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
         [self.gravity setMagnitude:-5.0];
         self.isDownwardGravity = YES;
         self.drawerBehavior.resistance = 0;
+        
+        if (self.isThreeSectionsLayout) {
+            [self.collision removeAllBoundaries];
+            [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsTrashBotBoundary
+                                            fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
+                                              toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
+        }
     }
 }
 
@@ -350,11 +387,31 @@
         pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
     }
     
+    if (self.isThreeSectionsLayout) {
+        if (self.isDownwardGravity == NO) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = YES;
+        }
+        self.drawerBehavior.resistance = 0;
+        
+        [self.collision removeAllBoundaries];
+        [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasBotBoundary
+                                        fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
+                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
+    }
+    
     // Let gravity pull the drawer up when the drawer is dragged past a certain point.
     if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
         [self.gravity setMagnitude:-5.0];
         self.isDownwardGravity = NO;
         self.drawerBehavior.resistance = 0;
+        
+        if (self.isThreeSectionsLayout) {
+            [self.collision removeAllBoundaries];
+            [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsTrashTopBoundary
+                                            fromPoint:CGPointMake(0, self.minY)
+                                              toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
+        }
     }
 }
 
@@ -599,8 +656,8 @@
 }
 
 -(void)dragHandleMoved:(UIPanGestureRecognizer*)recognizer {
-    
     CGPoint drag = [recognizer locationInView:self.view.superview];
+    BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
         
@@ -609,18 +666,15 @@
         self.dragStart = drag;
         self.initialFrameY = self.view.frame.origin.y;
         
-        // It is important to remove boundaries at the start of gesture or it'll be too late and the boundaries may
-        // persist and cause weird glitches.
-        if (self.drawerDragMode != UIViewAnimation) {
-            if ([self.collision.boundaryIdentifiers count] > 0) {
-                // [self.collision removeAllBoundaries];
-            }
+        // It is important to remove boundaries at the start of gesture for three sections layout, or it'll be too late,
+        // and the boundaries may persist and cause weird glitches.
+        if (self.drawerDragMode != UIViewAnimation && self.isThreeSectionsLayout) {
+            [self.collision removeAllBoundaries];
         }
     }
     
     self.newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
     // NSLog(@"newPosition = %f", self.newPosition);
-    BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
     
     // If dragged past a certain point, extend or hide the the canvas
     if (recognizer.state == UIGestureRecognizerStateEnded) {
@@ -633,7 +687,7 @@
             if (self.drawerDragMode == UIViewAnimation) {
                 self.newPosition = self.maxY;
             } else {
-                // [self physicsForTopHandleDraggedDownwards];
+                [self physicsForTopHandleDraggedDownwards];
             }
             
         } else if (fromTopHandle && !velocityDownwards) {
@@ -641,7 +695,7 @@
             if (self.drawerDragMode == UIViewAnimation) {
                 self.newPosition = self.restY;
             } else {
-                // [self physicsForTopHandleDraggedUpwards];
+                [self physicsForTopHandleDraggedUpwards];
             }
         
         } else if (!fromTopHandle && velocityDownwards) { // Case for dragging the bottom canvas downward
@@ -730,12 +784,10 @@
         self.dragStart = touchPointRelativeToWindow;
         self.initialFrameY = self.view.frame.origin.y;
         
-        // It is important to remove boundaries at the start of gesture or it'll be too late and the boundaries may
-        // persist and cause weird glitches.
-        if (self.drawerDragMode != UIViewAnimation) {
-            if ([self.collision.boundaryIdentifiers count] > 0) {
-                // [self.collision removeAllBoundaries];
-            }
+        // It is important to remove boundaries at the start of gesture for three sections layout, or it'll be too late,
+        // and the boundaries may persist and cause weird glitches.
+        if (self.drawerDragMode != UIViewAnimation && self.isThreeSectionsLayout) {
+            [self.collision removeAllBoundaries];
         }
     }
     
@@ -760,7 +812,7 @@
                 
                 if (self.isThreeSectionsLayout) {
                     if (self.allowDrag) {
-                        // [self physicsForTopHandleDraggedDownwards];
+                        [self physicsForTopHandleDraggedDownwards];
                     }
                 } else {
                     if (self.allowDrag) {
@@ -777,7 +829,7 @@
                 
                 if (self.isThreeSectionsLayout) {
                     if (self.allowDrag) {
-                        // [self physicsForTopHandleDraggedUpwards];
+                        [self physicsForTopHandleDraggedUpwards];
                     }
                 } else {
                     if (self.allowDrag) {
@@ -826,8 +878,6 @@
         
         self.fromTopDragHandle = NO;
         self.fromBotDragHandle = NO;
-        
-        // [self animateDrawerPosition:newPosition]; // Allows flicking the drawer up or down without using the handles
         
     } else {
         
@@ -886,12 +936,10 @@
         self.dragStart = touchPointRelativeToWindow;
         self.initialFrameY = self.view.frame.origin.y;
         
-        // It is important to remove boundaries at the start of gesture or it'll be too late and the boundaries may
-        // persist and cause weird glitches.
-        if (self.drawerDragMode != UIViewAnimation) {
-            if ([self.collision.boundaryIdentifiers count] > 0) {
-                // [self.collision removeAllBoundaries];
-            }
+        // It is important to remove boundaries at the start of gesture for three sections layout, or it'll be too late,
+        // and the boundaries may persist and cause weird glitches.
+        if (self.drawerDragMode != UIViewAnimation && self.isThreeSectionsLayout) {
+            [self.collision removeAllBoundaries];
         }
     }
     
@@ -914,7 +962,7 @@
             if (self.drawerDragMode == UIViewAnimation) {
                 self.newPosition = self.maxY;
             } else {
-                // [self physicsForTopHandleDraggedDownwards];
+                [self physicsForTopHandleDraggedDownwards];
             }
             
         } else if (self.fromTopDragHandle && !velocityDownwards) {
@@ -922,7 +970,7 @@
             if (self.drawerDragMode == UIViewAnimation) {
                 self.newPosition = self.restY;
             } else {
-                // [self physicsForTopHandleDraggedUpwards];
+                [self physicsForTopHandleDraggedUpwards];
             }
             
         } else if (self.fromBotDragHandle && velocityDownwards) {

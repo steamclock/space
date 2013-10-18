@@ -22,6 +22,11 @@ extern NSString* const Key_RecoveredNote;
 extern NSString* const Key_TwoSectionsTopBoundary;
 extern NSString* const Key_TwoSectionsBotBoundary;
 
+extern NSString* const Key_ThreeSectionsCanvasTopBoundary;
+extern NSString* const Key_ThreeSectionsCanvasBotBoundary;
+extern NSString* const Key_ThreeSectionsTrashTopBoundary;
+extern NSString* const Key_ThreeSectionsTrashBotBoundary;
+
 extern int const Key_NavBarHeight;
 extern int const Key_LandscapeFocusViewAdjustment;
 extern int const Key_PortraitFocusViewAdjustment;
