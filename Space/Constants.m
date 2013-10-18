@@ -19,6 +19,14 @@ NSString* const Key_CurrentCanvasIndex = @"currentCanvasIndex";
 NSString* const Key_TrashedNotes = @"trashedNotes";
 NSString* const Key_RecoveredNote = @"recoveredNote";
 
+NSString* const Key_TwoSectionsTopBoundary = @"twoSectionsTopBoundary";
+NSString* const Key_TwoSectionsBotBoundary = @"twoSectionsBotBoundary";
+
+NSString* const Key_ThreeSectionsCanvasTopBoundary = @"threeSectionsCanvasTopBoundary";
+NSString* const Key_ThreeSectionsCanvasBotBoundary = @"threeSectionsCanvasBotBoundary";
+NSString* const Key_ThreeSectionsTrashTopBoundary = @"threeSectionsThrashTopBoundary";
+NSString* const Key_ThreeSectionsTrashBotBoundary = @"threeSectionsThrashBotBoundary";
+
 int const Key_NavBarHeight = 64;
 int const Key_LandscapeFocusViewAdjustment = 120;
 int const Key_PortraitFocusViewAdjustment = 100;
