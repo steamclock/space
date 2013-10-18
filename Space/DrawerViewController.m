@@ -778,7 +778,7 @@
     }
 }
 
-// Allows "catching" of the handle if a pan gesture started outside the handle from the drawer's empty space.
+// Allows "catching" of the handle if a pan gesture started outside the handle from the canvases' empty space.
 -(void)panningDrawer:(UIPanGestureRecognizer*)recognizer {
     CGPoint touchPointRelativeToWindow = [recognizer locationInView:self.view.superview];
     CGPoint touchPointRelativeToDrawer = [recognizer locationInView:self.view];
@@ -936,7 +936,7 @@
     }
 }
 
-// Allows "catching" of the handle if a pan gesture started outside the handle from the canvases' empty space.
+// Allows "catching" of the handle if a pan gesture started outside the handle from the drawer's empty space.
 -(void)panOutsideOfCanvases:(UIPanGestureRecognizer*)recognizer {
     CGPoint touchPointRelativeToWindow = [recognizer locationInView:self.view.superview];
     CGPoint touchPointRelativeToDrawer = [recognizer locationInView:self.view];
@@ -1041,6 +1041,11 @@
         self.fromBotDragHandle = NO;
         
     } else {
+        
+        if ((self.fromTopDragHandle && newPosition < self.restY) || (self.fromBotDragHandle && newPosition > self.restY)) {
+            self.newPosition = self.restY;
+            return;
+        }
         
         [self setDrawerPosition:newPosition];
         
