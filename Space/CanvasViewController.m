@@ -105,9 +105,6 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(toggleNoteCircleMode:) name:kChangeNoteCircleModeNotification object:nil];
     }
     
-    self.currentCanvas = 0;
-    [self loadCurrentCanvas];
-
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChanged:) name:kCanvasChangedNotification object:nil];
     
     self.zoomAnimationDuration = 0.5;
@@ -118,30 +115,8 @@
     
     [super viewDidAppear:animated];
     
-    if (self.isTrashMode) {
-        UIImage* handlebarUpImage = [UIImage imageNamed:Img_HandlebarUp];
-        self.botDragHandleView = [[UIImageView alloc] initWithImage:handlebarUpImage];
-        self.botDragHandleView.center = CGPointMake(self.view.center.x, -50);
-        self.botDragHandleView.alpha = 0;
-        
-        [self.view addSubview:self.botDragHandleView];
-        
-        self.emptyTrashButton = [UIButton buttonWithType:UIButtonTypeSystem];
-        [self.emptyTrashButton setTitle:@"Empty Trash" forState:UIControlStateNormal];
-        self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
-        [self.emptyTrashButton addTarget:self action:@selector(emptyTrash) forControlEvents:UIControlEventTouchUpInside];
-        self.emptyTrashButton.titleLabel.font = [UIFont systemFontOfSize:20];
-        
-        [self.view addSubview:self.emptyTrashButton];
-    }
-    
-    if (self.isTrashMode == NO) {
-        UIImage* handlebarDownImage = [UIImage imageNamed:Img_HandlebarDown];
-        self.topDragHandleView = [[UIImageView alloc] initWithImage:handlebarDownImage];
-        self.topDragHandleView.center = CGPointMake(self.view.center.x, self.view.frame.size.height + 50);
-        
-        [self.view addSubview:self.topDragHandleView];
-    }
+    self.currentCanvas = 0;
+    [self loadCurrentCanvas];
 }
 
 #pragma mark - Show / Hide Original Note Circle Location
@@ -157,7 +132,6 @@
 #pragma mark - Change Canvas
 
 -(void)loadCurrentCanvas {
-    
     for(UIView* view in self.view.subviews) {
         [self.collision removeItem:view];
         [self.dynamicProperties removeItem:view];
@@ -171,18 +145,30 @@
         notes = [[Database sharedDatabase] trashedNotesInCanvas:self.currentCanvas];
         NSLog(@"Number of deleted notes = %d", [notes count]);
         
+        UIImage* handlebarUpImage = [UIImage imageNamed:Img_HandlebarUp];
+        self.botDragHandleView = [[UIImageView alloc] initWithImage:handlebarUpImage];
+        self.botDragHandleView.center = CGPointMake(self.view.center.x, -50);
+        self.botDragHandleView.alpha = 0;
+        
+        [self.view addSubview:self.botDragHandleView];
+        
+        UIImage* trashBinImage = [[UIImage imageNamed:Img_TrashBin] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         self.emptyTrashButton = [UIButton buttonWithType:UIButtonTypeSystem];
-        [self.emptyTrashButton setTitle:@"Empty Trash" forState:UIControlStateNormal];
+        [self.emptyTrashButton setImage:trashBinImage forState:UIControlStateNormal];
         self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
         [self.emptyTrashButton addTarget:self action:@selector(emptyTrash) forControlEvents:UIControlEventTouchUpInside];
-        self.emptyTrashButton.titleLabel.font = [UIFont systemFontOfSize:20];
         
         [self.view addSubview:self.emptyTrashButton];
-        // NSLog(@"Empty Trash Button Frame = %@", NSStringFromCGRect(self.emptyTrashButton.frame));
         
     } else {
         notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
         NSLog(@"Number of saved notes = %d", [notes count]);
+        
+        UIImage* handlebarDownImage = [UIImage imageNamed:Img_HandlebarDown];
+        self.topDragHandleView = [[UIImageView alloc] initWithImage:handlebarDownImage];
+        self.topDragHandleView.center = CGPointMake(self.view.center.x, self.view.frame.size.height + 50);
+        
+        [self.view addSubview:self.topDragHandleView];
     }
     
     for(Note* note in notes) {

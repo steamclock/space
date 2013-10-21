@@ -79,3 +79,4 @@ typedef enum EditorModeEnum {
 
 extern NSString* const Img_HandlebarDown;
 extern NSString* const Img_HandlebarUp;
+extern NSString* const Img_TrashBin;

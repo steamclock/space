@@ -54,3 +54,4 @@ NSString* const Key_EditorMode = @"editorMode";
 
 NSString* const Img_HandlebarDown = @"handlebar-down";
 NSString* const Img_HandlebarUp = @"handlebar-up";
+NSString* const Img_TrashBin = @"trash-bin";
