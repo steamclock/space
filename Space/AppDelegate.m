@@ -11,29 +11,32 @@
 #import "CanvasViewController.h"
 #import "FocusViewController.h"
 #import "CanvasSelectionViewController.h"
-
 #import "Database.h"
+
+@interface AppDelegate()
+
+@property (strong, nonatomic) CanvasViewController* canvas;
+
+@end
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    
-    self.window.backgroundColor = [UIColor whiteColor];
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];    
     [self.window makeKeyAndVisible];
     
-    self.window.backgroundColor = [UIColor darkGrayColor];
+    self.window.backgroundColor = [UIColor groupTableViewBackgroundColor];
 
     UIViewController* container = [[UIViewController alloc] init];
     
-    CanvasViewController* canvas = [[CanvasViewController alloc] initWithTopLevelView:container.view];
+    self.canvas = [[CanvasViewController alloc] initWithTopLevelView:container.view];
     CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvasWithTopLevelView:container.view];
     
     DrawerViewController* drawer = [[DrawerViewController alloc] init];
     drawer.bottomDrawerContents = trash;
-    drawer.topDrawerContents = canvas;
-    drawer.delegate = canvas;
+    drawer.topDrawerContents = self.canvas;
+    drawer.delegate = self.canvas;
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     
@@ -41,7 +44,7 @@
     [container.view addSubview:drawer.view];
     
     FocusViewController* focus = [[FocusViewController alloc] init];
-    canvas.focus = focus;
+    self.canvas.focus = focus;
     
     [container addChildViewController:focus];
     [container.view addSubview:focus.view];

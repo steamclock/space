@@ -93,11 +93,11 @@
     self.bottomDragHandle = [[UIView alloc] init];
 
     self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
-    self.topDragHandle.backgroundColor = [UIColor grayColor];
+    self.topDragHandle.backgroundColor = [UIColor clearColor];
     [self.view addSubview:self.topDragHandle];
 
     self.bottomDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
-    self.bottomDragHandle.backgroundColor = [UIColor grayColor];
+    self.bottomDragHandle.backgroundColor = [UIColor clearColor];
     [self.view addSubview:self.bottomDragHandle];
     
     self.isDownwardGravity = YES;
@@ -626,11 +626,14 @@
     self.bottomDragHandle.frame = CGRectMake(dragLeft, dragBottom, dragWidth, dragHeight);
     self.bottomDragHandle.layer.cornerRadius = 15;
     
-    // Update some frames for alternative layout
+    // Update handlebar display.
     if (self.isThreeSectionsLayout == NO) {
-        
-        // Remove the top drag handle as it is not needed in the alternative layout
         self.topDragHandle.frame = CGRectZero;
+        self.topDrawerContents.topDragHandleView.alpha = 1;
+        self.bottomDrawerContents.botDragHandleView.alpha = 0;
+    } else {
+        self.topDrawerContents.topDragHandleView.alpha = 1;
+        self.bottomDrawerContents.botDragHandleView.alpha = 1;
     }
 }
 
@@ -1210,6 +1213,7 @@
         [UIView animateWithDuration:1 animations:^{
             self.topDrawerContents.view.frame = destination;
             self.topDragHandle.alpha = 0;
+            self.bottomDragHandle.alpha = 0;
         }];
         
         self.canvasesAreSlidOut = YES;
@@ -1231,6 +1235,7 @@
         [UIView animateWithDuration:1 animations:^{
             self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;
             self.topDragHandle.alpha = 1;
+            self.bottomDragHandle.alpha = 1;
         } completion:^(BOOL finished) {
             if (finished) {
                 if (self.drawerDragMode != UIViewAnimation) {

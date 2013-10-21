@@ -74,3 +74,8 @@ typedef enum EditorModeEnum {
     ShowTitle,
     NoTitle
 } EditorMode;
+
+/* Image Names */
+
+extern NSString* const Img_HandlebarDown;
+extern NSString* const Img_HandlebarUp;

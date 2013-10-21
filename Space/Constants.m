@@ -49,3 +49,8 @@ NSString* const Key_FocusMode = @"focusMode";
 NSString* const Key_DragMode = @"dragMode";
 NSString* const Key_NoteCircleMode = @"noteCircleMode";
 NSString* const Key_EditorMode = @"editorMode";
+
+/* Image Names */
+
+NSString* const Img_HandlebarDown = @"handlebar-down";
+NSString* const Img_HandlebarUp = @"handlebar-up";

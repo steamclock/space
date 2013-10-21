@@ -70,7 +70,7 @@
 {
     [super viewDidLoad];
     
-    self.view.backgroundColor = [UIColor whiteColor];
+    self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
@@ -114,11 +114,18 @@
     self.showOriginalNoteLocation = YES;
 }
 
-- (void)viewDidAppear:(BOOL)animated {
+-(void)viewDidAppear:(BOOL)animated {
     
     [super viewDidAppear:animated];
     
     if (self.isTrashMode) {
+        UIImage* handlebarUpImage = [UIImage imageNamed:Img_HandlebarUp];
+        self.botDragHandleView = [[UIImageView alloc] initWithImage:handlebarUpImage];
+        self.botDragHandleView.center = CGPointMake(self.view.center.x, -50);
+        self.botDragHandleView.alpha = 0;
+        
+        [self.view addSubview:self.botDragHandleView];
+        
         self.emptyTrashButton = [UIButton buttonWithType:UIButtonTypeSystem];
         [self.emptyTrashButton setTitle:@"Empty Trash" forState:UIControlStateNormal];
         self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
@@ -126,12 +133,14 @@
         self.emptyTrashButton.titleLabel.font = [UIFont systemFontOfSize:20];
         
         [self.view addSubview:self.emptyTrashButton];
-        // NSLog(@"Empty Trash Button Frame = %@", NSStringFromCGRect(self.emptyTrashButton.frame));
     }
     
     if (self.isTrashMode == NO) {
-        // NSLog(@"Canvas view center = %@", NSStringFromCGPoint(self.view.center));
-        // NSLog(@"Canvas superview center = %@", NSStringFromCGPoint(self.view.superview.superview.center));
+        UIImage* handlebarDownImage = [UIImage imageNamed:Img_HandlebarDown];
+        self.topDragHandleView = [[UIImageView alloc] initWithImage:handlebarDownImage];
+        self.topDragHandleView.center = CGPointMake(self.view.center.x, self.view.frame.size.height + 50);
+        
+        [self.view addSubview:self.topDragHandleView];
     }
 }
 
@@ -455,6 +464,11 @@
     
     NoteView* noteView = (NoteView*)recognizer.view;
     
+    // Don't allow focus if the note is trashed.
+    if (noteView.note.trashed == YES) {
+        return;
+    }
+    
     // Update the original X and Y everytime a note is tapped to help with partial slide zoom animation
     noteView.note.originalX = noteView.center.x;
     noteView.note.originalY = noteView.center.y;
@@ -527,6 +541,12 @@
         // Create a temporary circle view that shows the zoomed in note's original location
         if (self.showOriginalNoteLocation) {
             self.originalNoteCircleIndicator = [self drawCircleWithFrame:noteView.originalCircleFrame];
+            UILabel* titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, Key_NoteTitleLabelWidth, Key_NoteTitleLabelHeight)];
+            titleLabel.center = CGPointMake(self.originalNoteCircleIndicator.frame.size.width/2.0, -Key_NoteTitleLabelHeight);
+            titleLabel.textAlignment = NSTextAlignmentCenter;
+            titleLabel.font = [UIFont systemFontOfSize:14];
+            [self.originalNoteCircleIndicator addSubview:titleLabel];
+            [titleLabel setText:noteView.titleLabel.text];
             
             if (self.dragToFocusRequested) {
                 self.originalNoteCircleIndicator.center = CGPointMake(noteView.note.originalX, noteView.note.originalY);
@@ -542,6 +562,7 @@
                 
                 if (notZoomedInNoteView != self.currentlyZoomedInNoteView) {
                     notZoomedInNoteView.circleShape.strokeColor = [UIColor lightGrayColor].CGColor;
+                    notZoomedInNoteView.titleLabel.textColor = [UIColor lightGrayColor];
                 }
             }
          }
@@ -637,6 +658,7 @@
                 
                 if (notZoomedInNoteView != self.currentlyZoomedInNoteView) {
                     notZoomedInNoteView.circleShape.strokeColor = [UIColor blackColor].CGColor;
+                    notZoomedInNoteView.titleLabel.textColor = [UIColor blackColor];
                 }
             }
         }
@@ -693,18 +715,16 @@
                 self.originalNoteCircleIndicator = nil;
             }
             
-            [UIView animateWithDuration:0.5 animations:^{
-                noteView.titleLabel.alpha = 1;
-            } completion:^(BOOL finished) {
-                self.isRunningZoomAnimation = NO;
-                
-                // Allows zoom after animation is completed
-                [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
-                
-                if (zoomCompleted) {
-                    zoomCompleted();
-                }
-            }];
+            noteView.titleLabel.alpha = 1;
+            
+            self.isRunningZoomAnimation = NO;
+            
+            // Allows zoom after animation is completed
+            [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
+            
+            if (zoomCompleted) {
+                zoomCompleted();
+            }
         }];
     }
 }

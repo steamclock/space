@@ -17,8 +17,9 @@
 @property (nonatomic) FocusViewController* focus;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // These properties help manage zoom focus animation
+
+-(void)toggleZoomForNoteView:(NoteView*)noteView completion:(void (^)(void))zoomCompleted;
 
 @property (nonatomic) BOOL isRunningZoomAnimation;
 
@@ -41,6 +42,9 @@
 @property (nonatomic) BOOL isRefocus;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+@property (strong, nonatomic) UIImageView* topDragHandleView;
+@property (strong, nonatomic) UIImageView* botDragHandleView;
 
 -(id)initWithTopLevelView:(UIView*)view;
 -(id)initAsTrashCanvasWithTopLevelView:(UIView*)view;
