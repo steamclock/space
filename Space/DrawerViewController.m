@@ -42,19 +42,10 @@
 @property (nonatomic) float bottomDrawerHeight;
 @property (nonatomic) float bottomDrawerStart;
 
-@property (nonatomic) BOOL layoutChangeRequested;
-@property (nonatomic) BOOL isThreeSectionsLayout;
-
-@property (nonatomic) BOOL focusModeChangeRequested;
-@property (nonatomic) BOOL isFocusModeDim;
-
-@property (nonatomic) BOOL slidePartially;
 @property (nonatomic) BOOL canvasesAreSlidOut;
 @property (nonatomic) float slideAmountInPercentage;
 
 @property (nonatomic) float currentDrawerYInPercentage;
-
-@property (nonatomic) DragMode drawerDragMode;
 
 @property (nonatomic) CGRect topCanvasFrameBeforeSlidingOut;
 
@@ -63,8 +54,6 @@
 @property (strong, nonatomic) UICollisionBehavior* collision;
 @property (strong, nonatomic) UIGravityBehavior* gravity;
 @property (nonatomic) BOOL isDownwardGravity;
-
-@property (nonatomic) BOOL hasLoaded;
 
 @end
 
@@ -77,15 +66,9 @@
     
     [self setEdgesForExtendedLayout:UIRectEdgeNone];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadThreeSectionsLayout) name:kLoadThreeSectionsLayoutNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(loadTwoSectionsLayout) name:kLoadTwoSectionsLayoutNotification object:nil];
-    
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideOutCanvases) name:kFocusNoteNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(slideInCanvases) name:kNoteDismissedNotification object:nil];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeFocusMode:) name:kChangeFocusModeNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(changeDragMode:) name:kChangeDragModeNotification object:nil];
-
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
@@ -106,21 +89,9 @@
 -(void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
     
-    // Load default settings.
-    if (self.hasLoaded == NO) {
-        NSDictionary* focusMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:SlidePartially], Key_FocusMode, nil];
-        [[NSNotificationCenter defaultCenter] postNotificationName:kChangeFocusModeNotification object:nil userInfo:focusMode];
-        
-        NSDictionary* dragMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:UIDynamicFreeSlidingWithGravity], Key_DragMode, nil];
-        [[NSNotificationCenter defaultCenter] postNotificationName:kChangeDragModeNotification object:nil userInfo:dragMode];
-        
-        NSDictionary* editorMode = [[NSDictionary alloc] initWithObjectsAndKeys:[NSNumber numberWithInt:NoTitle], Key_EditorMode, nil];
-        [[NSNotificationCenter defaultCenter] postNotificationName:kChangeEditorModeNotification object:nil userInfo:editorMode];
-        
-        [[NSNotificationCenter defaultCenter] postNotificationName:kLoadTwoSectionsLayoutNotification object:nil];
-        
-        self.hasLoaded = YES;
-    }
+    [self drawCanvasLayout];
+    [self stopPhysicsEngine];
+    [self startPhysicsEngine];
     
     UITapGestureRecognizer* tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOutsideOfCanvases:)];
     [self.view addGestureRecognizer:tapGestureRecognizer];
@@ -198,48 +169,33 @@
     self.collision.collisionDelegate = self;
     
     self.drawerBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.view]];
-    
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-        self.drawerBehavior.resistance = 0;
-    } else if (self.drawerDragMode == UIDynamicFreeSliding) {
-        self.drawerBehavior.resistance = 10;
-    }
-    
+    self.drawerBehavior.resistance = 0;
     self.drawerBehavior.allowsRotation = NO;
+    self.drawerBehavior.density = self.view.frame.size.width * self.view.frame.size.height;
+    self.drawerBehavior.elasticity = 0.3;
     
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-        [self.animator addBehavior:self.gravity];
-    }
-    
+    [self.animator addBehavior:self.gravity];
     [self.animator addBehavior:self.collision];
     [self.animator addBehavior:self.drawerBehavior];
     
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-        self.drawerBehavior.density = self.view.frame.size.width * self.view.frame.size.height;
-        self.drawerBehavior.elasticity = 0.3;
+    // Create top and bottom boundaries for two sections layout.
+    if (![[self.collision boundaryIdentifiers] containsObject:Key_TopBoundary]) {
+        [self.collision addBoundaryWithIdentifier:Key_TopBoundary
+                                        fromPoint:CGPointMake(0, self.minY)
+                                          toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
     }
     
-    // Create top and bottom boundaries for two sections layout.
-    if (self.isThreeSectionsLayout == NO) {
-        if (![[self.collision boundaryIdentifiers] containsObject:Key_TwoSectionsTopBoundary]) {
-            [self.collision addBoundaryWithIdentifier:Key_TwoSectionsTopBoundary
-                                            fromPoint:CGPointMake(0, self.minY)
-                                              toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
-        }
-        
-        if (![[self.collision boundaryIdentifiers] containsObject:Key_TwoSectionsBotBoundary]) {
-                [self.collision addBoundaryWithIdentifier:Key_TwoSectionsBotBoundary
-                                                fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
-                                                  toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
-        }
-    } else if (self.isThreeSectionsLayout) {
-        // Three section layout does not require initial gravity.
-        [self.animator removeBehavior:self.gravity];
+    if (![[self.collision boundaryIdentifiers] containsObject:Key_BotBoundary]) {
+        [self.collision addBoundaryWithIdentifier:Key_BotBoundary
+                                        fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
+                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
     }
 }
 
 -(void)stopPhysicsEngine {
-    [self.animator removeAllBehaviors];
+    if (self.animator) {
+        [self.animator removeAllBehaviors];
+    }
     self.animator = nil;
     self.collision = nil;
     self.drawerBehavior = nil;
@@ -259,279 +215,34 @@
                   atPoint:(CGPoint)p {
     // Resistance is set to 0 when gravity is taking place,
     // but we'll need to increase resistance to keep the bounce from gravity at collision under control.
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-        self.drawerBehavior.resistance = 2.5;
-    }
-}
-
--(void)physicsForTopHandleDraggedDownwards {
-    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? -400 : -100;
-    BOOL pastGravityThreshold;
-    if (self.isThreeSectionsLayout) {
-        pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
-    } else {
-        pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
-    }
-    
-    // If we don't drag down enough, let gravity pull the drawer back up and recreate the top boundary,
-    // so the drawer doesn't fly out of screen.
-    if (self.isThreeSectionsLayout) {
-        if (self.isDownwardGravity) {
-            [self.gravity setMagnitude:-5.0];
-            self.isDownwardGravity = NO;
-        }
-        
-        if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            self.drawerBehavior.resistance = 0;
-        }
-        
-        [self.collision removeAllBoundaries];
-        [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasTopBoundary
-                                        fromPoint:CGPointMake(0, self.restY)
-                                          toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
-    }
-    
-    // Let gravity pull the drawer down when the drawer is dragged past a certain point.
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
-        
-        if (self.isThreeSectionsLayout) {
-            if (self.isDownwardGravity == NO) {
-                [self.gravity setMagnitude:-5.0];
-                self.isDownwardGravity = YES;
-            }
-            self.drawerBehavior.resistance = 0;
-            
-            [self.collision removeAllBoundaries];
-            [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasBotBoundary
-                                            fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
-                                              toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
-        }
-    }
-}
-
--(void)physicsForTopHandleDraggedUpwards {
-    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? -150 : -700;
-    BOOL pastGravityThreshold;
-    if (self.isThreeSectionsLayout) {
-        pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
-    } else {
-        pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
-    }
-    
-    // If we don't drag up enough, let gravity pull the drawer back down and recreate the bottom boundary,
-    // so the drawer doesn't fly out of screen.
-    if (self.isThreeSectionsLayout) {
-        if (self.isDownwardGravity == NO) {
-            [self.gravity setMagnitude:-5.0];
-            self.isDownwardGravity = YES;
-        }
-        
-        if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            self.drawerBehavior.resistance = 0;
-        }
-        
-        [self.collision removeAllBoundaries];
-        [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasBotBoundary
-                                        fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
-                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
-    }
-    
-    // Let gravity pull the drawer up when the drawer is dragged past a certain point.
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
-        
-        if (self.isThreeSectionsLayout) {
-            if (self.isDownwardGravity) {
-                [self.gravity setMagnitude:-5.0];
-                self.isDownwardGravity = NO;
-            }
-            
-            if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-                self.drawerBehavior.resistance = 0;
-            }
-        }
-        
-        if (self.isThreeSectionsLayout) {
-            [self.collision removeAllBoundaries];
-            [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasTopBoundary
-                                            fromPoint:CGPointMake(0, self.restY)
-                                              toPoint:CGPointMake(self.view.frame.size.width, self.restY)];
-        }
-    }
+    self.drawerBehavior.resistance = 2.5;
 }
 
 -(void)physicsForBottomHandleDraggedDownwards {
-    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? self.minY + 100 : -550;
+    int gravityTriggerThreshold = -550;
     BOOL pastGravityThreshold;
-    if (self.isThreeSectionsLayout) {
-        pastGravityThreshold = (self.newPosition > gravityTriggerThreshold) ? YES : NO;
-    } else {
-        pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
-    }
-    
-    // If we don't drag down enough, let gravity pull the drawer back up and recreate the top boundary,
-    // so the drawer doesn't fly out of screen.
-    if (self.isThreeSectionsLayout) {
-        if (self.isDownwardGravity) {
-            [self.gravity setMagnitude:-5.0];
-            self.isDownwardGravity = NO;
-        }
-        
-        if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            self.drawerBehavior.resistance = 0;
-        }
-        
-        [self.collision removeAllBoundaries];
-        [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsTrashTopBoundary
-                                        fromPoint:CGPointMake(0, self.minY)
-                                          toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
-    }
+    pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
     
     // Let gravity pull the drawer down when the drawer is dragged past a certain point.
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+    if (pastGravityThreshold) {
         [self.gravity setMagnitude:-5.0];
         self.isDownwardGravity = YES;
         
-        if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            self.drawerBehavior.resistance = 0;
-        }
-        
-        if (self.isThreeSectionsLayout) {
-            [self.collision removeAllBoundaries];
-            [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsTrashBotBoundary
-                                            fromPoint:CGPointMake(0, self.view.frame.size.height + self.restY)
-                                              toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + self.restY)];
-        }
+        self.drawerBehavior.resistance = 0;
     }
 }
 
 -(void)physicsForBottomHandleDraggedUpwards {
-    int gravityTriggerThreshold = (self.isThreeSectionsLayout) ? self.maxY - 100 : -200;
+    int gravityTriggerThreshold = -200;
     BOOL pastGravityThreshold;
-    if (self.isThreeSectionsLayout) {
-        pastGravityThreshold = (self.newPosition < gravityTriggerThreshold) ? YES : NO;
-    } else {
-        pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
-    }
-    
-    // If we don't drag up enough, let gravity pull the drawer back down and recreate the bottom boundary,
-    // so the drawer doesn't fly out of screen.
-    if (self.isThreeSectionsLayout) {
-        if (self.isDownwardGravity == NO) {
-            [self.gravity setMagnitude:-5.0];
-            self.isDownwardGravity = YES;
-        }
-        
-        if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            self.drawerBehavior.resistance = 0;
-        }
-        
-        [self.collision removeAllBoundaries];
-        [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsCanvasBotBoundary
-                                        fromPoint:CGPointMake(0, self.view.frame.size.height + Key_NavBarHeight)
-                                          toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height + Key_NavBarHeight)];
-    }
+    pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
     
     // Let gravity pull the drawer up when the drawer is dragged past a certain point.
-    if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity && pastGravityThreshold) {
+    if (pastGravityThreshold) {
         [self.gravity setMagnitude:-5.0];
         self.isDownwardGravity = NO;
-        
-        if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            self.drawerBehavior.resistance = 0;
-        }
-        
-        if (self.isThreeSectionsLayout) {
-            [self.collision removeAllBoundaries];
-            [self.collision addBoundaryWithIdentifier:Key_ThreeSectionsTrashTopBoundary
-                                            fromPoint:CGPointMake(0, self.minY)
-                                              toPoint:CGPointMake(self.view.frame.size.width, self.minY)];
-        }
-    }
-}
 
-#pragma mark - Prototyping Options
-
--(void)changeFocusMode:(NSNotification*)notification {
-    
-    if ([[notification.userInfo objectForKey:Key_FocusMode] isEqual:[NSNumber numberWithInt:Dimming]]) {
-        
-        self.isFocusModeDim = YES;
-        self.slidePartially = NO;
-        self.focusModeChangeRequested = YES;
-        
-        self.topDrawerContents.canvasWillSlide = NO;
-        
-        NSLog(@"Setting focus mode to Dimming.");
-        
-    } else if ([[notification.userInfo objectForKey:Key_FocusMode] isEqual:[NSNumber numberWithInt:SlideOut]]) {
-        
-        self.isFocusModeDim = NO;
-        self.slidePartially = NO;
-        self.focusModeChangeRequested = YES;
-        
-        self.topDrawerContents.canvasWillSlide = YES;
-        
-        NSLog(@"Setting focus mode to Slide Out.");
-        
-    } else {
-        
-        self.isFocusModeDim = NO;
-        self.slidePartially = YES;
-        self.focusModeChangeRequested = YES;
-        
-        self.topDrawerContents.canvasWillSlide = YES;
-        
-        NSLog(@"Setting focus mode to Slide Partially.");
-    }
-}
-
--(void)changeDragMode:(NSNotification*)notification {
-    self.drawerDragMode = [[notification.userInfo objectForKey:Key_DragMode] intValue];
-    
-    if (self.drawerDragMode == UIViewAnimation) {
-        [self stopPhysicsEngine];
-    } else {
-        [self stopPhysicsEngine];
-        [self startPhysicsEngine];
-    }
-    NSLog(@"Drawer Drag Mode = %d", self.drawerDragMode);
-}
-
--(void)loadThreeSectionsLayout {
-    NSLog(@"Loading three sections layout drawer.");
-    
-    if (self.drawerDragMode != UIViewAnimation) {
-        [self stopPhysicsEngine];
-    }
-    
-    self.layoutChangeRequested = YES;
-    self.isThreeSectionsLayout = YES;
-    
-    [self drawCanvasLayout];
-    
-    if (self.drawerDragMode != UIViewAnimation) {
-        if (self.animator == nil) {
-            [self startPhysicsEngine];
-        }
-    }
-}
-
--(void)loadTwoSectionsLayout {
-    NSLog(@"Loading two sections layout drawer.");
-    
-    if (self.drawerDragMode != UIViewAnimation) {
-        [self stopPhysicsEngine];
-    }
-    
-    self.layoutChangeRequested = YES;
-    self.isThreeSectionsLayout = NO;
-    
-    [self drawCanvasLayout];
-    
-    if (self.drawerDragMode != UIViewAnimation) {
-        if (self.animator == nil) {
-            [self startPhysicsEngine];
-        }
+        self.drawerBehavior.resistance = 0;
     }
 }
 
@@ -551,62 +262,39 @@
     
     // NSLog(@"Orientation: %d Screen: %@", orientation, NSStringFromCGSize(screenSize));
     
-    // Redraw the layout if orientation has changed, or if a layout change is requested by the user
-    if (screenSize.height != self.realScreenSize.height || self.layoutChangeRequested) {
+    // Redraw the layout if device orientation has changed.
+    if (screenSize.height != self.realScreenSize.height) {
         [self updateExtentsForScreenSize:screenSize];
         [self updateViewSizes];
         [self updateCanvasSizes];
-        
-        self.layoutChangeRequested = NO;
     }
 }
 
 -(void)updateExtentsForScreenSize:(CGSize)screenSize {
-    
     // Store the actual screen size so we can reference it later to fix an iPad system bug where it'll report the wrong
     // size after changes in orientation
     self.realScreenSize = screenSize;
 
-    // Size of top and bottom canvas
-    self.topDrawerHeight = screenSize.height - 84 - Key_NavBarHeight;
+    // The empty space between the top canvas and the bottom of the screen at resting position
+    int bottomSpace = 100;
+    
+    // Alternative layout requires a different height for the top canvas, or else notes can get fly out of sight
+    self.topDrawerHeight = screenSize.height - bottomSpace - Key_NavBarHeight;
     self.bottomDrawerHeight = screenSize.height - 224;
 
     // When the drawer is pulled down all the way with the top canvas fully revealed, it will be resting at (0, 0)
     self.maxY = Key_NavBarHeight;
     
-    // Resting position or initial position is when the top left corner of the drawer is up and outside the screen,
-    // so that's why it's a negative value
-    self.restY = 384 - screenSize.height + Key_NavBarHeight;
+    // Resting position is with the canvas pulled all the way down
+    self.restY = self.maxY;
     
     // When the drawer reveals the trash canvas, it is pulled up and outside the screen even more, and this represents
     // how far the drawer can be pulled up
+    // Reupdate minY using new restY value so we can pull up the trash canvas to the proper height
     self.minY = self.restY - self.bottomDrawerHeight;
     
-    // Bottom canvas starts at where the bottom of the screen is, so it's not visible initially
-    self.bottomDrawerStart = screenSize.height - self.restY;
-    
-    // Update values for alternative layout
-    if (self.isThreeSectionsLayout == NO) {
-        
-        // The empty space between the top canvas and the bottom of the screen at resting position
-        int bottomSpace = 100;
-        
-        // Alternative layout requires a different height for the top canvas, or else notes can get fly out of sight
-        self.topDrawerHeight = screenSize.height - bottomSpace - Key_NavBarHeight;
-        
-        self.maxY = Key_NavBarHeight;
-        
-        // Resting position is with the canvas pulled all the way down
-        self.restY = self.maxY;
-        
-        // Reupdate minY using new restY value so we can pull up the trash canvas to the proper height
-        self.minY = self.restY - self.bottomDrawerHeight;
-        
-        // Bottom drawer starts right at the bottom of the screen in alternative layout
-        self.bottomDrawerStart = screenSize.height - Key_NavBarHeight;
-    }
-    
-    // NSLog(@"restY = %f minY = %f topDrawerHeight = %f bottomDrawerHeight = %f bottomDrawerStart = %f", self.restY, self.minY, self.topDrawerHeight, self.bottomDrawerHeight, self.bottomDrawerStart);
+    // Bottom drawer starts right at the bottom of the screen in alternative layout
+    self.bottomDrawerStart = screenSize.height - Key_NavBarHeight;
 }
 
 -(void)updateViewSizes {
@@ -626,15 +314,7 @@
     self.bottomDragHandle.frame = CGRectMake(dragLeft, dragBottom, dragWidth, dragHeight);
     self.bottomDragHandle.layer.cornerRadius = 15;
     
-    // Update handlebar display.
-    if (self.isThreeSectionsLayout == NO) {
-        self.topDragHandle.frame = CGRectZero;
-        self.topDrawerContents.topDragHandleView.alpha = 1;
-        self.bottomDrawerContents.botDragHandleView.alpha = 0;
-    } else {
-        self.topDrawerContents.topDragHandleView.alpha = 1;
-        self.bottomDrawerContents.botDragHandleView.alpha = 1;
-    }
+    self.topDragHandle.frame = CGRectZero;
 }
 
 -(void)updateCanvasSizes {
@@ -696,88 +376,43 @@
     BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
-        
         [self.animator removeBehavior:self.gravity];
         
         self.dragStart = drag;
         self.initialFrameY = self.view.frame.origin.y;
-        
-        // It is important to remove boundaries at the start of gesture for three sections layout, or it'll be too late,
-        // and the boundaries may persist and cause weird glitches.
-        if (self.drawerDragMode != UIViewAnimation && self.isThreeSectionsLayout) {
-            [self.collision removeAllBoundaries];
-        }
     }
     
     self.newPosition = self.initialFrameY + (drag.y - self.dragStart.y);
-    // NSLog(@"newPosition = %f", self.newPosition);
     
-    // If dragged past a certain point, extend or hide the the canvas
+    // If dragged past a certain point, change gravity direction and let it extend or hide the canvas.
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         
-        if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            [self.animator addBehavior:self.gravity];
-        }
+        [self.animator addBehavior:self.gravity];
         
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
-        if (fromTopHandle && velocityDownwards) {
-            
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.maxY;
-            } else {
-                [self physicsForTopHandleDraggedDownwards];
-            }
-            
-        } else if (fromTopHandle && !velocityDownwards) {
-            
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.restY;
-            } else {
-                [self physicsForTopHandleDraggedUpwards];
-            }
-        
-        } else if (!fromTopHandle && velocityDownwards) { // Case for dragging the bottom canvas downward
-            
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.restY;
-            } else {
-                [self physicsForBottomHandleDraggedDownwards];
-            }
-            
-        } else if (!fromTopHandle && !velocityDownwards) { // Case for dragging the bottom canvas upward
-            
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.minY;
-            } else {
-                [self physicsForBottomHandleDraggedUpwards];
-            }
-        
-        }
-        
-        if (self.drawerDragMode == UIViewAnimation) {
-            [self animateDrawerPosition:self.newPosition];
+        if (!fromTopHandle && velocityDownwards) { // Case for dragging the canvas downward.
+            [self physicsForBottomHandleDraggedDownwards];
+        } else if (!fromTopHandle && !velocityDownwards) { // Case for dragging canvas upward.
+            [self physicsForBottomHandleDraggedUpwards];
         }
         
         // Add throwable feel to the drawer
-        if (self.drawerDragMode == UIDynamicFreeSliding || self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
-            verticalVelocity = CGPointMake(0, verticalVelocity.y);
+        CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
+        verticalVelocity = CGPointMake(0, verticalVelocity.y);
         
-            [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
-        }
+        [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
         
-    } else { // If we did not drag past a certain point, continue updating canvas' new position based on current drag
-    
-        if ((fromTopHandle && self.newPosition < self.restY) || (!fromTopHandle && self.newPosition > self.restY)) {
+    } else { // If we are still dragging, continue updating the drawer's position.
+        
+        // Don't allow the drawer to be dragged further down when it's already fully revealed.
+        if (!fromTopHandle && self.newPosition > self.restY) {
             self.newPosition = self.restY;
         }
         
         [self setDrawerPosition:self.newPosition];
         
-        if (self.drawerDragMode != UIViewAnimation) {
-            [self.animator updateItemUsingCurrentState:self.view];
-        }
+        [self.animator updateItemUsingCurrentState:self.view];
     }
 }
 
@@ -790,13 +425,7 @@
     UIView* targetView;
     
     if ([recognizer.view isEqual:_topDrawerContents.view]) {
-        
-        if (self.isThreeSectionsLayout) {
-            targetView = self.topDragHandle;
-        } else {
             targetView = self.bottomDragHandle;
-        }
-        
     } else if ([recognizer.view isEqual:_bottomDrawerContents.view]) {
         targetView = self.bottomDragHandle;
     } else {
@@ -817,17 +446,10 @@
     BOOL fromTopDrawer;
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
-        
         [self.animator removeBehavior:self.gravity];
         
         self.dragStart = touchPointRelativeToWindow;
         self.initialFrameY = self.view.frame.origin.y;
-        
-        // It is important to remove boundaries at the start of gesture for three sections layout, or it'll be too late,
-        // and the boundaries may persist and cause weird glitches.
-        if (self.drawerDragMode != UIViewAnimation && self.isThreeSectionsLayout) {
-            [self.collision removeAllBoundaries];
-        }
     }
     
     if (self.allowDrag) {
@@ -839,82 +461,43 @@
     fromTopDrawer = [recognizer.view isEqual:_topDrawerContents.view];
     
     if (recognizer.state == UIGestureRecognizerStateEnded) {
-        
-        if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            [self.animator addBehavior:self.gravity];
-        }
+        [self.animator addBehavior:self.gravity];
         
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
         if (fromTopDrawer && velocityDownwards) {
             
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.maxY;
-            } else {
-                
-                if (self.isThreeSectionsLayout) {
-                    if (self.allowDrag) {
-                        [self physicsForTopHandleDraggedDownwards];
-                    }
-                } else {
-                    if (self.allowDrag) {
-                        [self physicsForBottomHandleDraggedDownwards];
-                    }
-                }
+            if (self.allowDrag) {
+                [self physicsForBottomHandleDraggedDownwards];
             }
             
         } else if (fromTopDrawer && !velocityDownwards) {
-            
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.restY;
-            } else {
-                
-                if (self.isThreeSectionsLayout) {
-                    if (self.allowDrag) {
-                        [self physicsForTopHandleDraggedUpwards];
-                    }
-                } else {
-                    if (self.allowDrag) {
-                        [self physicsForBottomHandleDraggedUpwards];
-                    }
-                }
+
+            if (self.allowDrag) {
+                [self physicsForBottomHandleDraggedUpwards];
             }
-            
+
         } else if (!fromTopDrawer && velocityDownwards) {
             
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.restY;
-            } else {
-                if (self.allowDrag) {
-                    [self physicsForBottomHandleDraggedDownwards];
-                }
+            if (self.allowDrag) {
+                [self physicsForBottomHandleDraggedDownwards];
             }
             
         } else if (!fromTopDrawer && !velocityDownwards) {
             
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.minY;
-            } else {
-                if (self.allowDrag) {
-                    [self physicsForBottomHandleDraggedUpwards];
-                }
+            if (self.allowDrag) {
+                [self physicsForBottomHandleDraggedUpwards];
             }
         }
         
-        if (self.drawerDragMode == UIViewAnimation) {
-            [self animateDrawerPosition:self.newPosition];
-        }
-        
-        // Add throwable feel to the drawer
-        if (self.drawerDragMode == UIDynamicFreeSliding || self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
+        if (self.allowDrag) {
+            // Add throwable feel to the drawer
             CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
             verticalVelocity = CGPointMake(0, verticalVelocity.y);
             
-            if (self.allowDrag) {
-                [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
-            }
+            [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
         }
-        
+    
         self.allowDrag = NO;
         self.allowedDragStartYAssigned = NO;
         
@@ -923,19 +506,10 @@
         
     } else {
         
-        if ((fromTopDrawer && newPosition < self.restY) || (!fromTopDrawer && newPosition > self.restY)) {
-            
-            if (self.isThreeSectionsLayout) {
-                newPosition = self.restY;
-            }
-        }
-        
         NSLog(@"New position = %f", newPosition);
         [self setDrawerPosition:newPosition];
         
-        if (self.drawerDragMode != UIViewAnimation) {
-            [self.animator updateItemUsingCurrentState:self.view];
-        }
+        [self.animator updateItemUsingCurrentState:self.view];
     }
 }
 
@@ -978,12 +552,6 @@
         
         self.dragStart = touchPointRelativeToWindow;
         self.initialFrameY = self.view.frame.origin.y;
-        
-        // It is important to remove boundaries at the start of gesture for three sections layout, or it'll be too late,
-        // and the boundaries may persist and cause weird glitches.
-        if (self.drawerDragMode != UIViewAnimation && self.isThreeSectionsLayout) {
-            [self.collision removeAllBoundaries];
-        }
     }
     
     if (self.allowDrag) {
@@ -997,47 +565,17 @@
         self.allowDrag = NO;
         self.allowedDragStartYAssigned = NO;
         
-        if (self.drawerDragMode == UIDynamicFreeSlidingWithGravity) {
-            [self.animator addBehavior:self.gravity];
-        }
+        [self.animator addBehavior:self.gravity];
         
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
-        if (self.fromTopDragHandle && velocityDownwards) {
+        if (self.fromBotDragHandle && velocityDownwards) {
             
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.maxY;
-            } else {
-                [self physicsForTopHandleDraggedDownwards];
-            }
-            
-        } else if (self.fromTopDragHandle && !velocityDownwards) {
-            
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.restY;
-            } else {
-                [self physicsForTopHandleDraggedUpwards];
-            }
-            
-        } else if (self.fromBotDragHandle && velocityDownwards) {
-            
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.restY;
-            } else {
                 [self physicsForBottomHandleDraggedDownwards];
-            }
             
         } else if (self.fromBotDragHandle && !velocityDownwards) {
             
-            if (self.drawerDragMode == UIViewAnimation) {
-                self.newPosition = self.minY;
-            } else {
                 [self physicsForBottomHandleDraggedUpwards];
-            }
-        }
-        
-        if (self.drawerDragMode == UIViewAnimation) {
-            [self animateDrawerPosition:self.newPosition];
         }
         
         self.fromTopDragHandle = NO;
@@ -1045,30 +583,27 @@
         
     } else {
         
-        if ((self.fromTopDragHandle && newPosition < self.restY) || (self.fromBotDragHandle && newPosition > self.restY)) {
+        if (self.fromBotDragHandle && newPosition > self.restY) {
             self.newPosition = self.restY;
             return;
         }
         
         [self setDrawerPosition:newPosition];
         
-        if (self.drawerDragMode != UIViewAnimation) {
-            [self.animator updateItemUsingCurrentState:self.view];
-        }
+        [self.animator updateItemUsingCurrentState:self.view];
     }
 }
 
 #pragma mark - Drawer Rotation
 
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
-    // Prevents animator from overriding our custom updates to views that are needed for orientation changes
-    if (self.drawerDragMode != UIViewAnimation) {
-        [self stopPhysicsEngine];
-    }
-    
-    // Hide the ugly and unnecessary animations when the completely slid-out canvas is updating its frames to fit the new orientations
-    if (self.isFocusModeDim == NO && self.slidePartially == NO && self.canvasesAreSlidOut == YES) {
-        self.topDrawerContents.view.alpha = 0;
+    // Prevents animator from overriding our custom changes to views that are needed for orientation changes.
+    [self stopPhysicsEngine];
+}
+
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+    if (self.animator == nil) {
+        [self startPhysicsEngine];
     }
 }
 
@@ -1084,13 +619,7 @@
         newY = self.view.frame.origin.y - self.minY;
     }
     
-    if (self.isThreeSectionsLayout == NO && self.canvasesAreSlidOut == NO) {
-        self.view.frame = CGRectMake(self.view.frame.origin.x,
-                                     self.view.frame.origin.y - newY,
-                                     self.view.frame.size.width,
-                                     self.view.frame.size.height);
-        
-    } else if (self.canvasesAreSlidOut == YES) {
+    if (self.canvasesAreSlidOut == YES) {
         // NSLog(@"Slide amount = %f", self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage);
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
         
@@ -1105,153 +634,76 @@
             self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage - (Key_LandscapeFocusViewAdjustment - Key_PortraitFocusViewAdjustment);
         }
         
-        if (self.slidePartially) {
-            self.topDrawerContents.view.frame = CGRectMake(self.topDrawerContents.view.frame.origin.x,
-                                                           self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage,
-                                                           self.topDrawerContents.view.frame.size.width,
-                                                           self.topDrawerContents.view.frame.size.height);
-        }
+        self.topDrawerContents.view.frame = CGRectMake(self.topDrawerContents.view.frame.origin.x,
+                                                       self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage,
+                                                       self.topDrawerContents.view.frame.size.width,
+                                                       self.topDrawerContents.view.frame.size.height);
         
-    } else if (self.isThreeSectionsLayout && self.canvasesAreSlidOut == NO) {
-        // Three sections layout is a bit problematic due to a varying distance between the top and bottom canvases
-        // in different orientations, as well as a varying starting position since it doesn't start out fully revealing
-        // the top canvas like in two sections layout. As a result, relative adjustment isn't going to work well here,
-        // so we will instead use a preset system. For example, we will detect the current drawer position, then
-        // determine which preset location it is closest to. For now, the preset locations include
-        // default resting position, top canvas revealed, and bottom canvas revealed.
-        
-        // Use the NSLog in setDrawerPosition to help debug and determine threshold values.
-        
-        if (self.currentDrawerYInPercentage < 0.17) {
-            newY = Key_NavBarHeight; // Reveal top canvas
-        } else if (self.currentDrawerYInPercentage >= 0.5) {
-            newY = self.minY; // Reveal bottom canvas
-        } else {
-            newY = self.view.frame.origin.y; // Default resting position
-        }
-        
-        self.view.frame = CGRectMake(self.view.frame.origin.x,
-                                     newY,
-                                     self.view.frame.size.width,
-                                     self.view.frame.size.height);
-    }
-}
-
--(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
-    // Update the frames of the slid-out canvas after a change in orientation to allow us to slide it back properly.
-    if (self.isFocusModeDim == NO && self.slidePartially == NO && self.canvasesAreSlidOut == YES) {
-        self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
-        self.topDrawerContents.view.alpha = 1;
-        
-        CGRect destination = self.topDrawerContents.view.frame;
-        if (self.view.frame.origin.y == 0) {
-            destination.origin.y = -(self.realScreenSize.height);
-        } else {
-            destination.origin.y = -(self.restY + self.realScreenSize.height);
-        }
-        
-        self.topDrawerContents.view.frame = destination;
-        
-    } else if (self.slidePartially == YES) {
-        // self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
-        // self.topCanvasFrameBeforeSlidingOut = CGRectMake(0, 0, self.topDrawerContents.view.frame.size.width, self.topDrawerContents.view.frame.size.height);
-        
-        self.topDrawerContents.view.alpha = 1;
-        
-        // CGRect destination = self.topDrawerContents.view.frame;
-        // self.topDrawerContents.view.frame = destination;
-    }
-    
-    if (self.drawerDragMode != UIViewAnimation) {
-        // Restore animator with the updated views
-        if (self.animator == nil) {
-            [self startPhysicsEngine];
-        }
     }
 }
 
 #pragma mark - Canvas Sliding
 
 -(void)slideOutCanvases {
-    if (self.drawerDragMode != UIViewAnimation && self.isFocusModeDim == NO) {
-        // UIDynamic overwrites manual frame positioning, so it needs to be turned off first.
-        [self stopPhysicsEngine];
+    // UIDynamic overwrites manual frame positioning, so it needs to be turned off first.
+    [self stopPhysicsEngine];
+    
+    if (self.topDrawerContents.isRefocus == NO) {
+        self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
     }
     
-    if (self.isFocusModeDim == NO && self.focusModeChangeRequested == YES) {
-        
-        if (self.topDrawerContents.isRefocus == NO) {
-            self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
-        }
-        
-        CGRect destination = self.topDrawerContents.view.frame;
-        destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
- 
-        if (self.slidePartially) {
-            // Find how far down the canvas the selected note circle is located at to help determine how far the
-            // canvas should slide out.
-            float targetedNoteY = self.topDrawerContents.currentlyZoomedInNoteView.note.originalY;
-            
-            // Give some room between the bottom of the nav bar and the note circle that the canvas is sliding up to.
-            destination.origin.y = -(targetedNoteY - NOTE_RADIUS * 2);
-            
-            if (destination.origin.y > 0) {
-                destination.origin.y = self.topDrawerContents.view.frame.origin.y;
-            }
-            
-            // Handle cases where the drawer is not completely drawn out or closed.
-            if (self.view.frame.origin.y < Key_NavBarHeight) {
-                destination.origin.y += Key_NavBarHeight - self.view.frame.origin.y;
-            }
-        }
-        
-        // Stores current amount of slide to help with device rotation.
-        self.topDrawerContents.slideOffset = destination.origin.y;
-        self.slideAmountInPercentage = [Coordinate normalizeYCoord:destination.origin.y withReferenceBounds:self.topDrawerContents.view.bounds];
-        NSLog(@"Normalized slide amount = %f", self.slideAmountInPercentage);
-        
-        [UIView animateWithDuration:1 animations:^{
-            self.topDrawerContents.view.frame = destination;
-            self.topDragHandle.alpha = 0;
-            self.bottomDragHandle.alpha = 0;
-        }];
-        
-        self.canvasesAreSlidOut = YES;
-
-    } else {
-        // NSLog(@"Focus mode is not set to slide, don't slide out canvases.");
+    CGRect destination = self.topDrawerContents.view.frame;
+    destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
+    
+    
+    // Find how far down the canvas the selected note circle is located at to help determine how far the
+    // canvas should slide out.
+    float targetedNoteY = self.topDrawerContents.currentlyZoomedInNoteView.note.originalY;
+    
+    // Give some room between the bottom of the nav bar and the note circle that the canvas is sliding up to.
+    destination.origin.y = -(targetedNoteY - Key_NoteRadius * 2);
+    
+    if (destination.origin.y > 0) {
+        destination.origin.y = self.topDrawerContents.view.frame.origin.y;
     }
+    
+    // Handle cases where the drawer is not completely drawn out or closed.
+    if (self.view.frame.origin.y < Key_NavBarHeight) {
+        destination.origin.y += Key_NavBarHeight - self.view.frame.origin.y;
+    }
+    
+    // Stores current amount of slide to help with device rotation.
+    self.topDrawerContents.slideOffset = destination.origin.y;
+    self.slideAmountInPercentage = [Coordinate normalizeYCoord:destination.origin.y withReferenceBounds:self.topDrawerContents.view.bounds];
+    NSLog(@"Normalized slide amount = %f", self.slideAmountInPercentage);
+    
+    [UIView animateWithDuration:1 animations:^{
+        self.topDrawerContents.view.frame = destination;
+        self.topDragHandle.alpha = 0;
+        self.bottomDragHandle.alpha = 0;
+    }];
+    
+    self.canvasesAreSlidOut = YES;
 }
 
 -(void)slideInCanvases {
     if (self.topDrawerContents.isRefocus) {
-        [self adjustSlide];
         return;
     }
     
-    if ( self.slidePartially == YES ||
-         (self.isFocusModeDim == NO && !CGRectEqualToRect(self.topDrawerContents.view.frame, self.topCanvasFrameBeforeSlidingOut)) ) {
-        
-        [UIView animateWithDuration:1 animations:^{
-            self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;
-            self.topDragHandle.alpha = 1;
-            self.bottomDragHandle.alpha = 1;
-        } completion:^(BOOL finished) {
-            if (finished) {
-                if (self.drawerDragMode != UIViewAnimation) {
-                    if (self.animator == nil) {
-                        [self startPhysicsEngine];
-                    }
-                }
+    [UIView animateWithDuration:1 animations:^{
+        self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;
+        self.topDragHandle.alpha = 1;
+        self.bottomDragHandle.alpha = 1;
+    } completion:^(BOOL finished) {
+        if (finished) {
+            if (self.animator == nil) {
+                [self startPhysicsEngine];
             }
-        }];
-        
-        self.canvasesAreSlidOut = NO;
-    }
-}
-
--(void)adjustSlide {
+        }
+    }];
     
+    self.canvasesAreSlidOut = NO;
 }
 
 @end

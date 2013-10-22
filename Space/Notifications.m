@@ -8,24 +8,16 @@
 
 NSString* kCanvasChangedNotification = @"spaceCanvasChanged";
 
+NSString* kNoteCreatedNotification = @"noteCreated";
+
+NSString* kSaveNoteNotification = @"saveNote";
+NSString* kNoteSavedNotification = @"noteSaved";
+
 NSString* kNoteTrashedNotification = @"noteTrashed";
 NSString* kNoteRecoveredNotification = @"noteRecovered";
 
-NSString* kLoadThreeSectionsLayoutNotification = @"loadThreeSectionsLayout";
-NSString* kLoadTwoSectionsLayoutNotification = @"loadTwoSectionsLayout";
-NSString* kLayoutChangedNotification = @"layoutChanged";
-
-NSString* kNoteCreatedNotification = @"noteCreated";
-NSString* kNoteSavedNotification = @"noteSaved";
-
 NSString* kFocusNoteNotification = @"focusNote";
-NSString* kDismissNoteNotification = @"dismissNote";
-NSString* kSaveNoteNotification = @"saveNote";
-
 NSString* kNoteFocusedNotification = @"noteFocused";
-NSString* kNoteDismissedNotification = @"noteDismissed";
 
-NSString* kChangeFocusModeNotification = @"changeFocusMode";
-NSString* kChangeDragModeNotification = @"changeDragMode";
-NSString* kChangeNoteCircleModeNotification = @"changeNoteCircleMode";
-NSString* kChangeEditorModeNotification = @"changeEditorMode";
+NSString* kDismissNoteNotification = @"dismissNote";
+NSString* kNoteDismissedNotification = @"noteDismissed";

@@ -10,6 +10,7 @@
 
 @protocol DrawerViewControllerDelegate <NSObject>
 
+// The drawer 
 -(void)updateCurrentlyZoomedInNoteViewCenter;
 
 @end

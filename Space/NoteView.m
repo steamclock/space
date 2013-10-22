@@ -7,12 +7,10 @@
 //
 
 #import "NoteView.h"
-#import "Note.h"
 #import "Coordinate.h"
-#import "Database.h"
+#import "HelperMethods.h"
 #import "Constants.h"
-
-const int NOTE_RADIUS = 30;
+#import "Database.h"
 
 @interface NoteView () {
     Note* _note;
@@ -41,72 +39,50 @@ const int NOTE_RADIUS = 30;
 */
 
 -(void)dealloc {
-    [_note removeObserver:self forKeyPath:@"title"];
     [_note removeObserver:self forKeyPath:@"content"];
 }
 
 -(void)commonSetup {
-    int diameter = NOTE_RADIUS * 2;
+    int diameter = Key_NoteRadius * 2;
     
     self.contentMode = UIViewContentModeScaleToFill;
     self.frame = CGRectMake(0, 0, diameter, diameter);
 
     self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, Key_NoteTitleLabelWidth, Key_NoteTitleLabelHeight)];
+    
+    // Force the title label to float above the note circle.
     self.titleLabel.center = CGPointMake(self.center.x, -Key_NoteTitleLabelHeight);
+    self.clipsToBounds = NO;
+    
     self.titleLabel.textAlignment = NSTextAlignmentCenter;
     self.titleLabel.font = [UIFont systemFontOfSize:14];
     
     [self addSubview:self.titleLabel];
-    self.clipsToBounds = NO;
     
-    [self drawCircle];
-}
-
--(void)drawCircle {
-    UIView* circle = [[UIView alloc] initWithFrame:self.frame];
-    circle.backgroundColor = [UIColor clearColor];
-    [self addSubview:circle];
-    
-    self.circleShape = [CAShapeLayer layer];
-    
-    CGRect circleFrame = self.bounds;
-    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:NOTE_RADIUS];
-    
-    self.circleShape.path = circlePath.CGPath;
-    
-    self.circleShape.fillColor = [UIColor clearColor].CGColor;
-    self.circleShape.strokeColor = [UIColor blackColor].CGColor;
-    self.circleShape.lineWidth = 2.0f;
-    
-    self.circleShape.frame = self.bounds;
-    
-    [self.layer addSublayer:self.circleShape];
+    self.circleShape = [HelperMethods drawCircleInView:self];
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
-    if([keyPath isEqualToString:@"title"]) {
-        self.titleLabel.text = self.note.title;
-    } else if ([keyPath isEqualToString:@"content"]) {
-        if ([self.titleLabel.text isEqualToString:@""]) {
-            // NSLog(@"Title is empty");
-            self.titleLabel.text = self.note.content;
-        }
+   if ([keyPath isEqualToString:@"content"]) {
+       
+       // Don't allow more than a certain number of characters when storing and displaying the note title.
+       NSUInteger charCount = [self.note.content length];
+       if (charCount > Key_NoteTitleLabelLength) {
+           charCount = Key_NoteTitleLabelLength;
+       }
+       
+       // Use the first few characters of the content as the title.
+       self.note.title = [self.note.content substringToIndex:charCount];
+       self.titleLabel.text = self.note.title;
     }
 }
 
 -(void)setNote:(Note *)note {
-    [_note removeObserver:self forKeyPath:@"title"];
     [_note removeObserver:self forKeyPath:@"content"];
     
     _note = note;
-    
     self.titleLabel.text = note.title;
-    if ([self.titleLabel.text isEqualToString:@""]) {
-        // NSLog(@"Title is empty");
-        self.titleLabel.text = note.content;
-    }
     
-    [_note addObserver:self forKeyPath:@"title" options:0 context:NULL];
     [_note addObserver:self forKeyPath:@"content" options:0 context:NULL];
 }
 
@@ -114,6 +90,9 @@ const int NOTE_RADIUS = 30;
     return _note;
 }
 
+// We're overriding the default setCenter method, which is constantly being called by the animator when it is animating,
+// in order to add some additional functionality, such as performing an action when the animator has dropped a
+// recently sent-to-trash note view below the bottom of the screen.
 -(void)setCenter:(CGPoint)center {
     [super setCenter:center];
     
@@ -123,6 +102,12 @@ const int NOTE_RADIUS = 30;
     }
 }
 
+// This is called when dragging a note view, or when orientation changes. In both cases, we need to programmatically
+// set new positions, and then update the animator with the new changes. We are not using the default setCenter here
+// because occasionally we need to call setCenter and manually reposition views while the animator is still active.
+// However, if we do that our setCenter calls can conflict with the animator as it could also be attempting to
+// reposition the same view. Therefore, we leave the default setCenter method alone, and do our custom moving here.
+// When we're done, we give the animator the results of our changes.
 -(void)setCenter:(CGPoint)center withReferenceBounds:(CGRect)bounds {
     [super setCenter:center];
     
@@ -131,14 +116,6 @@ const int NOTE_RADIUS = 30;
     
     [self.animator updateItemUsingCurrentState:self];
     [[Database sharedDatabase] save];
-}
-
--(void)setHighlighted:(BOOL)highlighted {
-    if (highlighted) {
-        // [self setBackgroundColor:[UIColor blueColor]];
-    } else {
-        // [self setBackgroundColor:[UIColor clearColor]];
-    }
 }
 
 @end

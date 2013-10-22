@@ -36,7 +36,6 @@
 
 // How far away is the drawer from its fully opened position; used to assist zoom animation in slide focus modes.
 @property (nonatomic) float slideOffset;
-@property (nonatomic) BOOL canvasWillSlide;
 
 // Refocus is the case for an attempt to zoom in another note while one is already zoomed in.
 @property (nonatomic) BOOL isRefocus;
@@ -46,7 +45,7 @@
 @property (strong, nonatomic) UIImageView* topDragHandleView;
 @property (strong, nonatomic) UIImageView* botDragHandleView;
 
--(id)initWithTopLevelView:(UIView*)view;
+-(id)initAsNoteCanvasWithTopLevelView:(UIView*)view;
 -(id)initAsTrashCanvasWithTopLevelView:(UIView*)view;
 
 //set up various almost-constants

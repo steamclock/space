@@ -10,6 +10,10 @@
 
 @interface HelperMethods : NSObject
 
-+(CGColorRef)circleFillColor;
+// Change this method's implmentation to quickly change the background circle colour for the focus view (text editor).
++(CGColorRef)backgroundCircleColour;
+
++(CAShapeLayer*)drawCircleInView:(UIView*)view;
++(CAShapeLayer*)drawFocusCircleInView:(UIView*)view;
 
 @end

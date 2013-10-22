@@ -7,11 +7,54 @@
 //
 
 #import "HelperMethods.h"
+#import "Constants.h"
 
 @implementation HelperMethods
 
-+(CGColorRef)circleFillColor {
++(CGColorRef)backgroundCircleColour {
     return [UIColor colorWithWhite:0.8 alpha:1].CGColor;
+}
+
++(CAShapeLayer*)drawCircleInView:(UIView*)view {
+    UIView* circleView = [[UIView alloc] initWithFrame:view.frame];
+    circleView.backgroundColor = [UIColor clearColor];
+    [view addSubview:circleView];
+    
+    CAShapeLayer* circleShape = [CAShapeLayer layer];
+    
+    CGRect circleFrame = view.bounds;
+    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:Key_NoteRadius];
+    
+    circleShape.path = circlePath.CGPath;
+    circleShape.fillColor = [UIColor clearColor].CGColor;
+    circleShape.strokeColor = [UIColor blackColor].CGColor;
+    circleShape.lineWidth = 2.0f;
+    circleShape.frame = view.bounds;
+    
+    [view.layer addSublayer:circleShape];
+    
+    return circleShape;
+}
+
++(CAShapeLayer*)drawFocusCircleInView:(UIView*)view {
+    UIView* circleView = [[UIView alloc] initWithFrame:view.frame];
+    circleView.backgroundColor = [UIColor clearColor];
+    [view addSubview:circleView];
+    
+    CAShapeLayer* circleShape = [CAShapeLayer layer];
+    
+    CGRect circleFrame = view.bounds;
+    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:Key_FocusSize];
+    
+    circleShape.path = circlePath.CGPath;
+    circleShape.fillColor = [HelperMethods backgroundCircleColour];
+    circleShape.strokeColor = [UIColor blackColor].CGColor;
+    circleShape.lineWidth = 0.0f;
+    circleShape.frame = view.bounds;
+    
+    [view.layer addSublayer:circleShape];
+    
+    return circleShape;
 }
 
 @end
