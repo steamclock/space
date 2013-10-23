@@ -15,6 +15,29 @@
     return [UIColor colorWithWhite:0.8 alpha:1].CGColor;
 }
 
++(UIView*)drawCircleWithFrame:(CGRect)frame {
+    
+    UIView* circle = [[UIView alloc] initWithFrame:frame];
+    circle.backgroundColor = [UIColor clearColor];
+    
+    CAShapeLayer* circleShape = [CAShapeLayer layer];
+    
+    CGRect circleFrame = circle.bounds;
+    UIBezierPath* circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:Key_NoteRadius];
+    
+    circleShape.path = circlePath.CGPath;
+    
+    circleShape.fillColor = [UIColor clearColor].CGColor;
+    circleShape.strokeColor = [UIColor blackColor].CGColor;
+    circleShape.lineWidth = 2.0f;
+    
+    circleShape.frame = circleFrame;
+    
+    [circle.layer addSublayer:circleShape];
+    
+    return circle;
+}
+
 +(CAShapeLayer*)drawCircleInView:(UIView*)view {
     UIView* circleView = [[UIView alloc] initWithFrame:view.frame];
     circleView.backgroundColor = [UIColor clearColor];

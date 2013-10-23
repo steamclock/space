@@ -13,6 +13,7 @@
 // Change this method's implmentation to quickly change the background circle colour for the focus view (text editor).
 +(CGColorRef)backgroundCircleColour;
 
++(UIView*)drawCircleWithFrame:(CGRect)frame;
 +(CAShapeLayer*)drawCircleInView:(UIView*)view;
 +(CAShapeLayer*)drawFocusCircleInView:(UIView*)view;
 

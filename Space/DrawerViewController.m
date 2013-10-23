@@ -325,7 +325,7 @@
 -(void)updateTopCanvasSize {
     self.topDrawerContents.view.frame = CGRectMake(0, 0, self.realScreenSize.width, self.topDrawerHeight);
     [self.topDrawerContents updateNotesForBoundsChange];
-    [self.topDrawerContents setYValuesWithTrashOffset:self.bottomDrawerStart];
+    [self.topDrawerContents setTrashThreshold:self.bottomDrawerStart];
 }
 
 -(void)updateBottomCanvasSize {
@@ -358,8 +358,6 @@
     self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
     // NSLog(@"Drawer current Y in percentage = %f", self.currentDrawerYInPercentage);
     NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
-    
-    [self.delegate updateCurrentlyZoomedInNoteViewCenter];
 }
 
 -(void)animateDrawerPosition:(float)positionY {
@@ -652,9 +650,10 @@
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
     }
     
+    int previousY = self.topDrawerContents.view.frame.origin.y;
+    self.topDrawerContents.previousOffset = previousY;
     CGRect destination = self.topDrawerContents.view.frame;
     destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
-    
     
     // Find how far down the canvas the selected note circle is located at to help determine how far the
     // canvas should slide out.
@@ -675,12 +674,29 @@
     // Stores current amount of slide to help with device rotation.
     self.topDrawerContents.slideOffset = destination.origin.y;
     self.slideAmountInPercentage = [Coordinate normalizeYCoord:destination.origin.y withReferenceBounds:self.topDrawerContents.view.bounds];
-    NSLog(@"Normalized slide amount = %f", self.slideAmountInPercentage);
     
     [UIView animateWithDuration:1 animations:^{
         self.topDrawerContents.view.frame = destination;
         self.topDragHandle.alpha = 0;
         self.bottomDragHandle.alpha = 0;
+    } completion:^(BOOL finished) {
+        if (finished) {
+            // After sliding the canvas up, reposition the zoomed in note view so that it is still at the same location as the focus view.
+            CGRect zoomedInNoteViewFrame = self.topDrawerContents.currentlyZoomedInNoteView.frame;
+            CGFloat offset;
+            if (self.topDrawerContents.hasRefocused) {
+                offset = destination.origin.y - previousY;
+            } else {
+                offset = destination.origin.y;
+            }
+            
+            self.topDrawerContents.currentlyZoomedInNoteView.frame = CGRectMake(zoomedInNoteViewFrame.origin.x,
+                                                                                zoomedInNoteViewFrame.origin.y - offset,
+                                                                                zoomedInNoteViewFrame.size.width,
+                                                                                zoomedInNoteViewFrame.size.height);
+            
+            self.topDrawerContents.originalZoomedInNoteViewFrame = self.topDrawerContents.currentlyZoomedInNoteView.frame;
+        }
     }];
     
     self.canvasesAreSlidOut = YES;
@@ -690,6 +706,8 @@
     if (self.topDrawerContents.isRefocus) {
         return;
     }
+    
+    self.topDrawerContents.hasRefocused = NO;
     
     [UIView animateWithDuration:1 animations:^{
         self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;

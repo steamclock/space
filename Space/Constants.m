@@ -24,7 +24,7 @@ NSString* const Key_RecoveredNote = @"recoveredNote";
 NSString* const Key_TopBoundary = @"topBoundary";
 NSString* const Key_BotBoundary = @"botBoundary";
 
-int const Key_LandscapeFocusViewAdjustment = 120;
+int const Key_LandscapeFocusViewAdjustment = 140;
 int const Key_PortraitFocusViewAdjustment = 100;
 
 int const Key_NoteRadius = 30;

@@ -11,7 +11,6 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "DrawerViewControllerDelegate.h"
 #import "CanvasViewController.h"
 
 @interface DrawerViewController : UIViewController <UIDynamicAnimatorDelegate, UICollisionBehaviorDelegate>
