@@ -115,13 +115,7 @@
 -(void)focusOn:(NoteView *)noteView {
     self.noteView = noteView;
     self.note = noteView.note;
-    
     self.contentField.text = self.note.content;
-    
-    if ([self.contentField.text length] <= 0) {
-        self.contentField.textColor = [UIColor lightGrayColor];
-        self.contentField.text = @"Type your note...";
-    }
     
     [self.contentField becomeFirstResponder];
 }
@@ -142,8 +136,13 @@
 
 -(void)textViewDidBeginEditing:(UITextView *)textView {
     if (textView == self.contentField) {
-        if ([self.contentField.text isEqualToString:@"Type your note..."]) {
+        if ([self.contentField.text length] == 0) {
+            self.contentField.textColor = [UIColor lightGrayColor];
+            self.contentField.text = @"Type your note...";
             self.isNewNote = YES;
+        } else {
+            self.contentField.textColor = [UIColor blackColor];
+            self.isNewNote = NO;
         }
     }
 }
