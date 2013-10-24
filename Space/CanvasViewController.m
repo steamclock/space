@@ -140,7 +140,7 @@
         
         UIImage* handlebarDownImage = [UIImage imageNamed:Img_HandlebarDown];
         self.dragHandleView = [[UIImageView alloc] initWithImage:handlebarDownImage];
-        self.dragHandleView.center = CGPointMake(self.view.center.x, self.view.frame.size.height + 50);
+        self.dragHandleView.center = CGPointMake(self.view.center.x, self.view.frame.size.height + 40);
         
         [self.view addSubview:self.dragHandleView];
     }
@@ -749,7 +749,7 @@ static BOOL dragStarted = NO;
     if (self.isTrashMode) {
         self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
     } else {
-        self.dragHandleView.center = CGPointMake(self.view.center.x, self.view.frame.size.height + 50);
+        self.dragHandleView.center = CGPointMake(self.view.center.x, self.view.frame.size.height + 40);
     }
     
     if (self.isCurrentlyZoomedIn) {

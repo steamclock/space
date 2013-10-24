@@ -200,7 +200,7 @@
 }
 
 -(void)physicsForHandleDraggedDownwards {
-    int gravityTriggerThreshold = -550;
+    int gravityTriggerThreshold = -650;
     BOOL pastGravityThreshold;
     pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
     
@@ -214,7 +214,7 @@
 }
 
 -(void)physicsForHandleDraggedUpwards {
-    int gravityTriggerThreshold = -200;
+    int gravityTriggerThreshold = -50;
     BOOL pastGravityThreshold;
     pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
     
@@ -280,13 +280,13 @@
     int viewHeight = self.bottomDrawerStart + self.bottomDrawerHeight;
     self.view.frame = CGRectMake(0, self.restY, self.realScreenSize.width, viewHeight);
     
-    int dragHeight = 50;
-    int dragWidth = 600;
+    int dragHeight = 75;
+    int dragWidth = self.realScreenSize.width;
+
     float dragX = (self.view.bounds.size.width - dragWidth) / 2;
     float dragY = self.bottomDrawerStart - dragHeight - 25;
 
     self.dragHandle.frame = CGRectMake(dragX, dragY, dragWidth, dragHeight);
-    self.dragHandle.layer.cornerRadius = 15;
 }
 
 -(void)updateCanvasSizes {
@@ -518,6 +518,12 @@
                 [self physicsForHandleDraggedUpwards];
         }
         
+        // Add throwable feel to the drawer
+        CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
+        verticalVelocity = CGPointMake(0, verticalVelocity.y);
+        
+        [self.drawerBehavior addLinearVelocity:verticalVelocity forItem:self.view];
+        
         self.fromDragHandle = NO;
         
     } else {
@@ -625,7 +631,7 @@
     self.slideAmountInPercentage = [Coordinate normalizeYCoord:destination.origin.y withReferenceBounds:self.topDrawerContents.view.bounds];
     
     // Slide animation blocks.
-    [UIView animateWithDuration:1 animations:^{
+    [UIView animateWithDuration:0.75 animations:^{
         self.topDrawerContents.view.frame = destination;
     } completion:^(BOOL finished) {
         if (finished) {
@@ -660,7 +666,7 @@
     self.topDrawerContents.hasRefocused = NO;
     
     // Restore canvas position and the animator.
-    [UIView animateWithDuration:1 animations:^{
+    [UIView animateWithDuration:0.75 animations:^{
         self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;
     } completion:^(BOOL finished) {
         if (finished) {
