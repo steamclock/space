@@ -292,7 +292,7 @@ static BOOL dragStarted = NO;
 }
 
 -(void)addViewForNote:(Note*)note {
-    NoteView* noteView = [[NoteView alloc] init];
+    NoteView* noteView = [[NoteView alloc] initWithImage:[UIImage imageNamed:@"circle"]];
     noteView.animator = self.animator;
     
     // Retrieve the actual center using the stored relative position.
@@ -593,7 +593,9 @@ static BOOL dragStarted = NO;
         
         // Zoom in animation blocks.
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
-            [noteView setTransform:CGAffineTransformMakeScale(SCALE_FACTOR, SCALE_FACTOR)];
+            noteView.image = [noteView.image resizableImageWithCapInsets:UIEdgeInsetsMake(30, 30, 30, 30) resizingMode:UIImageResizingModeStretch];
+            noteView.frame = [self.focus.view convertRect:self.focus.view.bounds toView:self.view];
+            
             CGPoint centerOfScreen = [self findCenterOfScreen];
             
             if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
@@ -664,6 +666,7 @@ static BOOL dragStarted = NO;
                 [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
                 noteView.circleShape.lineWidth = 2.0;
                 noteView.circleShape.fillColor = [UIColor clearColor].CGColor;
+                noteView.circleShape.path = [UIBezierPath bezierPathWithRoundedRect:noteView.bounds cornerRadius:Key_NoteRadius].CGPath;
             } [CATransaction commit];
             
         } completion:^(BOOL finished) {

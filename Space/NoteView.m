@@ -28,7 +28,6 @@
     return self;
 }
 
-/*
 -(id)initWithImage:(UIImage *)image {
     self = [super initWithImage:image];
     if (self) {
@@ -36,7 +35,6 @@
     }
     return self;
 }
-*/
 
 -(void)dealloc {
     [_note removeObserver:self forKeyPath:@"content"];
@@ -59,7 +57,7 @@
     
     [self addSubview:self.titleLabel];
     
-    self.circleShape = [HelperMethods drawCircleInView:self];
+    // self.circleShape = [HelperMethods drawCircleInView:self];
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {

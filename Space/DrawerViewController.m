@@ -17,38 +17,35 @@
     CanvasViewController* _bottomDrawerContents;
 }
 
-@property (nonatomic) UIView* topDragHandle;
-@property (nonatomic) UIView* bottomDragHandle;
+@property (nonatomic) UIView* dragHandle;
+
+// For dragging the drawer.
 @property (nonatomic) CGPoint dragStart;
 @property (nonatomic) float initialFrameY;
-@property (nonatomic) BOOL haveLayedOut;
-
 @property (nonatomic) BOOL allowDrag;
 @property (nonatomic) float allowedDragStartY;
 @property (nonatomic) BOOL allowedDragStartYAssigned;
-
-@property (nonatomic) BOOL fromTopDragHandle;
-@property (nonatomic) BOOL fromBotDragHandle;
-
+@property (nonatomic) BOOL fromDragHandle;
 @property (nonatomic) float newPosition;
 
+// For determining the boundaries of the drawer.
 @property (nonatomic) CGSize realScreenSize;
-
 @property (nonatomic) float maxY;
 @property (nonatomic) float restY;
 @property (nonatomic) float minY;
 
+// For determining the boundaries of the top and bottom canvases within the drawer.
 @property (nonatomic) float topDrawerHeight;
 @property (nonatomic) float bottomDrawerHeight;
 @property (nonatomic) float bottomDrawerStart;
 
+// For sliding the note canvas.
+@property (nonatomic) CGRect topCanvasFrameBeforeSlidingOut;
 @property (nonatomic) BOOL canvasesAreSlidOut;
 @property (nonatomic) float slideAmountInPercentage;
-
 @property (nonatomic) float currentDrawerYInPercentage;
 
-@property (nonatomic) CGRect topCanvasFrameBeforeSlidingOut;
-
+// For UIDynamic gravity behaviour.
 @property (strong, nonatomic) UIDynamicAnimator* animator;
 @property (strong, nonatomic) UIDynamicItemBehavior* drawerBehavior;
 @property (strong, nonatomic) UICollisionBehavior* collision;
@@ -72,16 +69,10 @@
     self.view.backgroundColor = [UIColor clearColor];
     self.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     
-    self.topDragHandle = [[UIView alloc] init];
-    self.bottomDragHandle = [[UIView alloc] init];
-
-    self.topDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
-    self.topDragHandle.backgroundColor = [UIColor clearColor];
-    [self.view addSubview:self.topDragHandle];
-
-    self.bottomDragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
-    self.bottomDragHandle.backgroundColor = [UIColor clearColor];
-    [self.view addSubview:self.bottomDragHandle];
+    self.dragHandle = [[UIView alloc] init];
+    self.dragHandle.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin;
+    self.dragHandle.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.dragHandle];
     
     self.isDownwardGravity = YES;
 }
@@ -106,22 +97,11 @@
     [self.bottomDrawerContents.view addGestureRecognizer:panGestureRecognizer];
     
     panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
-    [self.topDragHandle addGestureRecognizer:panGestureRecognizer];
-    
-    panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(dragHandleMoved:)];
-    [self.bottomDragHandle addGestureRecognizer:panGestureRecognizer];
+    [self.dragHandle addGestureRecognizer:panGestureRecognizer];
 }
 
 -(void)viewWillLayoutSubviews {
     [self drawCanvasLayout];
-}
-
-// Allows dismissing a zoomed in note when the empty space outside the top and bottom canvases is tapped.
--(void)tapOutsideOfCanvases:(UITapGestureRecognizer*)recognizer {
-    if(self.topDrawerContents.isCurrentlyZoomedIn && self.topDrawerContents.isRunningZoomAnimation == NO) {
-        self.topDrawerContents.isRefocus = NO;
-        [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
-    }
 }
 
 #pragma mark - Setup Top and Bottom Canvases
@@ -203,6 +183,7 @@
 }
 
 -(void)dynamicAnimatorDidPause:(UIDynamicAnimator *)animator {
+    // Once gravity is done its work on the drawer, check how far down or up (relatively) the drawer is currently at.
     self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
 }
 
@@ -218,7 +199,7 @@
     self.drawerBehavior.resistance = 2.5;
 }
 
--(void)physicsForBottomHandleDraggedDownwards {
+-(void)physicsForHandleDraggedDownwards {
     int gravityTriggerThreshold = -550;
     BOOL pastGravityThreshold;
     pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
@@ -232,7 +213,7 @@
     }
 }
 
--(void)physicsForBottomHandleDraggedUpwards {
+-(void)physicsForHandleDraggedUpwards {
     int gravityTriggerThreshold = -200;
     BOOL pastGravityThreshold;
     pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
@@ -249,12 +230,11 @@
 #pragma mark - Render Layout
 
 -(void)drawCanvasLayout {
-    
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     CGSize screenSize = [[UIScreen mainScreen] bounds].size;
     
     if (orientation == UIInterfaceOrientationLandscapeRight || orientation == UIInterfaceOrientationLandscapeLeft){
-        // Fix the iPad faulty screen size numbers due to a system bug in changing orientations
+        // Fix the iPad faulty screen size numbers due to a system bug in changing orientations.
         float tmp = screenSize.height;
         screenSize.height = screenSize.width;
         screenSize.width = tmp;
@@ -272,49 +252,41 @@
 
 -(void)updateExtentsForScreenSize:(CGSize)screenSize {
     // Store the actual screen size so we can reference it later to fix an iPad system bug where it'll report the wrong
-    // size after changes in orientation
+    // size after changes in orientation.
     self.realScreenSize = screenSize;
 
-    // The empty space between the top canvas and the bottom of the screen at resting position
+    // The empty space between the top canvas and the bottom of the screen at resting position.
     int bottomSpace = 100;
     
-    // Alternative layout requires a different height for the top canvas, or else notes can get fly out of sight
+    // Alternative layout requires a different height for the top canvas, or else notes can get fly out of sight.
     self.topDrawerHeight = screenSize.height - bottomSpace - Key_NavBarHeight;
     self.bottomDrawerHeight = screenSize.height - 224;
 
-    // When the drawer is pulled down all the way with the top canvas fully revealed, it will be resting at (0, 0)
+    // When the drawer is pulled down all the way with the top canvas fully revealed, it will be resting at (0, 0).
     self.maxY = Key_NavBarHeight;
     
-    // Resting position is with the canvas pulled all the way down
+    // Resting position is with the canvas pulled all the way down.
     self.restY = self.maxY;
     
     // When the drawer reveals the trash canvas, it is pulled up and outside the screen even more, and this represents
-    // how far the drawer can be pulled up
-    // Reupdate minY using new restY value so we can pull up the trash canvas to the proper height
+    // how far the drawer can be pulled up.
     self.minY = self.restY - self.bottomDrawerHeight;
     
-    // Bottom drawer starts right at the bottom of the screen in alternative layout
+    // Bottom drawer starts right at the bottom of the screen.
     self.bottomDrawerStart = screenSize.height - Key_NavBarHeight;
 }
 
 -(void)updateViewSizes {
-    
-    // Frames for original layout
     int viewHeight = self.bottomDrawerStart + self.bottomDrawerHeight;
     self.view.frame = CGRectMake(0, self.restY, self.realScreenSize.width, viewHeight);
     
     int dragHeight = 50;
     int dragWidth = 600;
-    float dragTop = self.topDrawerHeight + 25;
-    float dragLeft = (self.view.bounds.size.width - dragWidth) / 2;
-    float dragBottom = self.bottomDrawerStart - dragHeight - 25;
+    float dragX = (self.view.bounds.size.width - dragWidth) / 2;
+    float dragY = self.bottomDrawerStart - dragHeight - 25;
 
-    self.topDragHandle.frame = CGRectMake(dragLeft, dragTop, dragWidth, dragHeight);
-    self.topDragHandle.layer.cornerRadius = 15;
-    self.bottomDragHandle.frame = CGRectMake(dragLeft, dragBottom, dragWidth, dragHeight);
-    self.bottomDragHandle.layer.cornerRadius = 15;
-    
-    self.topDragHandle.frame = CGRectZero;
+    self.dragHandle.frame = CGRectMake(dragX, dragY, dragWidth, dragHeight);
+    self.dragHandle.layer.cornerRadius = 15;
 }
 
 -(void)updateCanvasSizes {
@@ -333,16 +305,9 @@
     [self.bottomDrawerContents updateNotesForBoundsChange];
 }
 
--(void)viewDidLayoutSubviews {
-    [super viewDidLayoutSubviews];
-    
-    if(!self.haveLayedOut) {
-        self.haveLayedOut = YES;
-    }
-}
+#pragma mark - Interact with Drawer
 
-#pragma mark - Drag Drawer
-
+// Called during a drag.
 -(void)setDrawerPosition:(float)positionY {
     CGRect frame = self.view.frame;
     frame.origin.y = positionY;
@@ -357,21 +322,12 @@
     
     self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
     // NSLog(@"Drawer current Y in percentage = %f", self.currentDrawerYInPercentage);
-    NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
 }
 
--(void)animateDrawerPosition:(float)positionY {
-    CGRect frame = self.view.frame;
-    frame.origin.y = positionY;
-
-    [UIView animateWithDuration:0.5 animations:^{
-        self.view.frame = frame;
-    }];
-}
-
+// Handles dragging of the drawer if the drag handle is directly touched initially.
 -(void)dragHandleMoved:(UIPanGestureRecognizer*)recognizer {
     CGPoint drag = [recognizer locationInView:self.view.superview];
-    BOOL fromTopHandle = [recognizer.view isEqual:self.topDragHandle];
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
         [self.animator removeBehavior:self.gravity];
@@ -389,10 +345,10 @@
         
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
-        if (!fromTopHandle && velocityDownwards) { // Case for dragging the canvas downward.
-            [self physicsForBottomHandleDraggedDownwards];
-        } else if (!fromTopHandle && !velocityDownwards) { // Case for dragging canvas upward.
-            [self physicsForBottomHandleDraggedUpwards];
+        if (velocityDownwards) { // Case for dragging the canvas downward.
+            [self physicsForHandleDraggedDownwards];
+        } else if (!velocityDownwards) { // Case for dragging canvas upward.
+            [self physicsForHandleDraggedUpwards];
         }
         
         // Add throwable feel to the drawer
@@ -404,7 +360,7 @@
     } else { // If we are still dragging, continue updating the drawer's position.
         
         // Don't allow the drawer to be dragged further down when it's already fully revealed.
-        if (!fromTopHandle && self.newPosition > self.restY) {
+        if (self.newPosition > self.restY) {
             self.newPosition = self.restY;
         }
         
@@ -423,9 +379,9 @@
     UIView* targetView;
     
     if ([recognizer.view isEqual:_topDrawerContents.view]) {
-            targetView = self.bottomDragHandle;
+        targetView = self.dragHandle;
     } else if ([recognizer.view isEqual:_bottomDrawerContents.view]) {
-        targetView = self.bottomDragHandle;
+        targetView = self.dragHandle;
     } else {
         targetView = nil;
     }
@@ -466,25 +422,25 @@
         if (fromTopDrawer && velocityDownwards) {
             
             if (self.allowDrag) {
-                [self physicsForBottomHandleDraggedDownwards];
+                [self physicsForHandleDraggedDownwards];
             }
             
         } else if (fromTopDrawer && !velocityDownwards) {
 
             if (self.allowDrag) {
-                [self physicsForBottomHandleDraggedUpwards];
+                [self physicsForHandleDraggedUpwards];
             }
 
         } else if (!fromTopDrawer && velocityDownwards) {
             
             if (self.allowDrag) {
-                [self physicsForBottomHandleDraggedDownwards];
+                [self physicsForHandleDraggedDownwards];
             }
             
         } else if (!fromTopDrawer && !velocityDownwards) {
             
             if (self.allowDrag) {
-                [self physicsForBottomHandleDraggedUpwards];
+                [self physicsForHandleDraggedUpwards];
             }
         }
         
@@ -499,12 +455,11 @@
         self.allowDrag = NO;
         self.allowedDragStartYAssigned = NO;
         
-        self.fromTopDragHandle = NO;
-        self.fromBotDragHandle = NO;
+        self.fromDragHandle = NO;
         
     } else {
         
-        NSLog(@"New position = %f", newPosition);
+        // NSLog(@"New position = %f", newPosition);
         [self setDrawerPosition:newPosition];
         
         [self.animator updateItemUsingCurrentState:self.view];
@@ -518,20 +473,8 @@
     
     UIView* hitView = [self.view hitTest:touchPointRelativeToDrawer withEvent:nil];
     
-    if (hitView == self.topDragHandle) {
-        
-        self.fromTopDragHandle = YES;
-        
-        if (self.allowedDragStartYAssigned == NO) {
-            self.allowedDragStartY = touchPointRelativeToWindow.y;
-            self.allowedDragStartYAssigned = YES;
-        }
-        
-        self.allowDrag = YES;
-        
-    } else if (hitView == self.bottomDragHandle) {
-        
-        self.fromBotDragHandle = YES;
+    if (hitView == self.dragHandle) {
+        self.fromDragHandle = YES;
         
         if (self.allowedDragStartYAssigned == NO) {
             self.allowedDragStartY = touchPointRelativeToWindow.y;
@@ -539,7 +482,6 @@
         }
         
         self.allowDrag = YES;
-        
     }
     
     float newPosition;
@@ -567,21 +509,20 @@
         
         BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
-        if (self.fromBotDragHandle && velocityDownwards) {
+        if (self.fromDragHandle && velocityDownwards) {
             
-                [self physicsForBottomHandleDraggedDownwards];
+                [self physicsForHandleDraggedDownwards];
             
-        } else if (self.fromBotDragHandle && !velocityDownwards) {
+        } else if (self.fromDragHandle && !velocityDownwards) {
             
-                [self physicsForBottomHandleDraggedUpwards];
+                [self physicsForHandleDraggedUpwards];
         }
         
-        self.fromTopDragHandle = NO;
-        self.fromBotDragHandle = NO;
+        self.fromDragHandle = NO;
         
     } else {
         
-        if (self.fromBotDragHandle && newPosition > self.restY) {
+        if (self.fromDragHandle && newPosition > self.restY) {
             self.newPosition = self.restY;
             return;
         }
@@ -589,6 +530,14 @@
         [self setDrawerPosition:newPosition];
         
         [self.animator updateItemUsingCurrentState:self.view];
+    }
+}
+
+// Allows dismissing a zoomed in note when the empty space outside the top and bottom canvases is tapped.
+-(void)tapOutsideOfCanvases:(UITapGestureRecognizer*)recognizer {
+    if(self.topDrawerContents.isCurrentlyZoomedIn && self.topDrawerContents.isRunningZoomAnimation == NO) {
+        self.topDrawerContents.isRefocus = NO;
+        [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
     }
 }
 
@@ -609,7 +558,6 @@
     // Calculates the drawer's current y coordinate relatively, and reposition the drawer during device rotation animation
     // in order to persist the drawer's current scroll.
     CGFloat newY = self.currentDrawerYInPercentage * self.view.frame.size.height;
-    // NSLog(@"New Y = %f", newY);
     
     // Occasionally, the calculated offset can be less than minY, which would cause the canvas to reposition incorrectly,
     // so we readjust newY by the amount it would go past minY.
@@ -621,9 +569,7 @@
         // NSLog(@"Slide amount = %f", self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage);
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
         
-        // The focus view shifts up or down using Key_Landscape or Key_Portrait adjustments when device orientation changes, so
-        // in addition to reposition the actual note view frame that's underneath the focus view using the new slide offset, we
-        // also need to take the focus view's shifting values into consideration.
+        // Calculates slide offset for refocusing, so the note circle can zoom in to the center of the screen even after the canvas has already slid up.
         if (toInterfaceOrientation == UIInterfaceOrientationLandscapeLeft || toInterfaceOrientation == UIInterfaceOrientationLandscapeRight) {
             self.topDrawerContents.slideOffset =
             self.topDrawerContents.view.frame.size.height * self.slideAmountInPercentage + (Key_LandscapeFocusViewAdjustment - Key_PortraitFocusViewAdjustment);
@@ -646,12 +592,17 @@
     // UIDynamic overwrites manual frame positioning, so it needs to be turned off first.
     [self stopPhysicsEngine];
     
+    // Stores the frame before sliding out so we can slide back to it.
     if (self.topDrawerContents.isRefocus == NO) {
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
     }
     
+    // Stores the current y coordinate before adjusting a slide for refocusing, so we can calculate the difference
+    // between the initial slide offset and the new refocus slide offset.
     int previousY = self.topDrawerContents.view.frame.origin.y;
     self.topDrawerContents.previousOffset = previousY;
+    
+    // Calculate the destination for the slide.
     CGRect destination = self.topDrawerContents.view.frame;
     destination.origin.y = -(self.view.frame.origin.y + self.realScreenSize.height);
     
@@ -661,11 +612,9 @@
     
     // Give some room between the bottom of the nav bar and the note circle that the canvas is sliding up to.
     destination.origin.y = -(targetedNoteY - Key_NoteRadius * 2);
-    
     if (destination.origin.y > 0) {
         destination.origin.y = self.topDrawerContents.view.frame.origin.y;
     }
-    
     // Handle cases where the drawer is not completely drawn out or closed.
     if (self.view.frame.origin.y < Key_NavBarHeight) {
         destination.origin.y += Key_NavBarHeight - self.view.frame.origin.y;
@@ -675,10 +624,9 @@
     self.topDrawerContents.slideOffset = destination.origin.y;
     self.slideAmountInPercentage = [Coordinate normalizeYCoord:destination.origin.y withReferenceBounds:self.topDrawerContents.view.bounds];
     
+    // Slide animation blocks.
     [UIView animateWithDuration:1 animations:^{
         self.topDrawerContents.view.frame = destination;
-        self.topDragHandle.alpha = 0;
-        self.bottomDragHandle.alpha = 0;
     } completion:^(BOOL finished) {
         if (finished) {
             // After sliding the canvas up, reposition the zoomed in note view so that it is still at the same location as the focus view.
@@ -703,16 +651,17 @@
 }
 
 -(void)slideInCanvases {
+    // Don't slide back the canvas if we're refocusing.
     if (self.topDrawerContents.isRefocus) {
         return;
     }
     
+    // Note is dismissed, reset the refocus flag.
     self.topDrawerContents.hasRefocused = NO;
     
+    // Restore canvas position and the animator.
     [UIView animateWithDuration:1 animations:^{
         self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;
-        self.topDragHandle.alpha = 1;
-        self.bottomDragHandle.alpha = 1;
     } completion:^(BOOL finished) {
         if (finished) {
             if (self.animator == nil) {

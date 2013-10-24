@@ -29,7 +29,6 @@
     DrawerViewController* drawer = [[DrawerViewController alloc] init];
     drawer.bottomDrawerContents = trashCanvas;
     drawer.topDrawerContents = noteCanvas;
-    drawer.delegate = noteCanvas;
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
     [container addChildViewController:drawer];

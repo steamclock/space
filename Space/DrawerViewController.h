@@ -18,6 +18,4 @@
 @property (nonatomic) CanvasViewController* topDrawerContents;
 @property (nonatomic) CanvasViewController* bottomDrawerContents;
 
-@property (weak, nonatomic) CanvasViewController* delegate;
-
 @end
