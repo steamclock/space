@@ -21,6 +21,8 @@
 @property (nonatomic) Note* note;
 @property (nonatomic) NoteView* noteView;
 
+@property (nonatomic) BOOL isNewNote;
+
 // The subview that will only detect touches within the zoomed in note view. This allows different behaviours for
 // tapping inside or outside the zoomed in note view.
 @property (nonatomic) UIView* focus;
@@ -59,6 +61,7 @@
                                                                            withReferenceBounds:self.focus.bounds]];
     
     self.contentField.backgroundColor = [UIColor whiteColor];
+    self.contentField.delegate = self;
     
     [self.view addSubview:self.focus];
     [self.focus addSubview:self.contentField];
@@ -114,7 +117,45 @@
     self.note = noteView.note;
     
     self.contentField.text = self.note.content;
+    
+    if ([self.contentField.text length] <= 0) {
+        self.contentField.textColor = [UIColor lightGrayColor];
+        self.contentField.text = @"Type your note...";
+    }
+    
     [self.contentField becomeFirstResponder];
+}
+
+#pragma mark - TextView Delegate Methods
+
+-(BOOL)textView:(UITextView *)textView shouldChangeTextInRange:(NSRange)range replacementText:(NSString *)text {
+    if (textView == self.contentField) {
+        if (self.isNewNote) {
+            self.contentField.textColor = [UIColor blackColor];
+            self.contentField.text = [text substringToIndex:0];
+            self.isNewNote = NO;
+        }
+    }
+    
+    return YES;
+}
+
+-(void)textViewDidBeginEditing:(UITextView *)textView {
+    if (textView == self.contentField) {
+        if ([self.contentField.text isEqualToString:@"Type your note..."]) {
+            self.isNewNote = YES;
+        }
+    }
+}
+
+-(BOOL)textViewShouldEndEditing:(UITextView *)textView {
+    if (textView == self.contentField) {
+        if ([self.contentField.text isEqualToString:@"Type your note..."]) {
+            self.contentField.text = @"";
+        }
+    }
+    
+    return YES;
 }
 
 @end

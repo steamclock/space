@@ -11,7 +11,7 @@
 #import <UIKit/UIKit.h>
 #import "NoteView.h"
 
-@interface FocusViewController : UIViewController
+@interface FocusViewController : UIViewController <UITextViewDelegate>
 
 // Called to pull the content from the selected note circle and display them in the editor.
 -(void)focusOn:(NoteView*)noteView;

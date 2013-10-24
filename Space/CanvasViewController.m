@@ -95,7 +95,7 @@
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChanged:) name:kCanvasChangedNotification object:nil];
     
-    self.zoomAnimationDuration = 0.5;
+    self.zoomAnimationDuration = 0.25;
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -361,8 +361,7 @@ static BOOL dragStarted = NO;
     if (self.newlyCreatedNoteView != nil) {
         self.currentlyZoomedInNoteView = self.newlyCreatedNoteView;
         self.currentlyZoomedInNoteView.originalCircleFrame = self.newlyCreatedNoteView.frame;
-        // Slight delay is required to wait for the animator to pause.
-        [self performSelector:@selector(zoomNote:) withObject:self.newlyCreatedNoteView afterDelay:1.0];
+        [self zoomNote:self.newlyCreatedNoteView];
     }
 }
 
