@@ -27,15 +27,17 @@ NSString* const Key_BotBoundary = @"botBoundary";
 int const Key_LandscapeFocusViewAdjustment = 140;
 int const Key_PortraitFocusViewAdjustment = 100;
 
+int const Key_BorderWidth = 2;
 int const Key_NoteRadius = 30;
-int const Key_FocusSize = 480;
+int const Key_FocusWidth = 400;
+int const Key_FocusHeight = 300;
 
 int const Key_NoteTitleLabelWidth = 120;
 int const Key_NoteTitleLabelHeight = 20;
 
 int const Key_NoteTitleLabelLength = 15;
 
-int const Key_NoteContentFieldWidth = 300;
+int const Key_NoteContentFieldWidth = 380;
 int const Key_NoteContentFieldHeight = 280;
 
 NSString* const Img_HandlebarDown = @"handlebar-down";

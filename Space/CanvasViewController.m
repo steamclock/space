@@ -11,7 +11,6 @@
 #import "Note.h"
 #import "QBPopupMenu.h"
 #import "Coordinate.h"
-#import "HelperMethods.h"
 #import "Notifications.h"
 #import "Constants.h"
 #import "Database.h"
@@ -588,13 +587,16 @@ static BOOL dragStarted = NO;
         // Create a temporary circle view that shows the zoomed in note's original location.
         [self createOriginalNoteCircleIndicator];
         
-        // Fade out all other note views.
-        [self fadeNoteView];
+        // Dim all note views.
+        [self dimNoteViews];
         
         // Zoom in animation blocks.
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
             noteView.image = [noteView.image resizableImageWithCapInsets:UIEdgeInsetsMake(30, 30, 30, 30) resizingMode:UIImageResizingModeStretch];
             noteView.frame = [self.focus.view convertRect:self.focus.view.bounds toView:self.view];
+            noteView.layer.cornerRadius = Key_NoteRadius;
+            noteView.layer.backgroundColor = [UIColor whiteColor].CGColor;
+            noteView.layer.masksToBounds = YES;
             
             CGPoint centerOfScreen = [self findCenterOfScreen];
             
@@ -614,16 +616,10 @@ static BOOL dragStarted = NO;
                 self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
             }
             
-            [CATransaction begin]; {
-                [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
-                noteView.circleShape.lineWidth = 0;
-                noteView.circleShape.fillColor = [HelperMethods backgroundCircleColour];
-            } [CATransaction commit];
-            
         } completion:^(BOOL finished) {
             // Show editor.
             [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
-                self.focus.view.alpha = 1.0;
+                self.focus.view.alpha = 1;
                 [self.focus focusOn:noteView];
                 
                 // Show original note circle location indicator.
@@ -653,26 +649,21 @@ static BOOL dragStarted = NO;
         [[NSNotificationCenter defaultCenter] postNotificationName:kSaveNoteNotification object:self];
         self.focus.view.alpha = 0;
         
-        // Fade in all note views.
-        [self fadeNoteView];
+        // Undim all note views.
+        [self undimNoteViews];
     
         // Zoom out animation blocks.
         [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
-            [noteView setTransform:CGAffineTransformMakeScale(1.0, 1.0)];
             
             noteView.frame = noteView.originalCircleFrame;
-            
-            [CATransaction begin]; {
-                [CATransaction setValue:[NSNumber numberWithFloat:self.zoomAnimationDuration] forKey:kCATransactionAnimationDuration];
-                noteView.circleShape.lineWidth = 2.0;
-                noteView.circleShape.fillColor = [UIColor clearColor].CGColor;
-                noteView.circleShape.path = [UIBezierPath bezierPathWithRoundedRect:noteView.bounds cornerRadius:Key_NoteRadius].CGPath;
-            } [CATransaction commit];
+            noteView.layer.backgroundColor = [UIColor clearColor].CGColor;
+            noteView.layer.masksToBounds = NO;
             
         } completion:^(BOOL finished) {
             
             // Reset the zPosition back to default so it can be overlapped by other circles that are zooming in
             noteView.layer.zPosition = 0;
+            noteView.layer.cornerRadius = 0;
             
             [self.collision addItem:noteView];
             [self.dynamicProperties addItem:noteView];
@@ -710,7 +701,8 @@ static BOOL dragStarted = NO;
 }
 
 -(void)createOriginalNoteCircleIndicator {
-    self.originalNoteCircleIndicator = [HelperMethods drawCircleWithFrame:self.currentlyZoomedInNoteView.originalCircleFrame];
+    self.originalNoteCircleIndicator = [[UIImageView alloc] initWithFrame:self.currentlyZoomedInNoteView.originalCircleFrame];
+    self.originalNoteCircleIndicator.image = [UIImage imageNamed:@"circle"];
     UILabel* titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, Key_NoteTitleLabelWidth, Key_NoteTitleLabelHeight)];
     titleLabel.center = CGPointMake(self.originalNoteCircleIndicator.frame.size.width/2.0, -Key_NoteTitleLabelHeight);
     titleLabel.textAlignment = NSTextAlignmentCenter;
@@ -721,17 +713,25 @@ static BOOL dragStarted = NO;
     [self.view addSubview:self.originalNoteCircleIndicator];
 }
 
--(void)fadeNoteView {
+-(void)dimNoteViews {
     for (UIView* view in self.view.subviews) {
         if ([view isKindOfClass:[NoteView class]]) {
             NoteView* noteView = (NoteView*)view;
-            
-            if (noteView.circleShape.strokeColor != [UIColor lightGrayColor].CGColor) {
-                noteView.circleShape.strokeColor = [UIColor lightGrayColor].CGColor;
+            if (noteView != self.currentlyZoomedInNoteView) {
                 noteView.titleLabel.textColor = [UIColor lightGrayColor];
-            } else {
-                noteView.circleShape.strokeColor = [UIColor blackColor].CGColor;
+                noteView.image = [UIImage imageNamed:@"circle-grey"];
+            }
+        }
+    }
+}
+
+-(void)undimNoteViews {
+    for (UIView* view in self.view.subviews) {
+        if ([view isKindOfClass:[NoteView class]]) {
+            NoteView* noteView = (NoteView*)view;
+            if (noteView != self.currentlyZoomedInNoteView) {
                 noteView.titleLabel.textColor = [UIColor blackColor];
+                noteView.image = [UIImage imageNamed:@"circle"];
             }
         }
     }

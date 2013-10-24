@@ -30,11 +30,13 @@ extern NSString* const Key_BotBoundary;
 extern int const Key_LandscapeFocusViewAdjustment;
 extern int const Key_PortraitFocusViewAdjustment;
 
+// Border width for the note circles, both zoomed in and zoomed out.
+extern int const Key_BorderWidth;
 // The radius for the note circles.
 extern int const Key_NoteRadius;
-
 // The size for the focus view.
-extern int const Key_FocusSize;
+extern int const Key_FocusWidth;
+extern int const Key_FocusHeight;
 
 // The label above the note circles.
 extern int const Key_NoteTitleLabelWidth;

@@ -10,21 +10,19 @@
 #import "FocusView.h"
 #import <QuartzCore/QuartzCore.h>
 #import "Coordinate.h"
-#import "HelperMethods.h"
 #import "Notifications.h"
 #import "Constants.h"
 #import "Database.h"
 
 @interface FocusViewController ()
 
-@property (nonatomic) CAShapeLayer* circleShape;
 @property (nonatomic) UITextView* contentField;
 
 @property (nonatomic) Note* note;
 @property (nonatomic) NoteView* noteView;
 
-// The subview that will only detect touches within the drawn circle. This allows different behaviours for tapping
-// inside or outside the circle.
+// The subview that will only detect touches within the zoomed in note view. This allows different behaviours for
+// tapping inside or outside the zoomed in note view.
 @property (nonatomic) UIView* focus;
 
 @end
@@ -38,21 +36,21 @@
     
     self.view.frame = [Coordinate frameWithCenterXByFactor:0.5
                                            centerYByFactor:0.5
-                                                     width:Key_FocusSize
-                                                    height:Key_FocusSize
+                                                     width:Key_FocusWidth
+                                                    height:Key_FocusHeight
                                        withReferenceBounds:self.view.bounds];
     
     self.view.backgroundColor = [UIColor clearColor];
     
-    self.circleShape = [HelperMethods drawFocusCircleInView:self.view];
-    
     self.focus = [[FocusView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                     centerYByFactor:0.5
-                                                                              width:Key_FocusSize
-                                                                             height:Key_FocusSize
+                                                                              width:Key_FocusWidth
+                                                                             height:Key_FocusHeight
                                                                 withReferenceBounds:self.view.bounds]];
     
-    self.focus.backgroundColor = [UIColor clearColor];
+    self.focus.backgroundColor = [UIColor whiteColor];
+    self.focus.layer.borderWidth = Key_BorderWidth;
+    self.focus.layer.cornerRadius = Key_NoteRadius;
     
     self.contentField = [[UITextView alloc] initWithFrame:[Coordinate frameWithCenterXByFactor:0.5
                                                                                centerYByFactor:0.5
@@ -60,8 +58,7 @@
                                                                                         height:Key_NoteContentFieldHeight
                                                                            withReferenceBounds:self.focus.bounds]];
     
-    self.contentField.backgroundColor = [UIColor colorWithWhite:1 alpha:0.8];
-    self.contentField.layer.cornerRadius = 15;
+    self.contentField.backgroundColor = [UIColor whiteColor];
     
     [self.view addSubview:self.focus];
     [self.focus addSubview:self.contentField];

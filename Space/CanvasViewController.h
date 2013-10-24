@@ -40,7 +40,7 @@
 @property (nonatomic) CGRect originalZoomedInNoteViewFrame;
 
 // A temporary duplicate note circle at the exact same location of the tapped note circle.
-@property (strong, nonatomic) UIView* originalNoteCircleIndicator;
+@property (strong, nonatomic) UIImageView* originalNoteCircleIndicator;
 
 // Used to help disabling user interactions during an animation, which could cause glitches.
 @property (nonatomic) BOOL isRunningZoomAnimation;

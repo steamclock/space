@@ -8,7 +8,6 @@
 
 #import "NoteView.h"
 #import "Coordinate.h"
-#import "HelperMethods.h"
 #import "Constants.h"
 #import "Database.h"
 
@@ -19,14 +18,6 @@
 @end
 
 @implementation NoteView
-
--(id)initWithFrame:(CGRect)frame {
-    self = [super initWithFrame:frame];
-    if (self) {
-        [self commonSetup];
-    }
-    return self;
-}
 
 -(id)initWithImage:(UIImage *)image {
     self = [super initWithImage:image];
@@ -56,8 +47,6 @@
     self.titleLabel.font = [UIFont systemFontOfSize:14];
     
     [self addSubview:self.titleLabel];
-    
-    // self.circleShape = [HelperMethods drawCircleInView:self];
 }
 
 -(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {

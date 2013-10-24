@@ -11,7 +11,7 @@
 
 @interface FocusView()
 
-@property (strong, nonatomic) UIBezierPath* circlePath;
+@property (strong, nonatomic) UIBezierPath* roundedRectPath;
 
 @end
 
@@ -21,15 +21,15 @@
     self = [super initWithFrame:frame];
     if (self) {
         // Initialization code
-        CGRect circleFrame = self.bounds;
-        self.circlePath = [UIBezierPath bezierPathWithRoundedRect:circleFrame cornerRadius:Key_FocusSize];
+        CGRect roundedRectFrame = self.bounds;
+        self.roundedRectPath = [UIBezierPath bezierPathWithRoundedRect:roundedRectFrame cornerRadius:Key_NoteRadius];
     }
     return self;
 }
 
 // Ignores touches outside of the focus view's circle.
 -(BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event {
-    return [self.circlePath containsPoint:point];
+    return [self.roundedRectPath containsPoint:point];
 }
 
 @end
