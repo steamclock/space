@@ -5,18 +5,15 @@
 //  Created by Nigel Brooke on 2013-08-21.
 //  Copyright (c) 2013 University of British Columbia. All rights reserved.
 //
+//  This view represents the large text editor after zooming in a selected note circle.
+//
 
 #import <UIKit/UIKit.h>
-
-@class NoteView;
+#import "NoteView.h"
 
 @interface FocusViewController : UIViewController
 
-@property (nonatomic) CAShapeLayer* circleShape;
-
-@property (nonatomic) UITextField* titleField;
-@property (nonatomic) UITextView* contentField;
-
--(void)focusOn:(NoteView*)note withTouchPoint:(CGPoint)pointOfTouch;
+// Called to pull the content from the selected note circle and display them in the editor.
+-(void)focusOn:(NoteView*)noteView;
 
 @end

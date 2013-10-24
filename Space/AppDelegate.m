@@ -13,43 +13,33 @@
 #import "CanvasSelectionViewController.h"
 #import "Database.h"
 
-@interface AppDelegate()
-
-@property (strong, nonatomic) CanvasViewController* canvas;
-
-@end
-
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];    
-    [self.window makeKeyAndVisible];
-    
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor groupTableViewBackgroundColor];
+    [self.window makeKeyAndVisible];
 
     UIViewController* container = [[UIViewController alloc] init];
     
-    self.canvas = [[CanvasViewController alloc] initWithTopLevelView:container.view];
-    CanvasViewController* trash = [[CanvasViewController alloc] initAsTrashCanvasWithTopLevelView:container.view];
+    CanvasViewController* noteCanvas = [[CanvasViewController alloc] initAsNoteCanvasWithTopLevelView:container.view];
+    CanvasViewController* trashCanvas = [[CanvasViewController alloc] initAsTrashCanvasWithTopLevelView:container.view];
     
     DrawerViewController* drawer = [[DrawerViewController alloc] init];
-    drawer.bottomDrawerContents = trash;
-    drawer.topDrawerContents = self.canvas;
-    drawer.delegate = self.canvas;
+    drawer.bottomDrawerContents = trashCanvas;
+    drawer.topDrawerContents = noteCanvas;
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-    
     [container addChildViewController:drawer];
     [container.view addSubview:drawer.view];
     
     FocusViewController* focus = [[FocusViewController alloc] init];
-    self.canvas.focus = focus;
+    focus.view.alpha = 0;
+    noteCanvas.focus = focus;
     
     [container addChildViewController:focus];
     [container.view addSubview:focus.view];
-    
-    focus.view.alpha = 0;
     
     CanvasSelectionViewController* canvasSelect = [[CanvasSelectionViewController alloc] init];
     [container addChildViewController:canvasSelect];

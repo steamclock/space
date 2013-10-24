@@ -8,6 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
+extern int const Key_NavBarHeight;
+
+// Keys for objects in either Core Data or NSUserDefaults.
 extern NSString* const Key_CanvasTitles;
 extern NSString* const Key_CanvasTitleIndices;
 
@@ -19,64 +22,33 @@ extern NSString* const Key_CurrentCanvasIndex;
 extern NSString* const Key_TrashedNotes;
 extern NSString* const Key_RecoveredNote;
 
-extern NSString* const Key_TwoSectionsTopBoundary;
-extern NSString* const Key_TwoSectionsBotBoundary;
+// Boundaries for gravity.
+extern NSString* const Key_TopBoundary;
+extern NSString* const Key_BotBoundary;
 
-extern NSString* const Key_ThreeSectionsCanvasTopBoundary;
-extern NSString* const Key_ThreeSectionsCanvasBotBoundary;
-extern NSString* const Key_ThreeSectionsTrashTopBoundary;
-extern NSString* const Key_ThreeSectionsTrashBotBoundary;
-
-extern int const Key_NavBarHeight;
+// Controls how far up or down the y axis the focus view is in different orientations.
 extern int const Key_LandscapeFocusViewAdjustment;
 extern int const Key_PortraitFocusViewAdjustment;
 
+// Border width for the note circles, both zoomed in and zoomed out.
+extern int const Key_BorderWidth;
+// The radius for the note circles.
+extern int const Key_NoteRadius;
+// The size for the focus view.
+extern int const Key_FocusWidth;
+extern int const Key_FocusHeight;
+
+// The label above the note circles.
 extern int const Key_NoteTitleLabelWidth;
 extern int const Key_NoteTitleLabelHeight;
 
-extern int const Key_NoteTitleFieldWidth;
-extern int const Key_NoteTitleFieldHeight;
+// The max number of characters for the note title label.
+extern int const Key_NoteTitleLabelLength;
 
+// The textview in focus view.
 extern int const Key_NoteContentFieldWidth;
 extern int const Key_NoteContentFieldHeight;
 
-extern int const Key_NoteLargeContentFieldWidth;
-extern int const Key_NoteLargeContentFieldHeight;
-
-/* Prototyping Modes */
-
-extern NSString* const Key_FocusMode;
-
-typedef enum FocusModeEnum {
-    Dimming,
-    SlideOut,
-    SlidePartially
-} FocusMode;
-
-extern NSString* const Key_DragMode;
-
-typedef enum DragModeEnum {
-    UIViewAnimation,
-    UIDynamicFreeSliding,
-    UIDynamicFreeSlidingWithGravity
-} DragMode;
-
-extern NSString* const Key_NoteCircleMode;
-
-typedef enum NoteCircleModeEnum {
-    ShowOriginalLocation,
-    HideOriginalLocation
-} NoteCircleMode;
-
-extern NSString* const Key_EditorMode;
-
-typedef enum EditorModeEnum {
-    ShowTitle,
-    NoTitle
-} EditorMode;
-
-/* Image Names */
-
+// Image names.
 extern NSString* const Img_HandlebarDown;
-extern NSString* const Img_HandlebarUp;
 extern NSString* const Img_TrashBin;

@@ -13,7 +13,7 @@
 static float width;
 static float height;
 
-+ (CGRect)frameWithCenterXByFactor:(CGFloat)xFactor
++(CGRect)frameWithCenterXByFactor:(CGFloat)xFactor
                    centerYByFactor:(CGFloat)yFactor
                              width:(CGFloat)frameWidth
                             height:(CGFloat)frameHeight
@@ -22,34 +22,21 @@ static float height;
     width = bounds.size.width;
     height = bounds.size.height;
     
-    CGFloat centerXCoord = [Coordinate xCoordByFactor:xFactor] - (frameWidth/2.0);
-    CGFloat centerYCoord = [Coordinate yCoordByFactor:yFactor] - (frameHeight/2.0);
+    CGFloat centerXCoord = (width * xFactor) - (frameWidth/2.0);
+    CGFloat centerYCoord = (height * yFactor) - (frameHeight/2.0);
     
     return CGRectMake(centerXCoord, centerYCoord, frameWidth, frameHeight);
 }
 
-+ (CGFloat)xCoordByFactor:(CGFloat)factor {
-    
-    return width * factor;
-}
-
-+ (CGFloat)yCoordByFactor:(CGFloat)factor {
-    
-    return height * factor;
-}
-
-+ (CGFloat)normalizeXCoord:(CGFloat)xCoord withReferenceBounds:(CGRect)bounds {
-    
++(CGFloat)normalizeXCoord:(CGFloat)xCoord withReferenceBounds:(CGRect)bounds {    
     return xCoord / bounds.size.width;
 }
 
-+ (CGFloat)normalizeYCoord:(CGFloat)yCoord withReferenceBounds:(CGRect)bounds {
-    
++(CGFloat)normalizeYCoord:(CGFloat)yCoord withReferenceBounds:(CGRect)bounds {
     return yCoord / bounds.size.height;
 }
 
-+ (CGPoint)unnormalizePoint:(CGPoint)pointToUnnormalize withReferenceBounds:(CGRect)bounds {
-    
++(CGPoint)unnormalizePoint:(CGPoint)pointToUnnormalize withReferenceBounds:(CGRect)bounds {
     return CGPointMake(pointToUnnormalize.x * bounds.size.width, pointToUnnormalize.y * bounds.size.height);
 }
 

@@ -7,20 +7,24 @@
 //
 
 #import "CanvasMenuPopover.h"
+#import "Notifications.h"
 #import "Constants.h"
 #import "Database.h"
-#import "Notifications.h"
 
 @interface CanvasMenuPopover ()
 
+// Canvas titles and indices are stored in NSUserDefaults.
 @property (strong, nonatomic) NSUserDefaults* defaults;
 
+// These properties assist with creating, editing, and deleting canvas titles.
 @property (strong, nonatomic) UIButton* currentlyEditingButton;
 @property (strong, nonatomic) NSString* currentlyEditingButtonTitle;
 @property (strong, nonatomic) UITextField* currentlyEditingButtonTextField;
 
+// The app cannot allow deleting the last remaining canvas.
 @property (nonatomic) BOOL deleteTitleAllowed;
 
+// Stores a list of buttons, each representing a stored and available canvas title.
 @property (strong, nonatomic) NSMutableArray* allCanvasButtons;
 
 @end
@@ -29,22 +33,21 @@
 
 @synthesize popoverController;
 
-- (id)init {
-    
+-(id)init {
     if (self = [super init]) {
         
         self.defaults = [NSUserDefaults standardUserDefaults];
         
         if ([self.defaults objectForKey:Key_CanvasTitles] && [self.defaults objectForKey:Key_CanvasTitleIndices]) {
             
+            // Load available canvases.
             self.canvasTitles = [self.defaults objectForKey:Key_CanvasTitles];
             self.canvasTitleIndices = [self.defaults objectForKey:Key_CanvasTitleIndices];
-            
             [self setupMenuWithCanvasTitles:self.canvasTitles andIndices:self.canvasTitleIndices];
             
         } else {
             
-            // If there are no canvases stored, initilalize two default ones
+            // If there are no canvases stored, initilalize two default ones.
             [self setupMenuWithCanvasTitles:@[@"Canvas One", @"Canvas Two"] andIndices:@[@0, @1]];
             
             [self.defaults setObject:[NSNumber numberWithInt:0] forKey:Key_CurrentCanvasIndex];
@@ -53,6 +56,7 @@
         
         if ([self.defaults objectForKey:Key_CurrentCanvasIndex]) {
             
+            // Highlight the current canvas at the start of the app.
             int currentCanvas = [[self.defaults objectForKey:Key_CurrentCanvasIndex] intValue];
             
             UIButton* buttonToHighlight = (UIButton *)[self.allCanvasButtons objectAtIndex:currentCanvas];
@@ -63,14 +67,13 @@
     return self;
 }
 
-- (void)viewDidLoad
-{
+-(void)viewDidLoad {
     [super viewDidLoad];
     
     self.view.backgroundColor = [UIColor whiteColor];
-    self.preferredContentSize = CGSizeMake(300.0f, 600.0f);
+    self.preferredContentSize = CGSizeMake(300.0f, 400.0f);
     
-    // Setup the textfield for entering new canvas titles
+    // Setup the textfield for entering new canvas titles.
     CGRect rect = CGRectMake(20.0f, 20.0f, 260.0f, 25.0f);
     self.titleField = [[UITextField alloc] initWithFrame:rect];
     self.titleField.textAlignment = NSTextAlignmentCenter;
@@ -80,20 +83,19 @@
     [self.view addSubview:self.titleField];
 }
 
-- (void)viewDidAppear:(BOOL)animated {
-    
+-(void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
+    
     [self.titleField setText:@""];
 }
 
-- (BOOL)shouldAutorotate {
+-(BOOL)shouldAutorotate {
     return YES;
 }
 
 #pragma mark - Canvas Menu Buttons
 
-- (void)clearAllButtons {
-    
+-(void)clearAllButtons {
     for (UIView* view in self.view.subviews) {
         if ([view isKindOfClass:[UIButton class]]) {
             [view removeFromSuperview];
@@ -101,27 +103,27 @@
     }
 }
 
-- (void)setupMenuWithCanvasTitles:(NSArray *)canvasTitles andIndices:(NSArray *)canvasIndices {
-    
+-(void)setupMenuWithCanvasTitles:(NSArray *)canvasTitles andIndices:(NSArray *)canvasIndices {
     self.allCanvasButtons = nil;
     self.allCanvasButtons = [[NSMutableArray alloc] init];
     
+    // Allows setting up the popover menu from a fresh state everytime there's a change.
     [self clearAllButtons];
     
-    // Store canvas titles and indices to NSUserDefaults
+    // Store canvas titles and indices in NSUserDefaults.
     self.canvasTitles = [canvasTitles mutableCopy];
     self.canvasTitleIndices = [canvasIndices mutableCopy];
     [self.defaults setObject:self.canvasTitles forKey:Key_CanvasTitles];
     [self.defaults setObject:self.canvasTitleIndices forKey:Key_CanvasTitleIndices];
     [self.defaults synchronize];
     
-    // Helps dynamically position canvas title buttons
+    // Helps dynamically position canvas title buttons.
     int yCoord = 60;
     
-    // Helps associate a button to its corresponding canvas index
+    // Helps associate a button to its corresponding array index of the canvas titles and indices. (See .h for more info)
     int indexTag = 0;
     
-    // Create a button for every canvas title
+    // Create a button for every canvas title.
     for (NSString* name in canvasTitles) {
         
         int buttonWidth = 250;
@@ -158,10 +160,9 @@
     }
 }
 
-- (void)titleLongPress:(UITapGestureRecognizer *)recognizer {
-    
+-(void)titleLongPress:(UITapGestureRecognizer *)recognizer {
     if (recognizer.state != UIGestureRecognizerStateBegan) {
-        return; // Disregard other states that are also part of a long press, so we don't enter this method multiple times
+        return; // Disregard other states that are also part of a long press, so we don't enter this method multiple times.
     }
     
     // Only allows editing one canvas title at a time
@@ -172,13 +173,12 @@
     }
 }
 
-- (void)swapButtonWithTextField {
-    
-    // Hide the button's title label so we can show the textfield on top of the button
+-(void)swapButtonWithTextField {
+    // Hide the button's title label so we can show the textfield on top of the button.
     self.currentlyEditingButtonTitle = self.currentlyEditingButton.titleLabel.text;
     [self.currentlyEditingButton setTitle:@"" forState:UIControlStateNormal];
     
-    // Grab and show the textfield we've added as a subview in the canvas button
+    // Grab and show the textfield we've added as a subview in the canvas button.
     for (UIView* view in self.currentlyEditingButton.subviews) {
         
         if ([view isKindOfClass:[UITextField class]]) {
@@ -196,8 +196,7 @@
 
 #pragma mark - Select, Add, Update, Delete Canvases
 
-- (IBAction)canvasSelected:(id)sender {
-    
+-(IBAction)canvasSelected:(id)sender {
     UIButton* pressedButton = (UIButton*)sender;
     
     // NSLog(@"Button number = %@", [NSNumber numberWithInt:pressedButton.tag]);
@@ -218,14 +217,13 @@
     pressedButton.backgroundColor = [UIColor colorWithWhite:0.8 alpha:0.5];
 }
 
-- (void)addNewCanvasTitle:(NSString *)newCanvasTitle {
-    
+-(void)addNewCanvasTitle:(NSString *)newCanvasTitle {
     [self.canvasTitles addObject:newCanvasTitle];
     
     BOOL isIndexUpdated = NO;
     
+    // Loop through canvas title indices and assign a unique number that has not been taken yet.
     for (int i = 0; i < [self.canvasTitleIndices count]; i++) {
-        
         if ([self.canvasTitleIndices containsObject:[NSNumber numberWithInt:i]]) {
             continue;
         } else {
@@ -240,8 +238,7 @@
     }
 }
 
-- (void)updateSelectedCanvas {
-    
+-(void)updateSelectedCanvas {
     [self.canvasTitles replaceObjectAtIndex:self.currentlyEditingButton.tag withObject:self.currentlyEditingButtonTextField.text];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
@@ -250,20 +247,20 @@
                                                                  Key_CanvasName:[self.canvasTitles objectAtIndex:self.currentlyEditingButton.tag]}];
 }
 
-- (void)deleteSelectedCanvas {
-    
-    // Reject delete if there's only one remaining canvas, or we can gracefully delete it and replace it with a placeholder
+-(void)deleteSelectedCanvas {
+    // Reject delete if there's only one remaining canvas.
     if ([self.canvasTitles count] == 1) {
         NSLog(@"Tried to delete last canvas");
         
-        UIAlertView* alertView = [[UIAlertView alloc] initWithTitle:@"Cannot Delete" message:@"Cannot delete last canvas" delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        UIAlertView* alertView = [[UIAlertView alloc] initWithTitle:@"Cannot Delete" message:@"This is the last canvas." delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
         [alertView show];
         
-        // Delete operation completed, so reset deleteTitleAllowed check
+        // Delete operation completed, so reset the deleteTitleAllowed check.
         self.deleteTitleAllowed = NO;
         return;
     }
     
+    // It's not the last canvas, so we can proceed with delete.
     int canvasToDelete;
     int canvasToSwitchTo;
     
@@ -288,13 +285,13 @@
                                                       userInfo:@{Key_CanvasNumber:[NSNumber numberWithInt:canvasToSwitchTo],
                                                                  Key_CanvasName:[self.canvasTitles objectAtIndex:indexOfCanvasToSwitchTo]}];
     
-    // Delete operation completed, so reset deleteTitleAllowed check
+    // Delete operation completed, so reset the deleteTitleAllowed check.
     self.deleteTitleAllowed = NO;
 }
 
 #pragma mark - TextField Delegate Methods
 
-- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+-(BOOL)textFieldShouldReturn:(UITextField *)textField {
     
     if (textField == self.currentlyEditingButtonTextField) {
         
@@ -306,10 +303,9 @@
             
             self.deleteTitleAllowed = YES;
             
-            // Check whether delete is allowed, and delete if nothing was entered
             [self deleteSelectedCanvas];
             
-        } else { // Otherwise, update canvas with newly provided name
+        } else { // Otherwise, update canvas with the newly provided name.
             
             [self updateSelectedCanvas];
         }
@@ -325,37 +321,33 @@
         textField.text = @"";
         
         [textField resignFirstResponder];
-        // [self.popoverController dismissPopoverAnimated:YES];
     }
     
     return YES;
 }
 
-- (void)textFieldDidBeginEditing:(UITextField *)textField {
-    
+-(void)textFieldDidBeginEditing:(UITextField *)textField {
     [textField setReturnKeyType:UIReturnKeyDone];
 }
 
-- (void)textFieldDidEndEditing:(UITextField *)textField {
-    
+-(void)textFieldDidEndEditing:(UITextField *)textField {
     // Only allow delete if Done is pressed on the keyboard. Don't delete if the popover is dismissed
     // by tapping somewhere else while the textfield is active.
     if (textField == self.currentlyEditingButtonTextField) {
         
         if (self.deleteTitleAllowed == NO) {
-            // Restore canvas title
+            // Restore canvas title.
             [self.currentlyEditingButton setTitle:self.currentlyEditingButtonTitle forState:UIControlStateNormal];
         }
         
         [self.currentlyEditingButtonTextField setHidden:YES];
         
-        // Clear cache
+        // Clear cache.
         self.currentlyEditingButton = nil;
     }
 }
 
-- (void)didReceiveMemoryWarning
-{
+- (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }

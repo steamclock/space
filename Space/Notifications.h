@@ -8,24 +8,16 @@
 
 extern NSString* kCanvasChangedNotification;
 
+extern NSString* kNoteCreatedNotification;
+
+extern NSString* kSaveNoteNotification;
+extern NSString* kNoteSavedNotification;
+
 extern NSString* kNoteTrashedNotification;
 extern NSString* kNoteRecoveredNotification;
 
-extern NSString* kLoadThreeSectionsLayoutNotification;
-extern NSString* kLoadTwoSectionsLayoutNotification;
-extern NSString* kLayoutChangedNotification;
-
-extern NSString* kNoteCreatedNotification;
-extern NSString* kNoteSavedNotification;
-
 extern NSString* kFocusNoteNotification;
-extern NSString* kDismissNoteNotification;
-extern NSString* kSaveNoteNotification;
-
 extern NSString* kNoteFocusedNotification;
-extern NSString* kNoteDismissedNotification;
 
-extern NSString* kChangeFocusModeNotification;
-extern NSString* kChangeDragModeNotification;
-extern NSString* kChangeNoteCircleModeNotification;
-extern NSString* kChangeEditorModeNotification;
+extern NSString* kDismissNoteNotification;
+extern NSString* kNoteDismissedNotification;

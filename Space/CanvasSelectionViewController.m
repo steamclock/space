@@ -8,7 +8,6 @@
 
 #import "CanvasSelectionViewController.h"
 #import "CanvasMenuPopover.h"
-#import "PrototypingPopover.h"
 #import "Notifications.h"
 #import "Constants.h"
 
@@ -17,7 +16,6 @@
 @property UINavigationBar* menuBar;
 
 @property (strong, nonatomic) UIPopoverController* canvasMenuPopoverController;
-@property (strong, nonatomic) UIPopoverController* prototypingPopoverController;
 
 @property (strong, nonatomic) NSUserDefaults* defaults;
 @property (strong, nonatomic) UINavigationItem* menuItems;
@@ -34,7 +32,7 @@
     
     if (self) {
         
-        // Helps retrieve canvas indices
+        // Helps retrieving canvas titles and indices later.
         self.defaults = [NSUserDefaults standardUserDefaults];
         
         self.menuBar = [[UINavigationBar alloc] init];
@@ -45,10 +43,6 @@
         
         if (popoverClass != nil && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
             
-            PrototypingPopover *prototypingPopover = [[PrototypingPopover alloc] init];
-            self.prototypingPopoverController = [[UIPopoverController alloc] initWithContentViewController:prototypingPopover];
-            prototypingPopover.popoverController = self.prototypingPopoverController;
-            
             CanvasMenuPopover *canvasTitlePopover = [[CanvasMenuPopover alloc] init];
             self.canvasMenuPopoverController = [[UIPopoverController alloc] initWithContentViewController:canvasTitlePopover];
             canvasTitlePopover.popoverController = self.canvasMenuPopoverController;
@@ -58,24 +52,19 @@
                 NSMutableArray* canvasTitles = [self.defaults objectForKey:Key_CanvasTitles];
                 NSMutableArray* canvasTitleIndices = [self.defaults objectForKey:Key_CanvasTitleIndices];
                 
-                // Grab current canvas and its title
+                // Grab current canvas and its title.
                 int currentCanvas = [[self.defaults objectForKey:Key_CurrentCanvasIndex] intValue];
                 NSString* currentTitle = [[self.defaults objectForKey:Key_CanvasTitles] objectAtIndex:currentCanvas];
                 self.menuItems = [[UINavigationItem alloc] initWithTitle:currentTitle];
                 
-                // Let the CanvasViewController know which canvas to draw for
+                // Let the CanvasViewController know which canvas to draw for.
                 [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
                                                                     object:self
                                                                   userInfo:@{Key_CanvasNumber:canvasTitleIndices[currentCanvas],
                                                                              Key_CanvasName:[canvasTitles objectAtIndex:currentCanvas]}];
                 
             }
-            
-            [self.menuItems setLeftBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Prototyping"
-                                                                             style:UIBarButtonItemStyleBordered
-                                                                            target:self
-                                                                            action:@selector(showPrototypingPopover:)]];
-            
+                        
             [self.menuItems setRightBarButtonItem:[[UIBarButtonItem alloc] initWithTitle:@"Canvases"
                                                                               style:UIBarButtonItemStyleBordered
                                                                              target:self
@@ -91,34 +80,25 @@
 }
 
 // Update the navigation bar title to show the name of the currently selected canvas
-- (void)updateTitle:(NSNotification *)notification {
-    
+-(void)updateTitle:(NSNotification *)notification {
     self.menuItems.title = [notification.userInfo objectForKey:Key_CanvasName];
 }
 
 -(void)viewWillAppear:(BOOL)animated {
-    
     [super viewWillAppear:animated];
     
     self.view.frame = CGRectMake(0, 0, self.view.superview.bounds.size.width, Key_NavBarHeight);
     self.view.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleWidth;
 }
 
-- (void)didReceiveMemoryWarning
-{
+-(void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
 }
 
 #pragma mark - Show NavBar Popover
 
-- (IBAction)showCanvasMenuPopover:(id)sender {
-    
+-(IBAction)showCanvasMenuPopover:(id)sender {
     [self.canvasMenuPopoverController presentPopoverFromBarButtonItem:sender permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
-}
-
-- (IBAction)showPrototypingPopover:(id)sender {
-    
-    [self.prototypingPopoverController presentPopoverFromBarButtonItem:sender permittedArrowDirections:UIPopoverArrowDirectionAny animated:YES];
 }
 
 @end
