@@ -596,18 +596,8 @@ static BOOL dragStarted = NO;
             CGPoint centerOfScreen = [self findCenterOfScreen];
             
             if (orientation == UIInterfaceOrientationLandscapeLeft || orientation == UIInterfaceOrientationLandscapeRight) {
-                if (self.isRefocus) {
-                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment - self.slideOffset);
-                } else {
-                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_LandscapeFocusViewAdjustment);
-                }
                 self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_LandscapeFocusViewAdjustment);
             } else {
-                if (self.isRefocus) {
-                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment - self.slideOffset);
-                } else {
-                    noteView.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - self.view.superview.frame.origin.y - Key_PortraitFocusViewAdjustment);
-                }
                 self.focus.view.center = CGPointMake(centerOfScreen.x, centerOfScreen.y - Key_PortraitFocusViewAdjustment);
             }
             
@@ -651,9 +641,6 @@ static BOOL dragStarted = NO;
             noteView.layer.masksToBounds = NO;
             
         } completion:^(BOOL finished) {
-            
-            // Allows zoom after animation is completed
-            [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
             
             // Reset the zPosition back to default so it can be overlapped by other circles that are zooming in
             noteView.layer.zPosition = 0;

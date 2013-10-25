@@ -617,7 +617,14 @@
     float targetedNoteY = self.topDrawerContents.currentlyZoomedInNoteView.note.originalY;
     
     // Give some room between the bottom of the nav bar and the note circle that the canvas is sliding up to.
-    destination.origin.y = -(targetedNoteY - Key_NoteRadius * 2);
+    destination.origin.y = -(targetedNoteY - Key_NoteRadius * 4);
+    
+    // Don't slide at all if the note is fairly close to the top.
+    if (destination.origin.y > -Key_NavBarHeight) {
+        self.topDrawerContents.isRunningZoomAnimation = NO;
+        return;
+    }
+    
     if (destination.origin.y > 0) {
         destination.origin.y = self.topDrawerContents.view.frame.origin.y;
     }
