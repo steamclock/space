@@ -58,6 +58,24 @@
 
 #pragma mark - Setup Canvases
 
+-(void)addBoundariesForCanvas {
+    [self.collision addBoundaryWithIdentifier:@"canvasTop"
+                                    fromPoint:CGPointMake(0,0)
+                                      toPoint:CGPointMake(self.view.frame.size.width, 0)];
+    
+    [self.collision addBoundaryWithIdentifier:@"canvasLeft"
+                                    fromPoint:CGPointMake(0,0)
+                                      toPoint:CGPointMake(0, self.view.frame.size.height)];
+    
+    [self.collision addBoundaryWithIdentifier:@"canvasRight"
+                                    fromPoint:CGPointMake(self.view.frame.size.width,0)
+                                      toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+    
+    [self.collision addBoundaryWithIdentifier:@"canvasBottom"
+                                    fromPoint:CGPointMake(0, self.view.frame.size.height)
+                                      toPoint:CGPointMake(self.view.frame.size.width, self.view.frame.size.height)];
+}
+
 -(void)viewDidLoad {
     [super viewDidLoad];
     
@@ -68,7 +86,6 @@
     self.animator.delegate = self;
 
     self.collision = [[UICollisionBehavior alloc] init];
-    self.collision.translatesReferenceBoundsIntoBoundary = YES;
     self.dynamicProperties = [[UIDynamicItemBehavior alloc] init];
     self.dynamicProperties.allowsRotation = NO;
     self.dynamicProperties.resistance = 10;
@@ -104,6 +121,8 @@
     // Load last selected canvas.
     self.currentCanvas = [[[NSUserDefaults standardUserDefaults] objectForKey:Key_CurrentCanvasIndex] intValue];
     [self loadCurrentCanvas];
+    
+    [self addBoundariesForCanvas];
 }
 
 -(void)setTrashThreshold:(int)trashY {
@@ -174,6 +193,8 @@ static BOOL dragStarted = NO;
         return;
     }
     
+    [self.collision removeAllBoundaries];
+    
     NoteView* noteView = (NoteView*)recognizer.view;
     CGPoint drag = [recognizer locationInView:self.view];
     
@@ -191,9 +212,34 @@ static BOOL dragStarted = NO;
     
     [noteView setCenter:drag withReferenceBounds:self.view.bounds];
     
-    // Prevents dragging above the navigation bar
-    if (self.isTrashMode == NO && noteView.center.y <= 0) {
-        [noteView setCenter:CGPointMake(drag.x, 0) withReferenceBounds:self.view.bounds];
+    // Prevents dragging across the boundaries.
+    if (self.isTrashMode) {
+        
+        if (noteView.center.y >= self.view.frame.size.height - Key_NoteRadius && noteView.center.x >= self.view.frame.size.width - Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(self.view.frame.size.width - Key_NoteRadius, self.view.frame.size.height - Key_NoteRadius) withReferenceBounds:self.view.bounds];
+        } else if (noteView.center.y >= self.view.frame.size.height - Key_NoteRadius && noteView.center.x <= Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(Key_NoteRadius, self.view.frame.size.height - Key_NoteRadius) withReferenceBounds:self.view.bounds];
+        } else if (noteView.center.y >= self.view.frame.size.height - Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(drag.x, self.view.frame.size.height - Key_NoteRadius) withReferenceBounds:self.view.bounds];
+        } else if (noteView.center.x >= self.view.frame.size.width - Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(self.view.frame.size.width - Key_NoteRadius, drag.y) withReferenceBounds:self.view.bounds];
+        } else if (noteView.center.x <= Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(Key_NoteRadius, drag.y) withReferenceBounds:self.view.bounds];
+        }
+        
+    } else {
+        
+        if (noteView.center.y <= Key_NoteRadius && noteView.center.x >= self.view.frame.size.width - Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(self.view.frame.size.width - Key_NoteRadius, Key_NoteRadius) withReferenceBounds:self.view.bounds];
+        } else if (noteView.center.y <= Key_NoteRadius && noteView.center.x <= Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(Key_NoteRadius, Key_NoteRadius) withReferenceBounds:self.view.bounds];
+        } else if (noteView.center.y <= Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(drag.x, Key_NoteRadius) withReferenceBounds:self.view.bounds];
+        } else if (noteView.center.x >= self.view.frame.size.width - Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(self.view.frame.size.width - Key_NoteRadius, drag.y) withReferenceBounds:self.view.bounds];
+        } else if (noteView.center.x <= Key_NoteRadius) {
+            [noteView setCenter:CGPointMake(Key_NoteRadius, drag.y) withReferenceBounds:self.view.bounds];
+        }
     }
     
     // Handle drag within the trash canvas.
@@ -239,8 +285,9 @@ static BOOL dragStarted = NO;
     }
     
     if(recognizer.state == UIGestureRecognizerStateEnded) {
-        [noteView setBackgroundColor:[UIColor clearColor]];
         dragStarted = NO;
+
+        [self addBoundariesForCanvas];
         
         if (self.dragToTrashRequested == NO) {
             noteView.note.originalX = noteView.center.x;
