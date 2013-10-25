@@ -650,6 +650,8 @@
                                                                                 zoomedInNoteViewFrame.size.height);
             
             self.topDrawerContents.originalZoomedInNoteViewFrame = self.topDrawerContents.currentlyZoomedInNoteView.frame;
+            
+            self.topDrawerContents.isRunningZoomAnimation = NO;
         }
     }];
     
@@ -672,6 +674,13 @@
         if (finished) {
             if (self.animator == nil) {
                 [self startPhysicsEngine];
+            }
+            
+            self.topDrawerContents.isRunningZoomAnimation = NO;
+            
+            if (self.topDrawerContents.loadCurrentCanvasAfterAnimation == YES) {
+                [self.topDrawerContents loadCurrentCanvas];
+                self.topDrawerContents.loadCurrentCanvasAfterAnimation = NO;
             }
         }
     }];

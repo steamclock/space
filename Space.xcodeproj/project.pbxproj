@@ -34,6 +34,7 @@
 		B83D42D517D8F5E800409BBF /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = B83D42D417D8F5E800409BBF /* Constants.m */; };
 		B8A7AF921815F85600EE1F28 /* FocusView.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A7AF911815F85600EE1F28 /* FocusView.m */; };
 		B8CFC07317EA4B7B000F0853 /* Coordinate.m in Sources */ = {isa = PBXBuildFile; fileRef = B8CFC07217EA4B7B000F0853 /* Coordinate.m */; };
+		B8F1A7B01819D4D1007BAABD /* ContainerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */; };
 		CA0F8356E0134BAC8244836C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1842E80713F540AB860880DC /* libPods.a */; };
 /* End PBXBuildFile section */
 
@@ -91,6 +92,8 @@
 		B8A7AF911815F85600EE1F28 /* FocusView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FocusView.m; sourceTree = "<group>"; };
 		B8CFC07117EA4B7B000F0853 /* Coordinate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Coordinate.h; sourceTree = "<group>"; };
 		B8CFC07217EA4B7B000F0853 /* Coordinate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Coordinate.m; sourceTree = "<group>"; };
+		B8F1A7AE1819D4D1007BAABD /* ContainerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContainerViewController.h; sourceTree = "<group>"; };
+		B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContainerViewController.m; sourceTree = "<group>"; };
 		D6C0872E37B24A98876C9A8E /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -160,6 +163,8 @@
 				E4DD05C617E90A5800ED525D /* CoreData */,
 				B83D02C2180765CE003A2C7B /* Helper */,
 				E4DD05C717E90A7B00ED525D /* Constants */,
+				B8F1A7AE1819D4D1007BAABD /* ContainerViewController.h */,
+				B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */,
 				A6F553FF17BD737200728B8C /* AppDelegate.h */,
 				A6F5540017BD737200728B8C /* AppDelegate.m */,
 				A6EF0DE317C56310005EF2A0 /* NoteView.h */,
@@ -379,6 +384,7 @@
 				A6EF0DE517C56310005EF2A0 /* NoteView.m in Sources */,
 				A699F2F817CC06830001E6B0 /* CanvasSelectionViewController.m in Sources */,
 				A62D413917BD7BE80073DDB4 /* Note.m in Sources */,
+				B8F1A7B01819D4D1007BAABD /* ContainerViewController.m in Sources */,
 				B8CFC07317EA4B7B000F0853 /* Coordinate.m in Sources */,
 				A62D413C17BD7D850073DDB4 /* CanvasViewController.m in Sources */,
 				A699F2FD17CC18FB0001E6B0 /* Notifications.m in Sources */,

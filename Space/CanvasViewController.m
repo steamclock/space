@@ -148,19 +148,17 @@
     for(Note* note in notes) {
         [self addViewForNote:note];
     }
+    
+    self.isRunningZoomAnimation = NO;
 }
 
 -(void)canvasChanged:(NSNotification*)notification {
     self.currentCanvas = [notification.userInfo[Key_CanvasNumber] intValue];
-    // NSLog(@"Current canvas = %d", self.currentCanvas);
     
     if (self.isCurrentlyZoomedIn) {
-        self.shouldLoadCanvasAfterZoomOut = YES;
-        
-        self.zoomAnimationDuration = 0;
+        self.isRefocus = NO;
+        self.loadCurrentCanvasAfterAnimation = YES;
         [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
-        self.zoomAnimationDuration = 0.5;
-        
     } else {
         [self loadCurrentCanvas];
     }
@@ -328,8 +326,6 @@ static BOOL dragStarted = NO;
         [[Database sharedDatabase] save];
     }
     
-    noteView.userInteractionEnabled = YES;
-    
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(noteTap:)];
     [noteView addGestureRecognizer:tapGestureRecognizer];
     
@@ -355,6 +351,8 @@ static BOOL dragStarted = NO;
         // Note creation complete, reset the flag.
         self.noteCreated = NO;
     }
+    
+    noteView.userInteractionEnabled = YES;
 }
 
 -(void)noteCreated:(NSNotification*)notification {
@@ -522,9 +520,6 @@ static BOOL dragStarted = NO;
         
         self.currentlyZoomedInNoteView.layer.zPosition = 500;
         
-        // Prevents double tap
-        [self.currentlyZoomedInNoteView setUserInteractionEnabled:NO];
-        
         [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:^(void) {
             self.currentlyZoomedInNoteView = noteView;
             
@@ -536,9 +531,6 @@ static BOOL dragStarted = NO;
         }];
     } else {
         self.currentlyZoomedInNoteView = noteView;
-        
-        // Prevents double tap.
-        [self.currentlyZoomedInNoteView setUserInteractionEnabled:NO];
         
         if (self.isCurrentlyZoomedIn == NO) {
             self.currentlyZoomedInNoteView.originalCircleFrame = self.currentlyZoomedInNoteView.frame;
@@ -555,7 +547,11 @@ static BOOL dragStarted = NO;
 }
 
 -(void)dismissNote:(NSNotification*)notification {
-    [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
+    if ([self.animator isRunning] || self.isRunningZoomAnimation) {
+        return;
+    } else {
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
+    }
 }
 
 -(void)toggleZoomForNoteView:(NoteView*)noteView completion:(void (^)(void))zoomCompleted {
@@ -631,10 +627,6 @@ static BOOL dragStarted = NO;
                 UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
                 
                 [[NSNotificationCenter defaultCenter] postNotificationName:kFocusNoteNotification object:self];
-                self.isRunningZoomAnimation = NO;
-                
-                // Allows unzoom after animation is completed.
-                [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
             }];
         }];
         
@@ -660,6 +652,9 @@ static BOOL dragStarted = NO;
             
         } completion:^(BOOL finished) {
             
+            // Allows zoom after animation is completed
+            [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
+            
             // Reset the zPosition back to default so it can be overlapped by other circles that are zooming in
             noteView.layer.zPosition = 0;
             noteView.layer.cornerRadius = 0;
@@ -671,11 +666,6 @@ static BOOL dragStarted = NO;
             noteView.note.positionY = [Coordinate normalizeYCoord:noteView.center.y withReferenceBounds:self.view.bounds];
             [[Database sharedDatabase] save];
             
-            if (self.shouldLoadCanvasAfterZoomOut) {
-                [self loadCurrentCanvas];
-                self.shouldLoadCanvasAfterZoomOut = NO;
-            }
-            
             [[NSNotificationCenter defaultCenter] postNotificationName:kNoteDismissedNotification object:self];
             
             // Remove original note circle location indicator
@@ -685,11 +675,6 @@ static BOOL dragStarted = NO;
             }
             
             noteView.titleLabel.alpha = 1;
-            
-            self.isRunningZoomAnimation = NO;
-            
-            // Allows zoom after animation is completed
-            [self.currentlyZoomedInNoteView setUserInteractionEnabled:YES];
             
             // Run completion block if there's one.
             if (zoomCompleted) {

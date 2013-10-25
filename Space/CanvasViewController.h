@@ -42,10 +42,10 @@
 // A temporary duplicate note circle at the exact same location of the tapped note circle.
 @property (strong, nonatomic) UIImageView* originalNoteCircleIndicator;
 
+@property (nonatomic) BOOL isCurrentlyZoomedIn;
+
 // Used to help disabling user interactions during an animation, which could cause glitches.
 @property (nonatomic) BOOL isRunningZoomAnimation;
-
-@property (nonatomic) BOOL isCurrentlyZoomedIn;
 
 // Refocus is the case for an attempt to zoom in another note while one is already zoomed in.
 @property (nonatomic) BOOL isRefocus;
@@ -58,6 +58,8 @@
 
 @property (nonatomic) float zoomAnimationDuration;
 
+@property (nonatomic) BOOL loadCurrentCanvasAfterAnimation;
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @property (strong, nonatomic) NoteView* newlyCreatedNoteView;
@@ -65,7 +67,6 @@
 
 // Assist with automatic zoom in at note creation.
 @property (nonatomic) BOOL shouldZoomInAfterCreatingNewNote;
-@property (nonatomic) BOOL shouldLoadCanvasAfterZoomOut;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -88,5 +89,7 @@
 
 // Triggers a zoom on a selected note view. The method itself will determine whether to zoom or to unzoom.
 -(void)toggleZoomForNoteView:(NoteView*)noteView completion:(void (^)(void))zoomCompleted;
+
+-(void)loadCurrentCanvas;
 
 @end

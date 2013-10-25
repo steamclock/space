@@ -67,7 +67,6 @@
     [self.focus addSubview:self.contentField];
     
     [self.view addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOutside:)]];
-    [self.focus addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapInside:)]];
     
     self.view.autoresizingMask =
     UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleRightMargin;
@@ -91,15 +90,10 @@
     // Dispose of any resources that can be recreated.
 }
 
-// Save, hide keyboard, and unzoom if the tap is outside the circle.
+// Save, hide keyboard, and unzoom if the tap is outside the focus view.
 -(void)tapOutside:(UITapGestureRecognizer*)gesture {
     [self saveNote];
     [[NSNotificationCenter defaultCenter] postNotificationName:kDismissNoteNotification object:self];
-}
-
-// Just save and hide keyboard if the tap is inside the circle.
--(void)tapInside:(UITapGestureRecognizer*)gesture {
-    [self saveNote];
 }
 
 -(void)saveNote {

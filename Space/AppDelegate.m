@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "ContainerViewController.h"
 #import "DrawerViewController.h"
 #import "CanvasViewController.h"
 #import "FocusViewController.h"
@@ -21,7 +22,7 @@
     self.window.backgroundColor = [UIColor groupTableViewBackgroundColor];
     [self.window makeKeyAndVisible];
 
-    UIViewController* container = [[UIViewController alloc] init];
+    ContainerViewController* container = [[ContainerViewController alloc] init];
     
     CanvasViewController* noteCanvas = [[CanvasViewController alloc] initAsNoteCanvasWithTopLevelView:container.view];
     CanvasViewController* trashCanvas = [[CanvasViewController alloc] initAsTrashCanvasWithTopLevelView:container.view];
@@ -31,6 +32,7 @@
     drawer.topDrawerContents = noteCanvas;
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+    container.drawer = drawer;
     [container addChildViewController:drawer];
     [container.view addSubview:drawer.view];
     
