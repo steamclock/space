@@ -14,6 +14,8 @@
 // The canvas to which this note belongs to.
 @property (nonatomic) int canvas;
 
+@property (nonatomic) BOOL recovering;
+
 // Indicates whether this note is trashed or not.
 @property (nonatomic) BOOL trashed;
 

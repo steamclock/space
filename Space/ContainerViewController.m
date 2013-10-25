@@ -36,7 +36,7 @@
 }
 
 -(BOOL)shouldAutorotate {
-    if (self.drawer.topDrawerContents.isRunningZoomAnimation) {
+    if (self.drawer.topDrawerContents.isRunningZoomAnimation || self.drawer.topDrawerContents.isDroppingNoteForDeletion) {
         return NO;
     } else {
         return YES;

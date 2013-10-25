@@ -77,6 +77,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+@property (nonatomic) BOOL isDroppingNoteForDeletion;
+
 // Initialize either a note or a trash canvas.
 -(id)initAsNoteCanvasWithTopLevelView:(UIView*)view;
 -(id)initAsTrashCanvasWithTopLevelView:(UIView*)view;

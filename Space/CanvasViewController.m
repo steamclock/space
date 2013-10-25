@@ -29,12 +29,14 @@
 @property (nonatomic) BOOL isTrashMode;
 
 @property (nonatomic) int triggerTrashY;
-@property (nonatomic) BOOL dragToTrashRequested;
 
 @property (nonatomic) UIView* topLevelView;
 @property (strong, nonatomic) UIButton* emptyTrashButton;
 
 @end
+
+static BOOL isDeleting;
+static BOOL dragToTrashRequested;
 
 @implementation CanvasViewController;
 
@@ -250,7 +252,7 @@ static BOOL dragStarted = NO;
                 [self returnNoteToBounds:noteView];
                 [self recoverNote:noteView];
             } else {
-                [noteView setBackgroundColor:[UIColor greenColor]];
+                [noteView setImage:[UIImage imageNamed:@"circle-green"]];
             }
         } else {
             // Add throw at the end of drag.
@@ -259,7 +261,7 @@ static BOOL dragStarted = NO;
                 CGPoint velocity = [recognizer velocityInView:self.view];
                 [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
             } else {
-                [noteView setBackgroundColor:[UIColor clearColor]];
+                [noteView setImage:[UIImage imageNamed:@"circle"]];
             }
         }
     // Handle drag within the note canvas.
@@ -267,7 +269,7 @@ static BOOL dragStarted = NO;
         // If a note is dragged below the trashY threshold, allow trashing note.
         if (noteView.center.y > self.triggerTrashY) {
             if(recognizer.state == UIGestureRecognizerStateEnded) {
-                self.dragToTrashRequested = YES;
+                dragToTrashRequested = YES;
                 [self deleteNoteWithoutAsking:noteView];
             } else {
                 [noteView setImage:[UIImage imageNamed:@"circle-red"]];
@@ -289,7 +291,7 @@ static BOOL dragStarted = NO;
 
         [self addBoundariesForCanvas];
         
-        if (self.dragToTrashRequested == NO) {
+        if (dragToTrashRequested == NO) {
             noteView.note.originalX = noteView.center.x;
             noteView.note.originalY = noteView.center.y;
             
@@ -314,6 +316,7 @@ static BOOL dragStarted = NO;
     }
     
     Note* note = [[Database sharedDatabase] createNote];
+    note.recovering = NO;
     
     CGPoint position = [recognizer locationInView:self.view];
     
@@ -345,28 +348,24 @@ static BOOL dragStarted = NO;
     
     // If this is a trashed note, "flip" its y-coordinate so that for example, if it was originally 80% down the y-coordinate in the top canvas,
     // it should only be roughly 20% down in the bottom canvas.
-    if ((self.isTrashMode == YES && note.trashed == YES && note.draggedToTrash != YES)) {
+    if (self.isTrashMode && dragToTrashRequested == NO && isDeleting) {
         
         unnormalizedCenter.y = self.view.bounds.size.height - unnormalizedCenter.y;
         [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
         
-    } else if (self.isTrashMode == YES && note.trashed == YES && note.draggedToTrash == YES) {
+    } else if (self.isTrashMode && dragToTrashRequested && isDeleting) {
         
-        // If this note was manually dragged to trash, place it at the original position at the start of the drag.
+        // If this note was manually dragged to trash, place it under the drag handle.
+        [noteView setCenter:CGPointMake(note.originalX, Key_NoteRadius * 2) withReferenceBounds:self.view.bounds];
+        note.originalX = noteView.center.x;
+        note.originalY = noteView.center.y;
         
-        float normalizedOriginalX = [Coordinate normalizeXCoord:note.originalX withReferenceBounds:self.view.bounds];
-        float normalizedOriginalY = [Coordinate normalizeYCoord:note.originalY withReferenceBounds:self.view.bounds];
+        [[Database sharedDatabase] save];
         
-        note.positionX = normalizedOriginalX;
-        note.positionY = normalizedOriginalY;
+    } else if (note.recovering == [[NSNumber numberWithBool:YES] intValue]) {
         
-        unnormalizedCenter = [Coordinate unnormalizePoint:CGPointMake(normalizedOriginalX, normalizedOriginalY) withReferenceBounds:self.view.bounds];
-        
-        if ( self.view.bounds.size.height - unnormalizedCenter.y > 0 ) {
-            unnormalizedCenter.y = self.view.bounds.size.height - unnormalizedCenter.y;
-        }
-        
-        [noteView setCenter:unnormalizedCenter withReferenceBounds:self.view.bounds];
+        // If this note was dragged to recover, place it just above the drag handle.
+        [noteView setCenter:CGPointMake(note.originalX, self.view.frame.size.height - Key_NoteRadius * 2) withReferenceBounds:self.view.bounds];
         note.originalX = noteView.center.x;
         note.originalY = noteView.center.y;
         
@@ -441,7 +440,10 @@ static BOOL dragStarted = NO;
 }
 
 -(void)deletePendingNote {
+    isDeleting = YES;
+    
     Note* note = self.notePendingDelete.note;
+    [note markAsTrashed];
     
     [self.collision removeItem:self.notePendingDelete];
     [self.dynamicProperties removeItem:self.notePendingDelete];
@@ -453,10 +455,10 @@ static BOOL dragStarted = NO;
         [note removeFromDatabase];
         [[Database sharedDatabase] save];
         
-    } else {
-        // Have the note fall down, and once it's fallen below a certain point, remove it, and draw the trashed note in the trash canvas.
-        [note markAsTrashed];
+    } else if (dragToTrashRequested == NO) {
+        self.isDroppingNoteForDeletion = YES;
         
+        // Have the note fall down, and once it's fallen below a certain point, remove it, and draw the trashed note in the trash canvas.
         UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.notePendingDelete]];
         trashDrop.gravityDirection = CGVectorMake(0, 1);
         [self.animator addBehavior:trashDrop];
@@ -480,7 +482,20 @@ static BOOL dragStarted = NO;
                                                                                   userInfo:deletedNoteInfo];
             
             [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
+            
+            weakSelf.isDroppingNoteForDeletion = NO;
         };
+    } else {
+        [self.notePendingDelete removeFromSuperview];
+        self.notePendingDelete = nil;
+        
+        NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
+        
+        NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification
+                                                                                object:self
+                                                                              userInfo:deletedNoteInfo];
+        
+        [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
     }
 }
 
@@ -489,6 +504,9 @@ static BOOL dragStarted = NO;
         Note* trashedNote = [notification.userInfo objectForKey:Key_TrashedNotes];
         [self addViewForNote:trashedNote];
         [[Database sharedDatabase] save];
+        
+        isDeleting = NO;
+        dragToTrashRequested = NO;
     }
 }
 
@@ -511,6 +529,9 @@ static BOOL dragStarted = NO;
 #pragma mark - Recover Note
 
 -(void)recoverNote:(NoteView*)noteView {
+    noteView.note.recovering = YES;
+    [[Database sharedDatabase] save];
+    
     // Remove the recovering note from the trashed canvas.
     [noteView removeFromSuperview];
     [self.collision removeItem:noteView];
@@ -533,10 +554,11 @@ static BOOL dragStarted = NO;
     recoveredNote.positionX = [Coordinate normalizeXCoord:originalCenter.x withReferenceBounds:self.view.bounds];
     recoveredNote.positionY = [Coordinate normalizeYCoord:originalCenter.y withReferenceBounds:self.view.bounds];
     
-    [self addViewForNote:recoveredNote];
-    
     recoveredNote.trashed = NO;
     
+    [self addViewForNote:recoveredNote];
+    
+    recoveredNote.recovering = NO;
     [[Database sharedDatabase] save];
 }
 

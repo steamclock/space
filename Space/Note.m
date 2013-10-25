@@ -8,10 +8,9 @@
 
 #import "Note.h"
 
-
 @implementation Note
 
-@dynamic canvas, content, originalX, originalY, positionX, positionY, title, trashed, draggedToTrash;
+@dynamic canvas, content, originalX, originalY, positionX, positionY, title, recovering, trashed, draggedToTrash;
 
 -(void)markAsTrashed {
     self.trashed = YES;
