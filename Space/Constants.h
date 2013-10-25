@@ -11,6 +11,8 @@
 extern int const Key_NavBarHeight;
 
 // Keys for objects in either Core Data or NSUserDefaults.
+extern NSString* const Key_AppInstalled;
+
 extern NSString* const Key_CanvasTitles;
 extern NSString* const Key_CanvasTitleIndices;
 

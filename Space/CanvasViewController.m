@@ -125,6 +125,13 @@ static BOOL dragToTrashRequested;
     [self loadCurrentCanvas];
     
     [self addBoundariesForCanvas];
+    
+    if (self.isTrashMode == NO) {
+        if ([[NSUserDefaults standardUserDefaults] objectForKey:Key_AppInstalled] == nil) {
+            [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:YES] forKey:Key_AppInstalled];
+            [self createDefaultNote];
+        }
+    }
 }
 
 -(void)setTrashThreshold:(int)trashY {
@@ -407,6 +414,29 @@ static BOOL dragStarted = NO;
         self.currentlyZoomedInNoteView.originalCircleFrame = self.newlyCreatedNoteView.frame;
         [self zoomNote:self.newlyCreatedNoteView];
     }
+}
+
+-(void)createDefaultNote {
+    Note* note = [[Database sharedDatabase] createNote];
+    
+    note.recovering = NO;
+    note.canvas = self.currentCanvas;
+    
+    note.title = @"About Space";
+    note.content = @"About Space\n\nSpace is a experimental note board with the ability to jot down thoughts and plans, arrange them, and discard them once they are complete.";
+    
+    note.positionX = 0.5;
+    note.positionY = 0.5;
+    
+    // Store current and actual location of the newly created note.
+    CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
+    note.originalX = unnormalizedCenter.x;
+    note.originalY = unnormalizedCenter.y;
+    
+    // Draw the note as a note view in the canvas.
+    [self addViewForNote:note];
+    
+    [[Database sharedDatabase] save];
 }
 
 #pragma mark - Delete Notes

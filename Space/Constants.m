@@ -10,6 +10,8 @@
 
 int const Key_NavBarHeight = 64;
 
+NSString* const Key_AppInstalled = @"appInstalled";
+
 NSString* const Key_CanvasTitles = @"canvasTitles";
 NSString* const Key_CanvasTitleIndices = @"canvasTitleIndices";
 
