@@ -62,6 +62,7 @@
     
     self.contentField.backgroundColor = [UIColor whiteColor];
     self.contentField.delegate = self;
+    self.contentField.font = [UIFont systemFontOfSize:16];
     
     [self.view addSubview:self.focus];
     [self.focus addSubview:self.contentField];
