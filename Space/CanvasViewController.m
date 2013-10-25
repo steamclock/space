@@ -224,7 +224,7 @@ static BOOL dragStarted = NO;
                 self.dragToTrashRequested = YES;
                 [self deleteNoteWithoutAsking:noteView];
             } else {
-                [noteView setBackgroundColor:[UIColor redColor]];
+                [noteView setImage:[UIImage imageNamed:@"circle-red"]];
             }
         } else {
             // Add throw at the end of drag.
@@ -233,7 +233,7 @@ static BOOL dragStarted = NO;
                 CGPoint velocity = [recognizer velocityInView:self.view];
                 [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
             } else {
-                [noteView setBackgroundColor:[UIColor clearColor]];
+                [noteView setImage:[UIImage imageNamed:@"circle"]];
             }
         }
     }
