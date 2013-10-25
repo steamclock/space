@@ -7,6 +7,7 @@
 //
 
 #import "CanvasViewController.h"
+#import "DrawerViewController.h"
 #import "FocusViewController.h"
 #import "Note.h"
 #import "QBPopupMenu.h"
@@ -30,7 +31,7 @@
 
 @property (nonatomic) int triggerTrashY;
 
-@property (nonatomic) UIView* topLevelView;
+@property (weak, nonatomic) UIView* topLevelView;
 @property (strong, nonatomic) UIButton* emptyTrashButton;
 
 @end
@@ -129,8 +130,19 @@ static BOOL dragToTrashRequested;
     if (self.isTrashMode == NO) {
         if ([[NSUserDefaults standardUserDefaults] objectForKey:Key_AppInstalled] == nil) {
             [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithBool:YES] forKey:Key_AppInstalled];
+            [[NSUserDefaults standardUserDefaults] synchronize];
             [self createDefaultNote];
         }
+    }
+    
+    // Helps reposition the create note label at the center of the screen, because at the point where we want to
+    // create this label, the top canvas view isn't properly initialized yet, so the bounds were a bit off at that time.
+    if (self.drawer.topDrawerContents.createNoteLabel != nil) {
+        self.drawer.topDrawerContents.createNoteLabel.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                                                                   centerYByFactor:0.5
+                                                                                             width:self.drawer.topDrawerContents.createNoteLabel.frame.size.width
+                                                                                            height:self.drawer.topDrawerContents.createNoteLabel.frame.size.height
+                                                                               withReferenceBounds:self.drawer.topDrawerContents.view.bounds];
     }
 }
 
@@ -142,11 +154,12 @@ static BOOL dragToTrashRequested;
 
 -(void)loadCurrentCanvas {
     for(UIView* view in self.view.subviews) {
-        [self.collision removeItem:view];
-        [self.dynamicProperties removeItem:view];
+        if (view != self.drawer.topDrawerContents.createNoteLabel) {
+            [self.collision removeItem:view];
+            [self.dynamicProperties removeItem:view];
+            [view removeFromSuperview];
+        }
     }
-    
-    [[self.view subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
     
     NSArray* notes;
     
@@ -346,6 +359,9 @@ static BOOL dragStarted = NO;
 }
 
 -(void)addViewForNote:(Note*)note {
+    
+    [self showCreateNoteLabel];
+    
     NoteView* noteView = [[NoteView alloc] initWithImage:[UIImage imageNamed:@"circle"]];
     noteView.animator = self.animator;
     
@@ -426,7 +442,7 @@ static BOOL dragStarted = NO;
     note.content = @"About Space\n\nSpace is a experimental note board with the ability to jot down thoughts and plans, arrange them, and discard them once they are complete.";
     
     note.positionX = 0.5;
-    note.positionY = 0.5;
+    note.positionY = 0.25;
     
     // Store current and actual location of the newly created note.
     CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
@@ -437,6 +453,32 @@ static BOOL dragStarted = NO;
     [self addViewForNote:note];
     
     [[Database sharedDatabase] save];
+}
+
+-(void)showCreateNoteLabel {
+    NSArray* notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
+    NSLog(@"Number of saved notes = %d", [notes count]);
+    
+    if ([notes count] <= 3) {
+        if (self.drawer.topDrawerContents.createNoteLabel == nil) {
+            self.drawer.topDrawerContents.createNoteLabel = [[UILabel alloc] init];
+            
+            [self.drawer.topDrawerContents.createNoteLabel setText:@"Tap anywhere to create a note"];
+            [self.drawer.topDrawerContents.createNoteLabel setTextColor:[UIColor lightGrayColor]];
+            [self.drawer.topDrawerContents.createNoteLabel sizeToFit];
+            
+            self.drawer.topDrawerContents.createNoteLabel.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                                                                       centerYByFactor:0.5
+                                                                                                 width:self.drawer.topDrawerContents.createNoteLabel.frame.size.width
+                                                                                                height:self.drawer.topDrawerContents.createNoteLabel.frame.size.height
+                                                                                   withReferenceBounds:self.drawer.topDrawerContents.view.bounds];
+            
+            [self.drawer.topDrawerContents.view addSubview:self.drawer.topDrawerContents.createNoteLabel];
+        }
+    } else {
+        [self.drawer.topDrawerContents.createNoteLabel removeFromSuperview];
+        self.drawer.topDrawerContents.createNoteLabel = nil;
+    }
 }
 
 #pragma mark - Delete Notes
@@ -832,6 +874,12 @@ static BOOL dragStarted = NO;
         
         self.originalNoteCircleIndicator.frame = self.currentlyZoomedInNoteView.originalCircleFrame;
     }
+    
+    self.drawer.topDrawerContents.createNoteLabel.frame = [Coordinate frameWithCenterXByFactor:0.5
+                                                                               centerYByFactor:0.5
+                                                                                         width:self.drawer.topDrawerContents.createNoteLabel.frame.size.width
+                                                                                        height:self.drawer.topDrawerContents.createNoteLabel.frame.size.height
+                                                                           withReferenceBounds:self.drawer.topDrawerContents.view.bounds];
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {

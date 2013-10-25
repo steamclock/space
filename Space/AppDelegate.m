@@ -32,9 +32,12 @@
     drawer.topDrawerContents = noteCanvas;
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-    container.drawer = drawer;
     [container addChildViewController:drawer];
     [container.view addSubview:drawer.view];
+    
+    noteCanvas.drawer = drawer;
+    trashCanvas.drawer = drawer;
+    container.drawer = drawer;
     
     FocusViewController* focus = [[FocusViewController alloc] init];
     focus.view.alpha = 0;

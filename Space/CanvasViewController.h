@@ -30,9 +30,11 @@
 #import <UIKit/UIKit.h>
 #import "NoteView.h"
 
-@class FocusViewController;
+@class FocusViewController, DrawerViewController;
 
 @interface CanvasViewController : UIViewController <UIDynamicAnimatorDelegate>
+
+@property (weak, nonatomic) DrawerViewController* drawer;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -72,8 +74,9 @@
 
 @property (nonatomic) FocusViewController* focus;
 
-// Displays the artwork for the drag handle.
 @property (strong, nonatomic) UIImageView* dragHandleView;
+
+@property (strong, nonatomic) UILabel* createNoteLabel;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
