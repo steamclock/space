@@ -201,14 +201,16 @@
     
     // NSLog(@"Button number = %@", [NSNumber numberWithInt:pressedButton.tag]);
     // NSLog(@"Canvas number = %@", self.canvasTitleIndices[pressedButton.tag]);
+    int pressedButtonIndex = [self.allCanvasButtons indexOfObject:pressedButton];
+    NSLog(@"Pressed button index = %d", pressedButtonIndex);
     
-    [self.defaults setObject:[NSNumber numberWithInt:pressedButton.tag] forKey:Key_CurrentCanvasIndex];
+    [self.defaults setObject:[NSNumber numberWithInt:pressedButtonIndex] forKey:Key_CurrentCanvasIndex];
     [self.defaults synchronize];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
                                                         object:self
-                                                      userInfo:@{Key_CanvasNumber:self.canvasTitleIndices[pressedButton.tag],
-                                                                 Key_CanvasName:[self.canvasTitles objectAtIndex:pressedButton.tag]}];
+                                                      userInfo:@{Key_CanvasNumber:self.canvasTitleIndices[pressedButtonIndex],
+                                                                 Key_CanvasName:[self.canvasTitles objectAtIndex:pressedButtonIndex]}];
     
     for (UIButton* button in self.allCanvasButtons) {
         button.backgroundColor = [UIColor clearColor];
@@ -261,24 +263,33 @@
     }
     
     // It's not the last canvas, so we can proceed with delete.
-    int canvasToDelete;
-    int canvasToSwitchTo;
     
-    canvasToDelete = [self.canvasTitleIndices[self.currentlyEditingButton.tag] intValue];
+    int canvasToDelete;
+    int indexOfCanvasToDelete;
+    int canvasToSwitchTo;
+    int indexOfCanvasToSwitchTo;
+    
+    indexOfCanvasToDelete = [self.allCanvasButtons indexOfObject:self.currentlyEditingButton];
+    canvasToDelete = [self.canvasTitleIndices[indexOfCanvasToDelete] intValue];
     [[Database sharedDatabase] deleteAllNotesInCanvas:canvasToDelete];
-    [self.canvasTitles removeObjectAtIndex:self.currentlyEditingButton.tag];
-    [self.canvasTitleIndices removeObjectAtIndex:self.currentlyEditingButton.tag];
+    
+    [self.canvasTitles removeObjectAtIndex:indexOfCanvasToDelete];
+    [self.canvasTitleIndices removeObjectAtIndex:indexOfCanvasToDelete];
     
     // Switches canvas view to the previous one by default
-    int indexOfCanvasToSwitchTo = canvasToDelete - 1;
+    indexOfCanvasToSwitchTo = indexOfCanvasToDelete - 1;
     
     // Switches canvas view to the last available one (second object will move from index 1 to 0)
-    // if the first of the two canvases is the one to be deleted
-    if (canvasToDelete == 0) {
+    // if the first of the two canvases is the one to be deleted.
+    if (indexOfCanvasToDelete == 0) {
         indexOfCanvasToSwitchTo = 0;
     }
     
     canvasToSwitchTo = [[self.canvasTitleIndices objectAtIndex:indexOfCanvasToSwitchTo] intValue];
+    NSLog(@"Canvas to switch to = %d", canvasToSwitchTo);
+    
+    [self.defaults setObject:[NSNumber numberWithInt:indexOfCanvasToSwitchTo] forKey:Key_CurrentCanvasIndex];
+    [self.defaults synchronize];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
                                                         object:self

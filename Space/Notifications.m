@@ -6,7 +6,7 @@
 //  Copyright (c) 2013 University of British Columbia. All rights reserved.
 //
 
-NSString* kCanvasChangedNotification = @"spaceCanvasChanged";
+NSString* kCanvasChangedNotification = @"canvasChanged";
 
 NSString* kNoteCreatedNotification = @"noteCreated";
 

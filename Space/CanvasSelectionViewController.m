@@ -48,20 +48,11 @@
             canvasTitlePopover.popoverController = self.canvasMenuPopoverController;
             
             if ([self.defaults objectForKey:Key_CurrentCanvasIndex]) {
-                
-                NSMutableArray* canvasTitles = [self.defaults objectForKey:Key_CanvasTitles];
-                NSMutableArray* canvasTitleIndices = [self.defaults objectForKey:Key_CanvasTitleIndices];
-                
-                // Grab current canvas and its title.
+                                
+                // Grab current canvas title.
                 int currentCanvas = [[self.defaults objectForKey:Key_CurrentCanvasIndex] intValue];
                 NSString* currentTitle = [[self.defaults objectForKey:Key_CanvasTitles] objectAtIndex:currentCanvas];
                 self.menuItems = [[UINavigationItem alloc] initWithTitle:currentTitle];
-                
-                // Let the CanvasViewController know which canvas to draw for.
-                [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
-                                                                    object:self
-                                                                  userInfo:@{Key_CanvasNumber:canvasTitleIndices[currentCanvas],
-                                                                             Key_CanvasName:[canvasTitles objectAtIndex:currentCanvas]}];
                 
             }
                         

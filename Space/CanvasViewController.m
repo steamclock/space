@@ -22,7 +22,7 @@
 
 @property (nonatomic) UIDynamicAnimator* animator;
 @property (nonatomic) UICollisionBehavior* collision;
-@property (nonatomic) UIDynamicItemBehavior* dynamicProperties;
+@property (nonatomic) UIDynamicItemBehavior* circleBehavior;
 
 @property (nonatomic) NoteView* notePendingDelete;
 
@@ -89,12 +89,12 @@ static BOOL dragToTrashRequested;
     self.animator.delegate = self;
 
     self.collision = [[UICollisionBehavior alloc] init];
-    self.dynamicProperties = [[UIDynamicItemBehavior alloc] init];
-    self.dynamicProperties.allowsRotation = NO;
-    self.dynamicProperties.resistance = 10;
+    self.circleBehavior = [[UIDynamicItemBehavior alloc] init];
+    self.circleBehavior.allowsRotation = NO;
+    self.circleBehavior.resistance = 10;
 
     [self.animator addBehavior:self.collision];
-    [self.animator addBehavior:self.dynamicProperties];
+    [self.animator addBehavior:self.circleBehavior];
 
     if (self.isTrashMode) {
         // Catch the trashed notes.
@@ -122,7 +122,7 @@ static BOOL dragToTrashRequested;
     [super viewDidAppear:animated];
     
     // Load last selected canvas.
-    self.currentCanvas = [[[NSUserDefaults standardUserDefaults] objectForKey:Key_CurrentCanvasIndex] intValue];
+    self.currentCanvas = [[[NSUserDefaults standardUserDefaults] objectForKey:Key_CanvasNumber] intValue];
     [self loadCurrentCanvas];
     
     [self addBoundariesForCanvas];
@@ -153,10 +153,16 @@ static BOOL dragToTrashRequested;
 #pragma mark - Change Canvas
 
 -(void)loadCurrentCanvas {
+    NSLog(@"Current canvas = %d", self.currentCanvas);
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInt:self.currentCanvas] forKey:Key_CanvasNumber];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+    
+    [self showCreateNoteLabel];
+    
     for(UIView* view in self.view.subviews) {
         if (view != self.drawer.topDrawerContents.createNoteLabel) {
             [self.collision removeItem:view];
-            [self.dynamicProperties removeItem:view];
+            [self.circleBehavior removeItem:view];
             [view removeFromSuperview];
         }
     }
@@ -190,7 +196,7 @@ static BOOL dragToTrashRequested;
         [self addViewForNote:note];
     }
     
-    self.isRunningZoomAnimation = NO;
+    self.isRunningZoomAnimation = NO;    
 }
 
 -(void)canvasChanged:(NSNotification*)notification {
@@ -279,7 +285,7 @@ static BOOL dragStarted = NO;
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [[Database sharedDatabase] save];
                 CGPoint velocity = [recognizer velocityInView:self.view];
-                [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
+                [self.circleBehavior addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
             } else {
                 [noteView setImage:[UIImage imageNamed:@"circle"]];
             }
@@ -299,7 +305,7 @@ static BOOL dragStarted = NO;
             if(recognizer.state == UIGestureRecognizerStateEnded) {
                 [[Database sharedDatabase] save];
                 CGPoint velocity = [recognizer velocityInView:self.view];
-                [self.dynamicProperties addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
+                [self.circleBehavior addLinearVelocity:CGPointMake(velocity.x, velocity.y) forItem:noteView];
             } else {
                 [noteView setImage:[UIImage imageNamed:@"circle"]];
             }
@@ -406,7 +412,7 @@ static BOOL dragStarted = NO;
 
     [self.view addSubview:noteView];
     [self.collision addItem:noteView];
-    [self.dynamicProperties addItem:noteView];
+    [self.circleBehavior addItem:noteView];
 
     noteView.note = note;
     
@@ -457,7 +463,6 @@ static BOOL dragStarted = NO;
 
 -(void)showCreateNoteLabel {
     NSArray* notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
-    NSLog(@"Number of saved notes = %d", [notes count]);
     
     if ([notes count] <= 3) {
         if (self.drawer.topDrawerContents.createNoteLabel == nil) {
@@ -518,7 +523,7 @@ static BOOL dragStarted = NO;
     [note markAsTrashed];
     
     [self.collision removeItem:self.notePendingDelete];
-    [self.dynamicProperties removeItem:self.notePendingDelete];
+    [self.circleBehavior removeItem:self.notePendingDelete];
     
     if (self.isTrashMode) { // Remove it permanentely and instantly.
         [self.notePendingDelete removeFromSuperview];
@@ -607,7 +612,7 @@ static BOOL dragStarted = NO;
     // Remove the recovering note from the trashed canvas.
     [noteView removeFromSuperview];
     [self.collision removeItem:noteView];
-    [self.dynamicProperties removeItem:noteView];
+    [self.circleBehavior removeItem:noteView];
     
     NSDictionary* noteToRecoverInfo =
     [[NSDictionary alloc] initWithObjects:@[noteView.note, [NSValue valueWithCGPoint:CGPointMake(noteView.note.originalX, noteView.note.originalY)]]
@@ -713,7 +718,7 @@ static BOOL dragStarted = NO;
         
         // Cannot transform properly when the view is being controlled by the animator.
         [self.collision removeItem:noteView];
-        [self.dynamicProperties removeItem:noteView];
+        [self.circleBehavior removeItem:noteView];
         
         self.isCurrentlyZoomedIn = YES;
         self.shouldZoomInAfterCreatingNewNote = NO;
@@ -788,7 +793,7 @@ static BOOL dragStarted = NO;
             noteView.layer.cornerRadius = 0;
             
             [self.collision addItem:noteView];
-            [self.dynamicProperties addItem:noteView];
+            [self.circleBehavior addItem:noteView];
             
             noteView.note.positionX = [Coordinate normalizeXCoord:noteView.center.x withReferenceBounds:self.view.bounds];
             noteView.note.positionY = [Coordinate normalizeYCoord:noteView.center.y withReferenceBounds:self.view.bounds];
@@ -855,7 +860,12 @@ static BOOL dragStarted = NO;
     // Remove behaviours to prevent the animator from setting the incorrect center positions for noteViews after we've already
     // calculated and set them. We're not sure why the animator does this, but we're doing a lot of custom view positioning,
     // and it could be a result of some custom view handling logic that don't play well with the animator.
-    [self.animator removeAllBehaviors];
+    if (self.animator) {
+        [self.animator removeAllBehaviors];
+    }
+    self.animator = nil;
+    self.collision = nil;
+    self.circleBehavior = nil;
 }
 
 -(void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
@@ -902,9 +912,27 @@ static BOOL dragStarted = NO;
         [self repositionFocusView];
     }
     
-    // Restore the behaviours after orientation changes and calculations are completed.
+    // Restore the physics after orientation changes and calculations are completed.
+    self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view];
+    self.animator.delegate = self;
+    
+    self.collision = [[UICollisionBehavior alloc] init];
+    self.circleBehavior = [[UIDynamicItemBehavior alloc] init];
+    self.circleBehavior.allowsRotation = NO;
+    self.circleBehavior.resistance = 10;
+    
     [self.animator addBehavior:self.collision];
-    [self.animator addBehavior:self.dynamicProperties];
+    [self.animator addBehavior:self.circleBehavior];
+    
+    for (UIView* subview in self.view.subviews) {
+        if ([subview isKindOfClass:[NoteView class]]) {
+            NoteView* noteView = (NoteView*)subview;
+            noteView.animator = self.animator;
+            
+            [self.collision addItem:noteView];
+            [self.circleBehavior addItem:noteView];
+        }
+    }
 }
 
 // Called when orientation changes to reposition note views.
