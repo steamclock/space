@@ -16,6 +16,8 @@
 // Canvas titles and indices are stored in NSUserDefaults.
 @property (strong, nonatomic) NSUserDefaults* defaults;
 
+@property (strong, nonatomic) UIScrollView* scrollView;
+
 // These properties assist with creating, editing, and deleting canvas titles.
 @property (strong, nonatomic) UIButton* currentlyEditingButton;
 @property (strong, nonatomic) NSString* currentlyEditingButtonTitle;
@@ -70,8 +72,8 @@
 -(void)viewDidLoad {
     [super viewDidLoad];
     
-    self.view.backgroundColor = [UIColor whiteColor];
-    self.preferredContentSize = CGSizeMake(300.0f, 400.0f);
+    self.view.backgroundColor = [UIColor groupTableViewBackgroundColor];
+    self.preferredContentSize = CGSizeMake(300.0f, 325.0f);
     
     // Setup the textfield for entering new canvas titles.
     CGRect rect = CGRectMake(20.0f, 20.0f, 260.0f, 25.0f);
@@ -87,6 +89,9 @@
     [super viewDidAppear:animated];
     
     [self.titleField setText:@""];
+    
+    // Workaround for Apple's bug in which the scroll indicator doesn't flash on the first viewDidAppear call.
+    [self.scrollView performSelector:@selector(flashScrollIndicators) withObject:nil afterDelay:0];
 }
 
 -(BOOL)shouldAutorotate {
@@ -104,6 +109,16 @@
 }
 
 -(void)setupMenuWithCanvasTitles:(NSArray *)canvasTitles andIndices:(NSArray *)canvasIndices {
+    
+    if (self.scrollView) {
+        [self.scrollView removeFromSuperview];
+        self.scrollView = nil;
+    }
+    
+    self.scrollView = [[UIScrollView alloc] initWithFrame:CGRectMake(20.0f, 60.0f, 260.0f, 200.0f)];
+    self.scrollView.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:self.scrollView];
+    
     self.allCanvasButtons = nil;
     self.allCanvasButtons = [[NSMutableArray alloc] init];
     
@@ -118,7 +133,7 @@
     [self.defaults synchronize];
     
     // Helps dynamically position canvas title buttons.
-    int yCoord = 60;
+    int yCoord = 5;
     
     // Helps associate a button to its corresponding array index of the canvas titles and indices. (See .h for more info)
     int indexTag = 0;
@@ -130,7 +145,7 @@
         int buttonHeight = 44;
         int gapBetweenButtons = 5;
         
-        CGRect buttonFrame = CGRectMake(20, yCoord, buttonWidth, buttonHeight);
+        CGRect buttonFrame = CGRectMake(5, yCoord, buttonWidth, buttonHeight);
         
         UIButton* canvasButton = [UIButton buttonWithType:UIButtonTypeSystem];
         canvasButton.frame = buttonFrame;
@@ -155,9 +170,11 @@
         
         [self.allCanvasButtons addObject:canvasButton];
         
-        [self.view addSubview:canvasButton];
+        [self.scrollView addSubview:canvasButton];
         yCoord += buttonHeight + gapBetweenButtons;
     }
+    
+    self.scrollView.contentSize = CGSizeMake(260.0f, 50.0f * [canvasTitles count]);
 }
 
 -(void)titleLongPress:(UITapGestureRecognizer *)recognizer {
