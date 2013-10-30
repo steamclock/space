@@ -92,6 +92,15 @@
     
     // Workaround for Apple's bug in which the scroll indicator doesn't flash on the first viewDidAppear call.
     [self.scrollView performSelector:@selector(flashScrollIndicators) withObject:nil afterDelay:0];
+    
+    // Scroll to selected button.
+    int selectedButtonIndex = [[self.defaults objectForKey:Key_CurrentCanvasIndex] intValue];
+    [self scrollToButtonAtIndex:selectedButtonIndex];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
 }
 
 -(BOOL)shouldAutorotate {
@@ -109,7 +118,6 @@
 }
 
 -(void)setupMenuWithCanvasTitles:(NSArray *)canvasTitles andIndices:(NSArray *)canvasIndices {
-    
     if (self.scrollView) {
         [self.scrollView removeFromSuperview];
         self.scrollView = nil;
@@ -346,9 +354,17 @@
         
         [self setupMenuWithCanvasTitles:self.canvasTitles andIndices:self.canvasTitleIndices];
         
+        // Scroll to newly created button.
+        int newlyCreatedButtonIndex = [self.canvasTitles count]-1;
+        [self scrollToButtonAtIndex:newlyCreatedButtonIndex];
+        
         textField.text = @"";
         
         [textField resignFirstResponder];
+        
+        // Switch to the new canvas.
+        UIButton* newlyCreatedButton = [self.allCanvasButtons objectAtIndex:newlyCreatedButtonIndex];
+        [self canvasSelected:newlyCreatedButton];
     }
     
     return YES;
@@ -375,9 +391,15 @@
     }
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+#pragma mark - Scroll to Selected Button
+
+-(void)scrollToButtonAtIndex:(int)buttonIndex {
+    UIButton* targetButton = [self.allCanvasButtons objectAtIndex:buttonIndex];
+    CGRect visibleRect = CGRectMake(targetButton.frame.origin.x,
+                                    targetButton.frame.origin.y + 5, // Adds a little padding at the bottom for the auto scroll.
+                                    targetButton.frame.size.width,
+                                    targetButton.frame.size.height);
+    [self.scrollView scrollRectToVisible:visibleRect animated:YES];
 }
 
 @end
