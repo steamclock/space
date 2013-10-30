@@ -43,6 +43,11 @@
     focus.view.alpha = 0;
     noteCanvas.focus = focus;
     
+    __weak CanvasViewController* weakNoteCanvas = noteCanvas;
+    noteCanvas.focus.titleEntered = ^void(NSString* newTitle) {
+        weakNoteCanvas.originalNoteCircleTitleLabel.text = newTitle;
+    };
+    
     [container addChildViewController:focus];
     [container.view addSubview:focus.view];
     

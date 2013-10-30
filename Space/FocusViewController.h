@@ -16,4 +16,7 @@
 // Called to pull the content from the selected note circle and display them in the editor.
 -(void)focusOn:(NoteView*)noteView;
 
+// Callback block for updating title label as text is being entered in the focus view.
+@property (copy, nonatomic) void (^titleEntered)(NSString*);
+
 @end

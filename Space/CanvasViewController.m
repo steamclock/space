@@ -820,12 +820,12 @@ static BOOL dragStarted = NO;
 -(void)createOriginalNoteCircleIndicator {
     self.originalNoteCircleIndicator = [[UIImageView alloc] initWithFrame:self.currentlyZoomedInNoteView.originalCircleFrame];
     self.originalNoteCircleIndicator.image = [UIImage imageNamed:@"circle"];
-    UILabel* titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, Key_NoteTitleLabelWidth, Key_NoteTitleLabelHeight)];
-    titleLabel.center = CGPointMake(self.originalNoteCircleIndicator.frame.size.width/2.0, -Key_NoteTitleLabelHeight);
-    titleLabel.textAlignment = NSTextAlignmentCenter;
-    titleLabel.font = [UIFont systemFontOfSize:14];
-    [self.originalNoteCircleIndicator addSubview:titleLabel];
-    [titleLabel setText:self.currentlyZoomedInNoteView.titleLabel.text];
+    self.originalNoteCircleTitleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, Key_NoteTitleLabelWidth, Key_NoteTitleLabelHeight)];
+    self.originalNoteCircleTitleLabel.center = CGPointMake(self.originalNoteCircleIndicator.frame.size.width/2.0, -Key_NoteTitleLabelHeight);
+    self.originalNoteCircleTitleLabel.textAlignment = NSTextAlignmentCenter;
+    self.originalNoteCircleTitleLabel.font = [UIFont systemFontOfSize:14];
+    [self.originalNoteCircleIndicator addSubview:self.originalNoteCircleTitleLabel];
+    [self.originalNoteCircleTitleLabel setText:self.currentlyZoomedInNoteView.titleLabel.text];
     
     [self.view addSubview:self.originalNoteCircleIndicator];
 }

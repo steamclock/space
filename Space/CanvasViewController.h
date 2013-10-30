@@ -43,6 +43,7 @@
 
 // A temporary duplicate note circle at the exact same location of the tapped note circle.
 @property (strong, nonatomic) UIImageView* originalNoteCircleIndicator;
+@property (strong, nonatomic) UILabel* originalNoteCircleTitleLabel;
 
 @property (nonatomic) BOOL isCurrentlyZoomedIn;
 

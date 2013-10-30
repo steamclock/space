@@ -129,6 +129,14 @@
     return YES;
 }
 
+- (void)textViewDidChange:(UITextView *)textView {
+    NSLog(@"You've typed = %@", self.contentField.text);
+    
+    if (self.titleEntered) {
+        self.titleEntered(self.contentField.text);
+    }
+}
+
 -(void)textViewDidBeginEditing:(UITextView *)textView {
     if (textView == self.contentField) {
         if ([self.contentField.text length] == 0) {
