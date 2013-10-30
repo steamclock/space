@@ -200,6 +200,10 @@
 }
 
 -(void)physicsForHandleDraggedDownwards {
+    if (self.view.frame.origin.y >= self.restY) {
+        return; // Don't run this function if the note canvas is already fully revealed.
+    }
+    
     int gravityTriggerThreshold = -650;
     BOOL pastGravityThreshold;
     pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
@@ -214,6 +218,10 @@
 }
 
 -(void)physicsForHandleDraggedUpwards {
+    if (self.view.frame.origin.y <= self.minY) {
+        return; // Don't run this function if the trash canvas is already fully revealed.
+    }
+    
     int gravityTriggerThreshold = -50;
     BOOL pastGravityThreshold;
     pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
