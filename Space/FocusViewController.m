@@ -102,6 +102,10 @@
     
     self.note.content = self.contentField.text;
     
+    if ([self.contentField.text length] == 0) {
+        self.note.content = @"New Note";
+    }
+    
     [[Database sharedDatabase] save];
     
     [self.noteView setUserInteractionEnabled:YES];
@@ -135,14 +139,19 @@
     if (self.titleEntered) {
         self.titleEntered(self.contentField.text);
     }
+    
+    if ([self.contentField.text length] == 0) {
+        self.titleEntered(@"New Note");
+    }
 }
 
 -(void)textViewDidBeginEditing:(UITextView *)textView {
     if (textView == self.contentField) {
-        if ([self.contentField.text length] == 0) {
+        if ([self.contentField.text isEqualToString:@"New Note"] || [self.contentField.text length] == 0) {
             self.contentField.textColor = [UIColor lightGrayColor];
             self.contentField.text = @"Type your note...";
             self.isNewNote = YES;
+            self.titleEntered(@"New Note");
         } else {
             self.contentField.textColor = [UIColor blackColor];
             self.isNewNote = NO;

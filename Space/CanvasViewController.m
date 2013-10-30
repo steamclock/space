@@ -828,6 +828,10 @@ static BOOL dragStarted = NO;
     [self.originalNoteCircleTitleLabel setText:self.currentlyZoomedInNoteView.titleLabel.text];
     
     [self.view addSubview:self.originalNoteCircleIndicator];
+    
+    if (self.noteCreated) {
+        self.originalNoteCircleTitleLabel.text = @"New Note";
+    }
 }
 
 -(void)dimNoteViews {
