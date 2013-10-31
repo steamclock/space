@@ -790,8 +790,11 @@ static BOOL dragStarted = NO;
             noteView.layer.zPosition = 0;
             noteView.layer.cornerRadius = 0;
             
-            [self.collision addItem:noteView];
-            [self.circleBehavior addItem:noteView];
+            // If canvas has been switched, can't add to animator because noteview isn't in the canvas view any more
+            if([noteView superview]) {
+                [self.collision addItem:noteView];
+                [self.circleBehavior addItem:noteView];
+            }
             
             noteView.note.positionX = [Coordinate normalizeXCoord:noteView.center.x withReferenceBounds:self.view.bounds];
             noteView.note.positionY = [Coordinate normalizeYCoord:noteView.center.y withReferenceBounds:self.view.bounds];
