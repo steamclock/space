@@ -7,6 +7,7 @@
 //
 
 NSString* kCanvasChangedNotification = @"canvasChanged";
+NSString* kCanvasAddedorDeletedNotification = @"canvasAddedOrDeleted";
 
 NSString* kNoteCreatedNotification = @"noteCreated";
 

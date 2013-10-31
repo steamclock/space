@@ -153,10 +153,6 @@ static BOOL dragToTrashRequested;
 #pragma mark - Change Canvas
 
 -(void)loadCurrentCanvas {
-    NSLog(@"Current canvas = %d", self.currentCanvas);
-    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInt:self.currentCanvas] forKey:Key_CanvasNumber];
-    [[NSUserDefaults standardUserDefaults] synchronize];
-    
     [self showCreateNoteLabel];
     
     for(UIView* view in self.view.subviews) {
@@ -201,6 +197,8 @@ static BOOL dragToTrashRequested;
 
 -(void)canvasChanged:(NSNotification*)notification {
     self.currentCanvas = [notification.userInfo[Key_CanvasNumber] intValue];
+    [[NSUserDefaults standardUserDefaults] setObject:[NSNumber numberWithInt:self.currentCanvas] forKey:Key_CanvasNumber];
+    [[NSUserDefaults standardUserDefaults] synchronize];
     
     if (self.isCurrentlyZoomedIn) {
         self.isRefocus = NO;

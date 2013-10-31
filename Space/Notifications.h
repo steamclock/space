@@ -7,6 +7,7 @@
 //
 
 extern NSString* kCanvasChangedNotification;
+extern NSString* kCanvasAddedorDeletedNotification;
 
 extern NSString* kNoteCreatedNotification;
 
