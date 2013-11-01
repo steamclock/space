@@ -972,18 +972,18 @@ static BOOL dragStarted = NO;
         CGPoint center = note.center;
         
         if (note.frame.origin.y < 0) {
-            center.y = Key_NoteRadius;
+            center.y = Key_NoteRadius * 2;
         } else if (CGRectGetMaxY(note.frame) > self.view.bounds.size.height) {
-            center.y = self.view.bounds.size.height - Key_NoteRadius;
+            center.y = self.view.bounds.size.height - Key_NoteRadius * 2;
         }
         
         if (note.frame.origin.x < 0) {
-            center.x = Key_NoteRadius;
+            center.x = Key_NoteRadius * 2;
         } else if (CGRectGetMaxX(note.frame) > self.view.bounds.size.width) {
-            center.x = self.view.bounds.size.width - Key_NoteRadius;
+            center.x = self.view.bounds.size.width - Key_NoteRadius * 2;
         }
         
-        note.center = CGPointMake(note.originalPositionX, note.originalPositionY);
+        note.center = center;
         
         [self.animator updateItemUsingCurrentState:note];
         [[Database sharedDatabase] save];
@@ -1053,6 +1053,8 @@ static BOOL dragStarted = NO;
                 noteView.note.originalX = noteView.center.x;
                 noteView.note.originalY = noteView.center.y;
             }
+            
+            [self returnNoteToBounds:noteView];
             
             [[Database sharedDatabase] save];
         }
