@@ -13,6 +13,7 @@
 #import "FocusViewController.h"
 #import "CanvasSelectionViewController.h"
 #import "Database.h"
+#import "UIResponder+KeyboardCache.h"
 
 @implementation AppDelegate
 
@@ -56,6 +57,8 @@
     [container.view addSubview:canvasSelect.view];
     
     self.window.rootViewController = container;
+    
+    [UIResponder cacheKeyboard];
     
     return YES;
 }

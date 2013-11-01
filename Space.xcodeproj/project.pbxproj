@@ -38,6 +38,7 @@
 		B8F1A7B01819D4D1007BAABD /* ContainerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */; };
 		B8F27427182435560040C83C /* AboutPage.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B8F27426182435560040C83C /* AboutPage.storyboard */; };
 		B8F2742A182439F70040C83C /* AboutViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F27429182439F70040C83C /* AboutViewController.m */; };
+		B8F2742E18244FF50040C83C /* UIResponder+KeyboardCache.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F2742D18244FF50040C83C /* UIResponder+KeyboardCache.m */; };
 		CA0F8356E0134BAC8244836C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1842E80713F540AB860880DC /* libPods.a */; };
 /* End PBXBuildFile section */
 
@@ -102,6 +103,8 @@
 		B8F27426182435560040C83C /* AboutPage.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = AboutPage.storyboard; sourceTree = "<group>"; };
 		B8F27428182439F70040C83C /* AboutViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AboutViewController.h; sourceTree = "<group>"; };
 		B8F27429182439F70040C83C /* AboutViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AboutViewController.m; sourceTree = "<group>"; };
+		B8F2742C18244FF50040C83C /* UIResponder+KeyboardCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIResponder+KeyboardCache.h"; sourceTree = "<group>"; };
+		B8F2742D18244FF50040C83C /* UIResponder+KeyboardCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIResponder+KeyboardCache.m"; sourceTree = "<group>"; };
 		D6C0872E37B24A98876C9A8E /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -171,6 +174,7 @@
 				E4DD05C617E90A5800ED525D /* CoreData */,
 				B83D02C2180765CE003A2C7B /* Helper */,
 				E4DD05C717E90A7B00ED525D /* Constants */,
+				B8F2742B18244FD60040C83C /* CacheKeyboard */,
 				B8F27426182435560040C83C /* AboutPage.storyboard */,
 				B8F27428182439F70040C83C /* AboutViewController.h */,
 				B8F27429182439F70040C83C /* AboutViewController.m */,
@@ -244,6 +248,15 @@
 				B875F3D41821C63800F2731C /* CanvasMenuViewController.m */,
 			);
 			name = CanvasMenu;
+			sourceTree = "<group>";
+		};
+		B8F2742B18244FD60040C83C /* CacheKeyboard */ = {
+			isa = PBXGroup;
+			children = (
+				B8F2742C18244FF50040C83C /* UIResponder+KeyboardCache.h */,
+				B8F2742D18244FF50040C83C /* UIResponder+KeyboardCache.m */,
+			);
+			name = CacheKeyboard;
 			sourceTree = "<group>";
 		};
 		E4DD05C617E90A5800ED525D /* CoreData */ = {
@@ -403,6 +416,7 @@
 				B8F2742A182439F70040C83C /* AboutViewController.m in Sources */,
 				B8A7AF921815F85600EE1F28 /* FocusView.m in Sources */,
 				A6F5540117BD737200728B8C /* AppDelegate.m in Sources */,
+				B8F2742E18244FF50040C83C /* UIResponder+KeyboardCache.m in Sources */,
 				A6F553FD17BD737200728B8C /* main.m in Sources */,
 				A6EF0DE517C56310005EF2A0 /* NoteView.m in Sources */,
 				A699F2F817CC06830001E6B0 /* CanvasSelectionViewController.m in Sources */,
