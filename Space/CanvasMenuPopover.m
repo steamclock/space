@@ -18,6 +18,11 @@
 
 @property (strong, nonatomic) CanvasMenuViewController* canvasMenuViewController;
 
+@property (strong, nonatomic) UIButton* editButton;
+@property (strong, nonatomic) UIButton* addButton;
+
+@property (strong, nonatomic) UIColor* defaultTintColor;
+
 @end
 
 @implementation CanvasMenuPopover
@@ -55,6 +60,10 @@
     [super viewDidLoad];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasAddedOrDeleted) name:kCanvasAddedorDeletedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(disableAddButton) name:kDisableAddButtonNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(enableAddButton) name:kEnableAddButtonNotification object:nil];
+    
+    self.defaultTintColor = [[[[UIApplication sharedApplication] delegate] window] tintColor];
 }
 
 -(void)viewDidLayoutSubviews {
@@ -84,19 +93,19 @@
     UIView* staticHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 35)];
     staticHeaderView.backgroundColor = [UIColor whiteColor];
     
-    UIButton* editButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    editButton.frame = CGRectMake(5, 5, 50, 25);
-    [editButton setTitle:@"Edit" forState:UIControlStateNormal];
-    [editButton addTarget:self action:@selector(editTableView) forControlEvents:UIControlEventTouchUpInside];
-    [staticHeaderView addSubview:editButton];
+    self.editButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.editButton.frame = CGRectMake(5, 5, 50, 25);
+    [self.editButton setTitle:@"Edit" forState:UIControlStateNormal];
+    [self.editButton addTarget:self action:@selector(editTableView) forControlEvents:UIControlEventTouchUpInside];
+    [staticHeaderView addSubview:self.editButton];
     
-    UIButton* addButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    addButton.frame = CGRectMake(250, 5, 50, 25);
-    addButton.titleLabel.font = [UIFont systemFontOfSize:20];
-    [addButton setTitle:@"+" forState:UIControlStateNormal];
-    [addButton addTarget:self action:@selector(addCanvasButtonPressed) forControlEvents:UIControlEventTouchUpInside];
-    [staticHeaderView addSubview:addButton];
-    
+    self.addButton = [UIButton buttonWithType:UIButtonTypeSystem];
+    self.addButton.frame = CGRectMake(250, 5, 50, 25);
+    self.addButton.titleLabel.font = [UIFont systemFontOfSize:20];
+    [self.addButton setTitle:@"+" forState:UIControlStateNormal];
+    [self.addButton addTarget:self action:@selector(addCanvasButtonPressed) forControlEvents:UIControlEventTouchUpInside];
+    [staticHeaderView addSubview:self.addButton];
+   
     [self.view addSubview:staticHeaderView];
 }
 
@@ -114,6 +123,14 @@
 
 -(void)addCanvasButtonPressed {
     [self.canvasMenuViewController addCanvas];
+}
+
+-(void)enableAddButton {
+    self.addButton.tintColor = self.defaultTintColor;
+}
+
+-(void)disableAddButton {
+    self.addButton.tintColor = [UIColor lightGrayColor];
 }
 
 #pragma mark - Update Popover Size

@@ -59,6 +59,10 @@ static CanvasMenuViewController* _mainInstance;
     // NSLog(@"Canvas indices count at viewDidAppear = %d", [self.canvasTitleIndices count]);
 }
 
+-(void)viewDidLayoutSubviews {
+    [self checkCanvasLimit];
+}
+
 -(void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
     
@@ -221,6 +225,8 @@ static CanvasMenuViewController* _mainInstance;
     
     // Delete operation completed, so reset the check.
     self.deleteCanvasAllowed = NO;
+    
+    [self checkCanvasLimit];
 }
 
 #pragma mark - Edit Canvas
@@ -316,6 +322,15 @@ static CanvasMenuViewController* _mainInstance;
         [self saveCurrentlyEditingCanvas];
     }
     
+    if ([self checkCanvasLimit]) {
+        UIAlertView* alertView = [[UIAlertView alloc] initWithTitle:@"Cannot Add Canvas"
+                                                            message:@"The maximum number of canvases you can create is 5."
+                                                           delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil];
+        [alertView show];
+        
+        return;
+    }
+    
     NSIndexPath* newCanvasPath = [NSIndexPath indexPathForRow:[self.canvasTitles count] inSection:0];
     
     [self.canvasTitles addObject:@""];
@@ -378,6 +393,20 @@ static CanvasMenuViewController* _mainInstance;
     self.currentTextField = nil;
     
     self.isEditingCanvasTitle = NO;
+}
+
+-(BOOL)checkCanvasLimit {
+    if ([self.canvasTitles count] >= 5) {
+        NSLog(@"Cannot allow more than 5 canvases.");
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:kDisableAddButtonNotification object:self];
+        
+        return YES;
+    } else {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kEnableAddButtonNotification object:self];
+        
+        return NO;
+    }
 }
 
 #pragma mark - Select Canvas

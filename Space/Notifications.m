@@ -9,6 +9,9 @@
 NSString* kCanvasChangedNotification = @"canvasChanged";
 NSString* kCanvasAddedorDeletedNotification = @"canvasAddedOrDeleted";
 
+NSString* kDisableAddButtonNotification = @"disableAddButton";
+NSString* kEnableAddButtonNotification = @"enableAddButton";
+
 NSString* kNoteCreatedNotification = @"noteCreated";
 
 NSString* kSaveNoteNotification = @"saveNote";

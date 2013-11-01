@@ -9,6 +9,9 @@
 extern NSString* kCanvasChangedNotification;
 extern NSString* kCanvasAddedorDeletedNotification;
 
+extern NSString* kDisableAddButtonNotification;
+extern NSString* kEnableAddButtonNotification;
+
 extern NSString* kNoteCreatedNotification;
 
 extern NSString* kSaveNoteNotification;
