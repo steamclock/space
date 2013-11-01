@@ -68,7 +68,7 @@
 
 -(void)viewDidLayoutSubviews {
     self.view.backgroundColor = [UIColor groupTableViewBackgroundColor];
-    self.preferredContentSize = CGSizeMake(300.0f, 45 * [[self.defaults objectForKey:Key_CanvasTitles] count] + 120);
+    self.preferredContentSize = CGSizeMake(300.0f, 45 * [[self.defaults objectForKey:Key_CanvasTitles] count] + 150);
     NSLog(@"Popover size at viewDidLoad = %@", NSStringFromCGSize(self.preferredContentSize));
 }
 
@@ -136,7 +136,7 @@
 #pragma mark - Update Popover Size
 
 -(void)canvasAddedOrDeleted {
-    self.preferredContentSize = CGSizeMake(300.0f, 60.0f * [[self.defaults objectForKey:Key_CanvasTitles] count] + 100);
+    self.preferredContentSize = CGSizeMake(300.0f, 60.0f * [[self.defaults objectForKey:Key_CanvasTitles] count] + 150);
 }
 
 @end

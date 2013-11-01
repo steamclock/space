@@ -135,6 +135,14 @@ static CanvasMenuViewController* _mainInstance;
     return cell;
 }
 
+-(NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+    if (section == 0) {
+        return @"Tap and hold to change canvas title.";
+    }
+    
+    return nil;
+}
+
 #pragma mark - Table View Edit Mode
 
 -(void)setEditing:(BOOL)editing animated:(BOOL)animated {
