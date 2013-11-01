@@ -27,6 +27,8 @@
 @property (strong, nonatomic) NSMutableArray* canvasTitles;
 @property (strong, nonatomic) NSMutableArray* canvasTitleIndices;
 
+@property (nonatomic) BOOL isEditingTableView;
+
 +(CanvasMenuViewController*)canvasMenuViewController;
 -(void)setupMenuWithCanvasTitles:(NSArray *)canvasTitles andIndices:(NSArray *)canvasIndices;
 

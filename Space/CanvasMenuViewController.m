@@ -59,6 +59,13 @@ static CanvasMenuViewController* _mainInstance;
     // NSLog(@"Canvas indices count at viewDidAppear = %d", [self.canvasTitleIndices count]);
 }
 
+-(void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    
+    [self.tableView setEditing:NO animated:YES];
+    self.isEditingTableView = NO;
+}
+
 -(void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
@@ -100,6 +107,7 @@ static CanvasMenuViewController* _mainInstance;
     
     if (indexPath.section == 0) {
         cell.textLabel.text = [self.canvasTitles objectAtIndex:indexPath.row];
+        cell.textLabel.textAlignment = NSTextAlignmentLeft;
         
         // Allows editing of canvas title by holding down on the button.
         UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(titleLongPress:)];
@@ -115,7 +123,7 @@ static CanvasMenuViewController* _mainInstance;
         
         [cell addSubview:titleField];
         
-    } else {
+    } else if (indexPath.section == 1) {
         cell.textLabel.text = @"About Space";
         cell.textLabel.textAlignment = NSTextAlignmentCenter;
     }
@@ -126,6 +134,10 @@ static CanvasMenuViewController* _mainInstance;
 #pragma mark - Table View Edit Mode
 
 -(void)setEditing:(BOOL)editing animated:(BOOL)animated {
+    if (self.isEditingCanvasTitle) {
+        [self saveCurrentlyEditingCanvas];
+    }
+     
     [super setEditing:editing animated:animated];
     [self.tableView setEditing:editing animated:animated];
 }
@@ -143,7 +155,6 @@ static CanvasMenuViewController* _mainInstance;
 // Override to support editing the table view.
 -(void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (editingStyle == UITableViewCellEditingStyleDelete) {
-        
         if (indexPath.section == 0) {
             // Reject delete if there's only one remaining canvas.
             if ([self.canvasTitles count] == 1) {
@@ -215,7 +226,7 @@ static CanvasMenuViewController* _mainInstance;
 #pragma mark - Edit Canvas
 
 -(void)titleLongPress:(UITapGestureRecognizer *)recognizer {
-    if (recognizer.state != UIGestureRecognizerStateBegan) {
+    if (recognizer.state != UIGestureRecognizerStateBegan || self.isEditingTableView) {
         return; // Disregard other states that are also part of a long press, so we don't enter this method multiple times.
     }
     
@@ -245,12 +256,6 @@ static CanvasMenuViewController* _mainInstance;
         self.isEditingCanvasTitle = YES;
         
     } else {
-        
-        if ([self.currentTextField.text isEqualToString:@""]) {
-            [self.canvasTitles replaceObjectAtIndex:self.pathOfCellToEdit.row withObject:@"No Title"];
-        } else {
-            [self.canvasTitles replaceObjectAtIndex:self.pathOfCellToEdit.row withObject:self.currentTextField.text];
-        }
         
         [self updateCanvas];
     }
@@ -302,6 +307,15 @@ static CanvasMenuViewController* _mainInstance;
 #pragma mark - Add Canvas
 
 -(void)addCanvas {
+    if (self.isEditingTableView) {
+        [self.tableView setEditing:NO animated:YES];
+        self.isEditingTableView = NO;
+    }
+    
+    if (self.isEditingCanvasTitle) {
+        [self saveCurrentlyEditingCanvas];
+    }
+    
     NSIndexPath* newCanvasPath = [NSIndexPath indexPathForRow:[self.canvasTitles count] inSection:0];
     
     [self.canvasTitles addObject:@""];
@@ -334,12 +348,36 @@ static CanvasMenuViewController* _mainInstance;
         self.pathOfCellToEdit = [self.tableView indexPathForCell:self.cellToEdit];
         self.currentTextField = (UITextField*)[self.cellToEdit viewWithTag:1];
         
+        self.currentTextField.text = @"";
+        
         [self swapTextLabelWithTextField];
     }
     
     [self.tableView selectRowAtIndexPath:newCanvasPath animated:YES scrollPosition:UITableViewScrollPositionBottom];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasAddedorDeletedNotification object:self];
+}
+
+-(void)saveCurrentlyEditingCanvas {
+    if ([self.currentTextField.text isEqualToString:@""]) {
+        [self.canvasTitles replaceObjectAtIndex:self.pathOfCellToEdit.row withObject:@"No Title"];
+    } else {
+        [self.canvasTitles replaceObjectAtIndex:self.pathOfCellToEdit.row withObject:self.currentTextField.text];
+    }
+    
+    [self.defaults setObject:[NSNumber numberWithInt:self.pathOfCellToEdit.row] forKey:Key_CurrentCanvasIndex];
+    [self.defaults setObject:self.canvasTitles forKey:Key_CanvasTitles];
+    [self.defaults synchronize];
+    
+    self.cellToEdit.textLabel.alpha = 1;
+    self.currentTextField.alpha = 0;
+    
+    [self.tableView reloadData];
+        
+    self.cellToEdit = nil;
+    self.currentTextField = nil;
+    
+    self.isEditingCanvasTitle = NO;
 }
 
 #pragma mark - Select Canvas

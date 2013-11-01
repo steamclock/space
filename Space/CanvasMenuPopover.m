@@ -17,7 +17,6 @@
 @property (strong, nonatomic) NSUserDefaults* defaults;
 
 @property (strong, nonatomic) CanvasMenuViewController* canvasMenuViewController;
-@property (nonatomic) BOOL hasEditedTableView;
 
 @end
 
@@ -104,12 +103,12 @@
 #pragma mark - Edit and Add Button Actions
 
 -(void)editTableView {
-    if (self.hasEditedTableView == NO) {
+    if (self.canvasMenuViewController.isEditingTableView == NO) {
         [self.canvasMenuViewController setEditing:YES animated:YES];
-        self.hasEditedTableView = YES;
+        self.canvasMenuViewController.isEditingTableView = YES;
     } else {
         [self.canvasMenuViewController setEditing:NO animated:YES];
-        self.hasEditedTableView = NO;
+        self.canvasMenuViewController.isEditingTableView = NO;
     }
 }
 
