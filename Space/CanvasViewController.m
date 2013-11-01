@@ -532,36 +532,10 @@ static BOOL dragStarted = NO;
         [[Database sharedDatabase] save];
         
     } else if (dragToTrashRequested == NO) {
-        self.isDroppingNoteForDeletion = YES;
-        
-        // Have the note fall down, and once it's fallen below a certain point, remove it, and draw the trashed note in the trash canvas.
-        UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.notePendingDelete]];
-        trashDrop.gravityDirection = CGVectorMake(0, 1);
-        [self.animator addBehavior:trashDrop];
-        
-        __weak CanvasViewController* weakSelf = self;
-        
-        CGPoint windowBottom = CGPointMake(0, self.topLevelView.frame.size.height);
-        CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:self.topLevelView];
-        
-        self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y + Key_NoteRadius;
-        
-        self.notePendingDelete.onDropOffscreen = ^{
-            [weakSelf.animator removeBehavior:trashDrop];
-            [weakSelf.notePendingDelete removeFromSuperview];
-            weakSelf.notePendingDelete = nil;
-            
-            NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
-            
-            NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification
-                                                                                    object:weakSelf
-                                                                                  userInfo:deletedNoteInfo];
-            
-            [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
-            
-            weakSelf.isDroppingNoteForDeletion = NO;
-        };
+        [self dropNoteToTrash:note];
     } else {
+        [self dropNoteToTrash:note];
+        /* // Alternative drag to trash behaviour in which we just remove the note view.
         [self.notePendingDelete removeFromSuperview];
         self.notePendingDelete = nil;
         
@@ -572,7 +546,40 @@ static BOOL dragStarted = NO;
                                                                               userInfo:deletedNoteInfo];
         
         [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
+        */
     }
+}
+
+-(void)dropNoteToTrash:(Note*)note {
+    self.isDroppingNoteForDeletion = YES;
+    
+    // Have the note fall down, and once it's fallen below a certain point, remove it, and draw the trashed note in the trash canvas.
+    UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.notePendingDelete]];
+    trashDrop.gravityDirection = CGVectorMake(0, 20.0);
+    [self.animator addBehavior:trashDrop];
+    
+    __weak CanvasViewController* weakSelf = self;
+    
+    CGPoint windowBottom = CGPointMake(0, self.topLevelView.frame.size.height);
+    CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:self.topLevelView];
+    
+    self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y + Key_NoteRadius;
+    
+    self.notePendingDelete.onDropOffscreen = ^{
+        [weakSelf.animator removeBehavior:trashDrop];
+        [weakSelf.notePendingDelete removeFromSuperview];
+        weakSelf.notePendingDelete = nil;
+        
+        NSDictionary* deletedNoteInfo = [[NSDictionary alloc] initWithObjects:@[note] forKeys:@[Key_TrashedNotes]];
+        
+        NSNotification* noteTrashedNotification = [[NSNotification alloc] initWithName:kNoteTrashedNotification
+                                                                                object:weakSelf
+                                                                              userInfo:deletedNoteInfo];
+        
+        [[NSNotificationCenter defaultCenter] postNotification:noteTrashedNotification];
+        
+        weakSelf.isDroppingNoteForDeletion = NO;
+    };
 }
 
 -(void)addTrashedNote:(NSNotification*)notification {
