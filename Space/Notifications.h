@@ -25,3 +25,5 @@ extern NSString* kNoteFocusedNotification;
 
 extern NSString* kDismissNoteNotification;
 extern NSString* kNoteDismissedNotification;
+
+extern NSString* kDismissPopoverNotification;

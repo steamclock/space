@@ -7,6 +7,7 @@
 //
 
 #import "CanvasMenuViewController.h"
+#import "AboutViewController.h"
 #import "Notifications.h"
 #import "Constants.h"
 #import "Database.h"
@@ -24,6 +25,9 @@
 @property (strong, nonatomic) NSIndexPath* pathOfCellToEdit;
 @property (strong, nonatomic) UITextField* currentTextField;
 @property (nonatomic) BOOL isEditingCanvasTitle;
+
+@property (strong, nonatomic) UIStoryboard* aboutPageStoryboard;
+@property (strong, nonatomic) AboutViewController* aboutPageViewController;
 
 @end
 
@@ -422,6 +426,20 @@ static CanvasMenuViewController* _mainInstance;
 -(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     if (indexPath.section == 0) {
         [self selectCanvas:indexPath.row];
+    } else if (indexPath.section == 1) {
+        
+        [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
+        
+        if (self.aboutPageStoryboard == nil) {
+            self.aboutPageStoryboard = [UIStoryboard storyboardWithName:@"AboutPage" bundle:nil];
+            self.aboutPageViewController = [self.aboutPageStoryboard instantiateInitialViewController];
+            
+            self.aboutPageViewController.modalPresentationStyle = UIModalPresentationFormSheet;
+            self.aboutPageViewController.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
+        }
+        
+        [self presentViewController:self.aboutPageViewController animated:YES completion:nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kDismissPopoverNotification object:nil];
     }
 }
 

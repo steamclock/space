@@ -25,3 +25,5 @@ NSString* kNoteFocusedNotification = @"noteFocused";
 
 NSString* kDismissNoteNotification = @"dismissNote";
 NSString* kNoteDismissedNotification = @"noteDismissed";
+
+NSString* kDismissPopoverNotification = @"dismissPopover";

@@ -444,7 +444,7 @@ static BOOL dragStarted = NO;
     note.canvas = self.currentCanvas;
     
     note.title = @"About Space";
-    note.content = @"About Space\n\nSpace is a experimental note board with the ability to jot down thoughts and plans, arrange them, and discard them once they are complete.";
+    note.content = @"About Space\n\nSpace is an experimental note board with the ability to jot down thoughts and plans, arrange them, and discard them once they are complete.";
     
     note.positionX = 0.5;
     note.positionY = 0.25;

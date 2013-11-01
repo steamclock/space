@@ -62,6 +62,7 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasAddedOrDeleted) name:kCanvasAddedorDeletedNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(disableAddButton) name:kDisableAddButtonNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(enableAddButton) name:kEnableAddButtonNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(dismissPopover) name:kDismissPopoverNotification object:nil];
     
     self.defaultTintColor = [[[[UIApplication sharedApplication] delegate] window] tintColor];
 }
@@ -86,8 +87,9 @@
 -(void)initializeMenuWithCanvasTitles:(NSArray *)canvasTitles andIndices:(NSArray *)canvasIndices {
     // Test tableview
     self.canvasMenuViewController = [CanvasMenuViewController canvasMenuViewController];
+    self.canvasMenuViewController.view.frame = self.view.frame;
     [self.canvasMenuViewController setupMenuWithCanvasTitles:canvasTitles andIndices:canvasIndices];
-    self.canvasMenuViewController.tableView.contentInset = UIEdgeInsetsMake(-20, 0, 0, 0);
+    
     [self.view addSubview:self.canvasMenuViewController.view];
     
     UIView* staticHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 35)];
@@ -137,6 +139,14 @@
 
 -(void)canvasAddedOrDeleted {
     self.preferredContentSize = CGSizeMake(300.0f, 60.0f * [[self.defaults objectForKey:Key_CanvasTitles] count] + 150);
+}
+
+#pragma mark - Dismiss Popover Programmatically
+
+-(void)dismissPopover {
+    if ([self.popoverController isPopoverVisible]) {
+        [self.popoverController dismissPopoverAnimated:NO];
+    }
 }
 
 @end

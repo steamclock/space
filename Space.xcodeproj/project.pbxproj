@@ -36,6 +36,8 @@
 		B8A7AF921815F85600EE1F28 /* FocusView.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A7AF911815F85600EE1F28 /* FocusView.m */; };
 		B8CFC07317EA4B7B000F0853 /* Coordinate.m in Sources */ = {isa = PBXBuildFile; fileRef = B8CFC07217EA4B7B000F0853 /* Coordinate.m */; };
 		B8F1A7B01819D4D1007BAABD /* ContainerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */; };
+		B8F27427182435560040C83C /* AboutPage.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B8F27426182435560040C83C /* AboutPage.storyboard */; };
+		B8F2742A182439F70040C83C /* AboutViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F27429182439F70040C83C /* AboutViewController.m */; };
 		CA0F8356E0134BAC8244836C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1842E80713F540AB860880DC /* libPods.a */; };
 /* End PBXBuildFile section */
 
@@ -97,6 +99,9 @@
 		B8CFC07217EA4B7B000F0853 /* Coordinate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Coordinate.m; sourceTree = "<group>"; };
 		B8F1A7AE1819D4D1007BAABD /* ContainerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContainerViewController.h; sourceTree = "<group>"; };
 		B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContainerViewController.m; sourceTree = "<group>"; };
+		B8F27426182435560040C83C /* AboutPage.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = AboutPage.storyboard; sourceTree = "<group>"; };
+		B8F27428182439F70040C83C /* AboutViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AboutViewController.h; sourceTree = "<group>"; };
+		B8F27429182439F70040C83C /* AboutViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AboutViewController.m; sourceTree = "<group>"; };
 		D6C0872E37B24A98876C9A8E /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -166,6 +171,9 @@
 				E4DD05C617E90A5800ED525D /* CoreData */,
 				B83D02C2180765CE003A2C7B /* Helper */,
 				E4DD05C717E90A7B00ED525D /* Constants */,
+				B8F27426182435560040C83C /* AboutPage.storyboard */,
+				B8F27428182439F70040C83C /* AboutViewController.h */,
+				B8F27429182439F70040C83C /* AboutViewController.m */,
 				B8F1A7AE1819D4D1007BAABD /* ContainerViewController.h */,
 				B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */,
 				A6F553FF17BD737200728B8C /* AppDelegate.h */,
@@ -340,6 +348,7 @@
 			files = (
 				A6F553FB17BD737200728B8C /* InfoPlist.strings in Resources */,
 				A6F5540617BD737200728B8C /* Images.xcassets in Resources */,
+				B8F27427182435560040C83C /* AboutPage.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -391,6 +400,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B8F2742A182439F70040C83C /* AboutViewController.m in Sources */,
 				B8A7AF921815F85600EE1F28 /* FocusView.m in Sources */,
 				A6F5540117BD737200728B8C /* AppDelegate.m in Sources */,
 				A6F553FD17BD737200728B8C /* main.m in Sources */,
