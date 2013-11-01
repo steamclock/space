@@ -174,6 +174,7 @@ static BOOL dragToTrashRequested;
         [self.emptyTrashButton setImage:trashBinImage forState:UIControlStateNormal];
         self.emptyTrashButton.frame = [Coordinate frameWithCenterXByFactor:0.5 centerYByFactor:0.9 width:300 height:50 withReferenceBounds:self.view.bounds];
         [self.emptyTrashButton addTarget:self action:@selector(emptyTrash) forControlEvents:UIControlEventTouchUpInside];
+        [self.emptyTrashButton setTitle:@"Empty Trash" forState:UIControlStateNormal];
         
         [self.view addSubview:self.emptyTrashButton];
         
