@@ -220,6 +220,10 @@ static BOOL dragStarted = NO;
         return;
     }
     
+    if ([self.animator.behaviors containsObject:self.circleBehavior] == NO) {
+        [self.animator addBehavior:self.circleBehavior];
+    }
+    
     [self.collision removeAllBoundaries];
     
     NoteView* noteView = (NoteView*)recognizer.view;
@@ -648,8 +652,11 @@ static BOOL dragStarted = NO;
 #pragma mark - Focus Notes
 
 -(void)noteTap:(UITapGestureRecognizer *)recognizer {
-    // Don't allow focus if the animator is still running, or if a zoom animation is still animating.
-    if (self.animator.running || self.isRunningZoomAnimation) {
+    if (self.animator.isRunning && self.isRunningZoomAnimation == NO) {
+        // Stop the animator if the a note is tapped when it's still got some velocity and is still sliding.
+        [self.animator removeBehavior:self.circleBehavior];
+    } else if (self.animator.running || self.isRunningZoomAnimation) {
+        // Don't allow focus if the animator is still running, or if a zoom animation is still animating.
         return;
     }
     
