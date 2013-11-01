@@ -210,7 +210,11 @@
     
     // Let gravity pull the drawer down when the drawer is dragged past a certain point.
     if (pastGravityThreshold) {
-        [self.gravity setMagnitude:-5.0];
+        if (self.isDownwardGravity == NO) {
+            [self.gravity setMagnitude:-5.0];
+        } else {
+            [self.gravity setMagnitude:5.0];
+        }
         self.isDownwardGravity = YES;
         
         self.drawerBehavior.resistance = 0;
@@ -228,7 +232,11 @@
     
     // Let gravity pull the drawer up when the drawer is dragged past a certain point.
     if (pastGravityThreshold) {
-        [self.gravity setMagnitude:-5.0];
+        if (self.isDownwardGravity == NO) {
+            [self.gravity setMagnitude:5.0];
+        } else {
+            [self.gravity setMagnitude:-5.0];
+        }
         self.isDownwardGravity = NO;
 
         self.drawerBehavior.resistance = 0;
@@ -337,6 +345,8 @@
 -(void)dragHandleMoved:(UIPanGestureRecognizer*)recognizer {
     CGPoint drag = [recognizer locationInView:self.view.superview];
     
+    BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
+    
     if(recognizer.state == UIGestureRecognizerStateBegan) {
         [self.animator removeBehavior:self.gravity];
         
@@ -350,8 +360,6 @@
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         
         [self.animator addBehavior:self.gravity];
-        
-        BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
         if (velocityDownwards) { // Case for dragging the canvas downward.
             [self physicsForHandleDraggedDownwards];
@@ -380,6 +388,8 @@
 
 // Allows "catching" of the handle if a pan gesture started outside the handle from the canvases' empty space.
 -(void)panningDrawer:(UIPanGestureRecognizer*)recognizer {
+    BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
+    
     CGPoint touchPointRelativeToWindow = [recognizer locationInView:self.view.superview];
     CGPoint touchPointRelativeToDrawer = [recognizer locationInView:self.view];
     
@@ -424,8 +434,6 @@
     
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         [self.animator addBehavior:self.gravity];
-        
-        BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
         if (fromTopDrawer && velocityDownwards) {
             
@@ -476,6 +484,8 @@
 
 // Allows "catching" of the handle if a pan gesture started outside the handle from the drawer's empty space.
 -(void)panOutsideOfCanvases:(UIPanGestureRecognizer*)recognizer {
+    BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
+    
     CGPoint touchPointRelativeToWindow = [recognizer locationInView:self.view.superview];
     CGPoint touchPointRelativeToDrawer = [recognizer locationInView:self.view];
     
@@ -514,8 +524,6 @@
         self.allowedDragStartYAssigned = NO;
         
         [self.animator addBehavior:self.gravity];
-        
-        BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
         
         if (self.fromDragHandle && velocityDownwards) {
             
