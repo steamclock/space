@@ -39,6 +39,8 @@
 static BOOL isDeleting;
 static BOOL dragToTrashRequested;
 
+static BOOL dragHandleIsPointUp;
+
 @implementation CanvasViewController;
 
 #pragma mark - Create Canvases
@@ -111,6 +113,10 @@ static BOOL dragToTrashRequested;
         // Help manage note circle zoom animation.
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteCreated:) name:kNoteCreatedNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(dismissNote:) name:kDismissNoteNotification object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(flipHandleBarUp:) name:kFlipHandleBarUpNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(flipHandleBarDown:) name:kFlipHandleBarDownNotification object:nil];
+        dragHandleIsPointUp = YES;
     }
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChanged:) name:kCanvasChangedNotification object:nil];
@@ -207,6 +213,26 @@ static BOOL dragToTrashRequested;
         [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
     } else {
         [self loadCurrentCanvas];
+    }
+}
+
+#pragma mark - Flip Handle Bar
+
+-(void)flipHandleBarUp:(NSNotification*)notification {
+    if (dragHandleIsPointUp == NO) {
+        [UIView animateWithDuration:0.25 animations:^{
+            self.dragHandleView.transform = CGAffineTransformIdentity;
+        }];
+        dragHandleIsPointUp = YES;
+    }
+}
+
+-(void)flipHandleBarDown:(NSNotification*)notification {
+    if (dragHandleIsPointUp) {
+        [UIView animateWithDuration:0.25 animations:^{
+            self.dragHandleView.transform = CGAffineTransformMakeScale(1, -1);
+        }];
+        dragHandleIsPointUp = NO;
     }
 }
 

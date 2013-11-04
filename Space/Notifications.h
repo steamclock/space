@@ -27,3 +27,6 @@ extern NSString* kDismissNoteNotification;
 extern NSString* kNoteDismissedNotification;
 
 extern NSString* kDismissPopoverNotification;
+
+extern NSString* kFlipHandleBarUpNotification;
+extern NSString* kFlipHandleBarDownNotification;

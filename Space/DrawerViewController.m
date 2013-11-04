@@ -56,6 +56,8 @@
 
 @implementation DrawerViewController
 
+static BOOL hasLoaded;
+
 #pragma mark - Initial Setup
 
 -(void)viewDidLoad {
@@ -183,8 +185,25 @@
 }
 
 -(void)dynamicAnimatorDidPause:(UIDynamicAnimator *)animator {
+    if (hasLoaded == NO) {
+        hasLoaded = YES;
+        return;
+    }
+    
     // Once gravity is done its work on the drawer, check how far down or up (relatively) the drawer is currently at.
     self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
+    
+    NSLog(@"Frame = %@", NSStringFromCGRect(self.view.frame));
+    
+    if (self.view.frame.origin.y <= self.minY + 1) {
+        // NSLog(@"Flip handle bar down");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kFlipHandleBarDownNotification object:self];
+    }
+    
+    if (self.view.frame.origin.y >= self.restY - 1) {
+        // NSLog(@"Flip handle bar up");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kFlipHandleBarUpNotification object:self];
+    }
 }
 
 -(void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {

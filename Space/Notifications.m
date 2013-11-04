@@ -27,3 +27,6 @@ NSString* kDismissNoteNotification = @"dismissNote";
 NSString* kNoteDismissedNotification = @"noteDismissed";
 
 NSString* kDismissPopoverNotification = @"dismissPopover";
+
+NSString* kFlipHandleBarUpNotification = @"flipHandleBarUp";
+NSString* kFlipHandleBarDownNotification = @"flipHandleBarDown";
