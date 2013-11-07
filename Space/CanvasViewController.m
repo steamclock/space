@@ -25,6 +25,7 @@
 @property (nonatomic) UIDynamicItemBehavior* circleBehavior;
 
 @property (nonatomic) NoteView* notePendingDelete;
+@property (nonatomic) NoteView* draggedNote;
 
 @property (nonatomic) int currentCanvas;
 @property (nonatomic) BOOL isTrashMode;
@@ -254,6 +255,7 @@ static BOOL dragStarted = NO;
     [self.collision removeAllBoundaries];
     
     NoteView* noteView = (NoteView*)recognizer.view;
+    self.draggedNote = noteView;
     CGPoint drag = [recognizer locationInView:self.view];
     
     // Saves the originalX and originalY only at the beginning of a new drag.
@@ -971,6 +973,10 @@ static BOOL dragStarted = NO;
 
 // Used to force notes back into the canvas if they're getting outside.
 -(void)returnNoteToBounds:(NoteView*)note {
+    
+    if (note == self.draggedNote) {
+        return;
+    }
     
     if (! CGRectContainsRect(self.view.bounds, note.frame)) {
         CGPoint center = note.center;
