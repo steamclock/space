@@ -129,6 +129,8 @@ static CanvasMenuViewController* _mainInstance;
         
         [cell addSubview:titleField];
         
+        cell.accessoryType = UITableViewCellAccessoryNone;
+        
     } else if (indexPath.section == 1) {
         cell.textLabel.text = @"About Space";
         cell.textLabel.textAlignment = NSTextAlignmentCenter;
