@@ -46,7 +46,7 @@
     
     __weak CanvasViewController* weakNoteCanvas = noteCanvas;
     noteCanvas.focus.titleEntered = ^void(NSString* newTitle) {
-        weakNoteCanvas.originalNoteCircleTitleLabel.text = newTitle;
+        weakNoteCanvas.currentlyZoomedInNoteView.titleLabel.text = newTitle;
     };
     
     [container addChildViewController:focus];

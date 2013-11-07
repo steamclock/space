@@ -678,7 +678,7 @@ static BOOL hasLoaded;
     } completion:^(BOOL finished) {
         if (finished) {
             // After sliding the canvas up, reposition the zoomed in note view so that it is still at the same location as the focus view.
-            CGRect zoomedInNoteViewFrame = self.topDrawerContents.currentlyZoomedInNoteView.frame;
+            CGRect zoomedInNoteViewFrame = self.topDrawerContents.noteCircleForZoom.frame;
             CGFloat offset;
             if (self.topDrawerContents.hasRefocused) {
                 offset = destination.origin.y - previousY;
@@ -686,12 +686,10 @@ static BOOL hasLoaded;
                 offset = destination.origin.y;
             }
             
-            self.topDrawerContents.currentlyZoomedInNoteView.frame = CGRectMake(zoomedInNoteViewFrame.origin.x,
-                                                                                zoomedInNoteViewFrame.origin.y - offset,
-                                                                                zoomedInNoteViewFrame.size.width,
-                                                                                zoomedInNoteViewFrame.size.height);
-            
-            self.topDrawerContents.originalZoomedInNoteViewFrame = self.topDrawerContents.currentlyZoomedInNoteView.frame;
+            self.topDrawerContents.noteCircleForZoom.frame = CGRectMake(zoomedInNoteViewFrame.origin.x,
+                                                                        zoomedInNoteViewFrame.origin.y - offset,
+                                                                        zoomedInNoteViewFrame.size.width,
+                                                                        zoomedInNoteViewFrame.size.height);
             
             self.topDrawerContents.isRunningZoomAnimation = NO;
         }
@@ -707,6 +705,7 @@ static BOOL hasLoaded;
     }
     
     // Note is dismissed, reset the refocus flag.
+    self.topDrawerContents.isRefocus = NO;
     self.topDrawerContents.hasRefocused = NO;
     
     // Restore canvas position and the animator.
