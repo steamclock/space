@@ -162,7 +162,7 @@ static BOOL dragHandleIsPointUp;
     [self showCreateNoteLabel];
     
     for(UIView* view in self.view.subviews) {
-        if (view != self.drawer.topDrawerContents.createNoteLabel) {
+        if (view != self.drawer.topDrawerContents.createNoteLabel && view != self.dragHandleView) {
             [self.collision removeItem:view];
             [self.circleBehavior removeItem:view];
             [view removeFromSuperview];
@@ -188,11 +188,13 @@ static BOOL dragHandleIsPointUp;
         notes = [[Database sharedDatabase] notesInCanvas:self.currentCanvas];
         NSLog(@"Number of saved notes = %d", [notes count]);
         
-        UIImage* handlebarDownImage = [UIImage imageNamed:Img_HandlebarDown];
-        self.dragHandleView = [[UIImageView alloc] initWithImage:handlebarDownImage];
-        self.dragHandleView.center = CGPointMake(self.view.center.x, self.view.frame.size.height + 40);
+        if (self.dragHandleView == nil) {
+            UIImage* handlebarDownImage = [UIImage imageNamed:Img_HandlebarDown];
+            self.dragHandleView = [[UIImageView alloc] initWithImage:handlebarDownImage];
+            self.dragHandleView.center = CGPointMake(self.view.center.x, self.view.frame.size.height + 40);
         
-        [self.view addSubview:self.dragHandleView];
+            [self.view addSubview:self.dragHandleView];
+        }
     }
     
     for(Note* note in notes) {
