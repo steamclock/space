@@ -218,47 +218,41 @@ static BOOL hasLoaded;
     self.drawerBehavior.resistance = 2.5;
 }
 
--(void)physicsForHandleDraggedDownwards {
-    if (self.view.frame.origin.y >= self.restY) {
-        return; // Don't run this function if the note canvas is already fully revealed.
+-(void)physicsForHandleDragged {
+    int downwardGravityThreshold;
+    int upwardGravityThreshold;
+    
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    if (orientation == UIInterfaceOrientationPortrait || orientation == UIInterfaceOrientationPortraitUpsideDown) {
+        downwardGravityThreshold = -100;
+        upwardGravityThreshold = -600;
+    } else {
+        downwardGravityThreshold = -50;
+        upwardGravityThreshold = -400;
     }
     
-    int gravityTriggerThreshold = -650;
-    BOOL pastGravityThreshold;
-    pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
-    
-    // Let gravity pull the drawer down when the drawer is dragged past a certain point.
-    if (pastGravityThreshold) {
+    if (self.view.frame.origin.y > downwardGravityThreshold) {
         if (self.isDownwardGravity == NO) {
             [self.gravity setMagnitude:-5.0];
-        } else {
-            [self.gravity setMagnitude:5.0];
+            self.isDownwardGravity = YES;
         }
-        self.isDownwardGravity = YES;
-        
-        self.drawerBehavior.resistance = 0;
-    }
-}
-
--(void)physicsForHandleDraggedUpwards {
-    if (self.view.frame.origin.y <= self.minY) {
-        return; // Don't run this function if the trash canvas is already fully revealed.
-    }
-    
-    int gravityTriggerThreshold = -50;
-    BOOL pastGravityThreshold;
-    pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
-    
-    // Let gravity pull the drawer up when the drawer is dragged past a certain point.
-    if (pastGravityThreshold) {
-        if (self.isDownwardGravity == NO) {
-            [self.gravity setMagnitude:5.0];
-        } else {
+    } else if (self.view.frame.origin.y < upwardGravityThreshold) {
+        if (self.isDownwardGravity) {
             [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = NO;
         }
-        self.isDownwardGravity = NO;
-
-        self.drawerBehavior.resistance = 0;
+    }
+    
+    if (self.isDownwardGravity) {
+        if (self.view.frame.origin.y < downwardGravityThreshold) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = NO;
+        }
+    } else {
+        if (self.view.frame.origin.y > upwardGravityThreshold) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = YES;
+        }
     }
 }
 
@@ -357,7 +351,7 @@ static BOOL hasLoaded;
     
     self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
     // NSLog(@"Drawer current Y in percentage = %f", self.currentDrawerYInPercentage);
-    // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
 }
 
 // Handles dragging of the drawer if the drag handle is directly touched initially.
@@ -380,11 +374,7 @@ static BOOL hasLoaded;
         
         [self.animator addBehavior:self.gravity];
         
-        if (velocityDownwards) { // Case for dragging the canvas downward.
-            [self physicsForHandleDraggedDownwards];
-        } else if (!velocityDownwards) { // Case for dragging canvas upward.
-            [self physicsForHandleDraggedUpwards];
-        }
+        [self physicsForHandleDragged];
         
         // Add throwable feel to the drawer
         CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
@@ -457,25 +447,25 @@ static BOOL hasLoaded;
         if (fromTopDrawer && velocityDownwards) {
             
             if (self.allowDrag) {
-                [self physicsForHandleDraggedDownwards];
+                [self physicsForHandleDragged];
             }
             
         } else if (fromTopDrawer && !velocityDownwards) {
 
             if (self.allowDrag) {
-                [self physicsForHandleDraggedUpwards];
+                [self physicsForHandleDragged];
             }
 
         } else if (!fromTopDrawer && velocityDownwards) {
             
             if (self.allowDrag) {
-                [self physicsForHandleDraggedDownwards];
+                [self physicsForHandleDragged];
             }
             
         } else if (!fromTopDrawer && !velocityDownwards) {
             
             if (self.allowDrag) {
-                [self physicsForHandleDraggedUpwards];
+                [self physicsForHandleDragged];
             }
         }
         
@@ -546,11 +536,11 @@ static BOOL hasLoaded;
         
         if (self.fromDragHandle && velocityDownwards) {
             
-                [self physicsForHandleDraggedDownwards];
+                [self physicsForHandleDragged];
             
         } else if (self.fromDragHandle && !velocityDownwards) {
             
-                [self physicsForHandleDraggedUpwards];
+                [self physicsForHandleDragged];
         }
         
         // Add throwable feel to the drawer
@@ -592,6 +582,7 @@ static BOOL hasLoaded;
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     if (self.animator == nil) {
         [self startPhysicsEngine];
+        self.isDownwardGravity = YES;
     }
 }
 
