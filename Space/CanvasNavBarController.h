@@ -10,6 +10,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface CanvasSelectionViewController : UIViewController
+@interface CanvasNavBarController : UIViewController
 
 @end

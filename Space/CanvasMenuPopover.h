@@ -12,7 +12,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "CanvasSelectionViewController.h"
+#import "CanvasNavBarController.h"
 
 @interface CanvasMenuPopover : UIViewController
 

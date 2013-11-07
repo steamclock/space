@@ -6,12 +6,12 @@
 //  Copyright (c) 2013 University of British Columbia. All rights reserved.
 //
 
-#import "CanvasSelectionViewController.h"
+#import "CanvasNavBarController.h"
 #import "CanvasMenuPopover.h"
 #import "Notifications.h"
 #import "Constants.h"
 
-@interface CanvasSelectionViewController ()
+@interface CanvasNavBarController ()
 
 @property UINavigationBar* menuBar;
 
@@ -22,7 +22,7 @@
 
 @end
 
-@implementation CanvasSelectionViewController
+@implementation CanvasNavBarController
 
 @synthesize canvasMenuPopoverController;
 

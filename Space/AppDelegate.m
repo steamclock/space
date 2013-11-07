@@ -11,7 +11,7 @@
 #import "DrawerViewController.h"
 #import "CanvasViewController.h"
 #import "FocusViewController.h"
-#import "CanvasSelectionViewController.h"
+#import "CanvasNavBarController.h"
 #import "Database.h"
 #import "UIResponder+KeyboardCache.h"
 
@@ -52,7 +52,7 @@
     [container addChildViewController:focus];
     [container.view addSubview:focus.view];
     
-    CanvasSelectionViewController* canvasSelect = [[CanvasSelectionViewController alloc] init];
+    CanvasNavBarController* canvasSelect = [[CanvasNavBarController alloc] init];
     [container addChildViewController:canvasSelect];
     [container.view addSubview:canvasSelect.view];
     
