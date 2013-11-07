@@ -8,6 +8,7 @@
 
 #import "CanvasMenuPopover.h"
 #import "CanvasMenuViewController.h"
+#import "AboutViewController.h"
 #import "Notifications.h"
 #import "Constants.h"
 
@@ -18,10 +19,12 @@
 
 @property (strong, nonatomic) CanvasMenuViewController* canvasMenuViewController;
 
-@property (strong, nonatomic) UIButton* editButton;
-@property (strong, nonatomic) UIButton* addButton;
+@property (strong, nonatomic) UIBarButtonItem* addButton;
 
 @property (strong, nonatomic) UIColor* defaultTintColor;
+
+@property (strong, nonatomic) UIStoryboard* aboutPageStoryboard;
+@property (strong, nonatomic) AboutViewController* aboutPageViewController;
 
 @end
 
@@ -63,14 +66,30 @@
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(disableAddButton) name:kDisableAddButtonNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(enableAddButton) name:kEnableAddButtonNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(dismissPopover) name:kDismissPopoverNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(showAboutPage) name:kShowAboutPageNotification object:nil];
     
     self.defaultTintColor = [[[[UIApplication sharedApplication] delegate] window] tintColor];
+    self.view.backgroundColor = [UIColor groupTableViewBackgroundColor];
+    
+    self.navigationItem.leftBarButtonItem =
+    [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemEdit target:self action:@selector(editTableView)];
+    
+    self.navigationItem.rightBarButtonItem =
+    [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(addCanvasButtonPressed)];
+    
+    self.addButton = self.navigationItem.rightBarButtonItem;
+}
+
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+}
+
+-(void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
 }
 
 -(void)viewDidLayoutSubviews {
-    self.view.backgroundColor = [UIColor groupTableViewBackgroundColor];
-    self.preferredContentSize = CGSizeMake(300.0f, 45 * [[self.defaults objectForKey:Key_CanvasTitles] count] + 150);
-    NSLog(@"Popover size at viewDidLoad = %@", NSStringFromCGSize(self.preferredContentSize));
+    self.preferredContentSize = CGSizeMake(300.0f, 45 * [[self.defaults objectForKey:Key_CanvasTitles] count] + 125);
 }
 
 - (void)didReceiveMemoryWarning {
@@ -91,24 +110,6 @@
     [self.canvasMenuViewController setupMenuWithCanvasTitles:canvasTitles andIndices:canvasIndices];
     
     [self.view addSubview:self.canvasMenuViewController.view];
-    
-    UIView* staticHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, self.view.frame.size.width, 35)];
-    staticHeaderView.backgroundColor = [UIColor whiteColor];
-    
-    self.editButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.editButton.frame = CGRectMake(5, 5, 50, 25);
-    [self.editButton setTitle:@"Edit" forState:UIControlStateNormal];
-    [self.editButton addTarget:self action:@selector(editTableView) forControlEvents:UIControlEventTouchUpInside];
-    [staticHeaderView addSubview:self.editButton];
-    
-    self.addButton = [UIButton buttonWithType:UIButtonTypeSystem];
-    self.addButton.frame = CGRectMake(250, 5, 50, 25);
-    self.addButton.titleLabel.font = [UIFont systemFontOfSize:20];
-    [self.addButton setTitle:@"+" forState:UIControlStateNormal];
-    [self.addButton addTarget:self action:@selector(addCanvasButtonPressed) forControlEvents:UIControlEventTouchUpInside];
-    [staticHeaderView addSubview:self.addButton];
-   
-    [self.view addSubview:staticHeaderView];
 }
 
 #pragma mark - Edit and Add Button Actions
@@ -138,7 +139,7 @@
 #pragma mark - Update Popover Size
 
 -(void)canvasAddedOrDeleted {
-    self.preferredContentSize = CGSizeMake(300.0f, 60.0f * [[self.defaults objectForKey:Key_CanvasTitles] count] + 150);
+    [self.view setNeedsLayout];
 }
 
 #pragma mark - Dismiss Popover Programmatically
@@ -147,6 +148,17 @@
     if ([self.popoverController isPopoverVisible]) {
         [self.popoverController dismissPopoverAnimated:NO];
     }
+}
+
+#pragma mark - Show About Page
+
+-(void)showAboutPage {
+    if (self.aboutPageStoryboard == nil) {
+        self.aboutPageStoryboard = [UIStoryboard storyboardWithName:@"AboutPage" bundle:nil];
+        self.aboutPageViewController = [self.aboutPageStoryboard instantiateInitialViewController];
+    }
+    
+    [self.navigationController pushViewController:self.aboutPageViewController animated:YES];
 }
 
 @end

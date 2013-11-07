@@ -30,3 +30,5 @@ NSString* kDismissPopoverNotification = @"dismissPopover";
 
 NSString* kFlipHandleBarUpNotification = @"flipHandleBarUp";
 NSString* kFlipHandleBarDownNotification = @"flipHandleBarDown";
+
+NSString* kShowAboutPageNotification = @"showAboutPage";

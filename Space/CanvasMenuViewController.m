@@ -7,7 +7,6 @@
 //
 
 #import "CanvasMenuViewController.h"
-#import "AboutViewController.h"
 #import "Notifications.h"
 #import "Constants.h"
 #import "Database.h"
@@ -25,9 +24,6 @@
 @property (strong, nonatomic) NSIndexPath* pathOfCellToEdit;
 @property (strong, nonatomic) UITextField* currentTextField;
 @property (nonatomic) BOOL isEditingCanvasTitle;
-
-@property (strong, nonatomic) UIStoryboard* aboutPageStoryboard;
-@property (strong, nonatomic) AboutViewController* aboutPageViewController;
 
 @end
 
@@ -49,6 +45,8 @@ static CanvasMenuViewController* _mainInstance;
     self.defaults = [NSUserDefaults standardUserDefaults];
     
     self.clearsSelectionOnViewWillAppear = NO;
+    
+    self.tableView.contentInset = UIEdgeInsetsMake(-35, 0, 0, 0);
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -134,6 +132,7 @@ static CanvasMenuViewController* _mainInstance;
     } else if (indexPath.section == 1) {
         cell.textLabel.text = @"About Space";
         cell.textLabel.textAlignment = NSTextAlignmentCenter;
+        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     }
     
     return cell;
@@ -427,19 +426,11 @@ static CanvasMenuViewController* _mainInstance;
     if (indexPath.section == 0) {
         [self selectCanvas:indexPath.row];
     } else if (indexPath.section == 1) {
-        
         [self.tableView deselectRowAtIndexPath:indexPath animated:YES];
         
-        if (self.aboutPageStoryboard == nil) {
-            self.aboutPageStoryboard = [UIStoryboard storyboardWithName:@"AboutPage" bundle:nil];
-            self.aboutPageViewController = [self.aboutPageStoryboard instantiateInitialViewController];
-            
-            self.aboutPageViewController.modalPresentationStyle = UIModalPresentationFormSheet;
-            self.aboutPageViewController.modalTransitionStyle = UIModalTransitionStyleCoverVertical;
-        }
-        
-        [self presentViewController:self.aboutPageViewController animated:YES completion:nil];
-        [[NSNotificationCenter defaultCenter] postNotificationName:kDismissPopoverNotification object:nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:kShowAboutPageNotification
+                                                            object:self
+                                                          userInfo:nil];
     }
 }
 

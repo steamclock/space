@@ -30,3 +30,5 @@ extern NSString* kDismissPopoverNotification;
 
 extern NSString* kFlipHandleBarUpNotification;
 extern NSString* kFlipHandleBarDownNotification;
+
+extern NSString* kShowAboutPageNotification;
