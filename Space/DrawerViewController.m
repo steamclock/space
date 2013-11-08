@@ -84,7 +84,7 @@ static BOOL hasLoaded;
     
     [self drawCanvasLayout];
     [self stopPhysicsEngine];
-    [self startPhysicsEngine];
+    [self startPhysicsEngineWithDownwardGravity:YES];
     
     UITapGestureRecognizer* tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOutsideOfCanvases:)];
     [self.view addGestureRecognizer:tapGestureRecognizer];
@@ -140,12 +140,18 @@ static BOOL hasLoaded;
 
 #pragma mark - UIDynamic
 
--(void)startPhysicsEngine {
+-(void)startPhysicsEngineWithDownwardGravity:(BOOL)isDownwardGravity {
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
     self.animator.delegate = self;
     
     self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-    [self.gravity setMagnitude:5.0];
+    if (isDownwardGravity == NO) {
+        [self.gravity setMagnitude:-5.0];
+        self.isDownwardGravity = NO;
+    } else {
+        [self.gravity setMagnitude:5.0];
+        self.isDownwardGravity = YES;
+    }
     
     self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
     self.collision.collisionDelegate = self;
@@ -357,8 +363,6 @@ static BOOL hasLoaded;
 // Handles dragging of the drawer if the drag handle is directly touched initially.
 -(void)dragHandleMoved:(UIPanGestureRecognizer*)recognizer {
     CGPoint drag = [recognizer locationInView:self.view.superview];
-    
-    BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
     
     if(recognizer.state == UIGestureRecognizerStateBegan) {
         [self.animator removeBehavior:self.gravity];
@@ -581,8 +585,7 @@ static BOOL hasLoaded;
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     if (self.animator == nil) {
-        [self startPhysicsEngine];
-        self.isDownwardGravity = YES;
+        [self startPhysicsEngineWithDownwardGravity:YES];
     }
 }
 
@@ -705,7 +708,11 @@ static BOOL hasLoaded;
     } completion:^(BOOL finished) {
         if (finished) {
             if (self.animator == nil) {
-                [self startPhysicsEngine];
+                if (self.isDownwardGravity == NO) {
+                    [self startPhysicsEngineWithDownwardGravity:NO];
+                } else {
+                    [self startPhysicsEngineWithDownwardGravity:YES];
+                }
             }
             
             self.topDrawerContents.isRunningZoomAnimation = NO;
