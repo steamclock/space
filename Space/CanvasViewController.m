@@ -40,6 +40,7 @@
 static BOOL isDeleting;
 static BOOL dragToTrashRequested;
 static BOOL dragHandleIsPointUp;
+static BOOL isRotating;
 
 @implementation CanvasViewController;
 
@@ -823,6 +824,8 @@ static BOOL dragStarted = NO;
             
         } completion:^(BOOL finished) {
             
+            self.isRunningZoomAnimation = NO;
+            
             // If canvas has been switched, can't add to animator because noteview isn't in the canvas view any more
             if([noteView superview]) {
                 [self.collision addItem:noteView];
@@ -883,10 +886,13 @@ static BOOL dragStarted = NO;
 #pragma mark - Orientation Changes Handling
 
 -(void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+    isRotating = YES;
+    
     // Remove behaviours to prevent the animator from setting the incorrect center positions for noteViews after we've already
     // calculated and set them. We're not sure why the animator does this, but we're doing a lot of custom view positioning,
     // and it could be a result of some custom view handling logic that don't play well with the animator.
     if (self.animator) {
+        [self.collision removeAllBoundaries];
         [self.animator removeAllBehaviors];
     }
     self.animator = nil;
@@ -959,6 +965,10 @@ static BOOL dragStarted = NO;
             [self.circleBehavior addItem:noteView];
         }
     }
+    
+    isRotating = NO;
+    
+    [self addBoundariesForCanvas];
 }
 
 // Called when orientation changes to reposition note views.
@@ -974,7 +984,7 @@ static BOOL dragStarted = NO;
 // Used to force notes back into the canvas if they're getting outside.
 -(void)returnNoteToBounds:(NoteView*)note {
     
-    if (note == self.draggedNote) {
+    if (note == self.draggedNote || isRotating) {
         return;
     }
     
