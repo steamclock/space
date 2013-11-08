@@ -667,7 +667,7 @@ static BOOL hasLoaded;
     self.slideAmountInPercentage = [Coordinate normalizeYCoord:destination.origin.y withReferenceBounds:self.topDrawerContents.view.bounds];
     
     // Slide animation blocks.
-    [UIView animateWithDuration:0.75 animations:^{
+    [UIView animateWithDuration:0.3 animations:^{
         self.topDrawerContents.view.frame = destination;
     } completion:^(BOOL finished) {
         if (finished) {
@@ -703,7 +703,7 @@ static BOOL hasLoaded;
     self.topDrawerContents.hasRefocused = NO;
     
     // Restore canvas position and the animator.
-    [UIView animateWithDuration:0.75 animations:^{
+    [UIView animateWithDuration:0.3 animations:^{
         self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;
     } completion:^(BOOL finished) {
         if (finished) {

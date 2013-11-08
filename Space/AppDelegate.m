@@ -21,6 +21,8 @@
 {
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor groupTableViewBackgroundColor];
+    self.window.tintColor = [UIColor colorWithHue:(144.0/360.0) saturation:1.0 brightness:0.7 alpha:1.0];
+    
     [self.window makeKeyAndVisible];
 
     ContainerViewController* container = [[ContainerViewController alloc] init];

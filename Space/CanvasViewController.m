@@ -121,7 +121,7 @@ static BOOL dragHandleIsPointUp;
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(canvasChanged:) name:kCanvasChangedNotification object:nil];
     
-    self.zoomAnimationDuration = 0.25;
+    self.zoomAnimationDuration = 0.18;
 }
 
 -(void)viewDidAppear:(BOOL)animated {
@@ -222,7 +222,7 @@ static BOOL dragHandleIsPointUp;
 
 -(void)flipHandleBarUp:(NSNotification*)notification {
     if (dragHandleIsPointUp == NO) {
-        [UIView animateWithDuration:0.25 animations:^{
+        [UIView animateWithDuration:0.1 animations:^{
             self.dragHandleView.transform = CGAffineTransformIdentity;
         }];
         dragHandleIsPointUp = YES;
@@ -231,7 +231,7 @@ static BOOL dragHandleIsPointUp;
 
 -(void)flipHandleBarDown:(NSNotification*)notification {
     if (dragHandleIsPointUp) {
-        [UIView animateWithDuration:0.25 animations:^{
+        [UIView animateWithDuration:0.1 animations:^{
             self.dragHandleView.transform = CGAffineTransformMakeScale(1, -1);
         }];
         dragHandleIsPointUp = NO;
