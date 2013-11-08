@@ -16,24 +16,26 @@
                         <rect key="frame" x="0.0" y="0.0" width="300" height="200"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" lineBreakMode="tailTruncation" numberOfLines="8" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="276" translatesAutoresizingMaskIntoConstraints="NO" id="uM7-eO-zs4">
-                                <rect key="frame" x="12" y="20" width="276" height="150"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <string key="text">Space is an experimental note board with the ability to jot down thoughts and plans, arrange them, and discard them once they are complete.
-
-Space is a research project for the University of British Columbia by Steamclock Software.</string>
-                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="16"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" editable="NO" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bHv-Cu-QiJ">
+                                <rect key="frame" x="5" y="5" width="290" height="190"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="uM7-eO-zs4" firstAttribute="centerX" secondItem="auL-Ug-tfx" secondAttribute="centerX" id="9eV-3j-56f"/>
-                            <constraint firstItem="uM7-eO-zs4" firstAttribute="top" secondItem="auL-Ug-tfx" secondAttribute="top" constant="20" symbolic="YES" id="gxc-L2-dVh"/>
+                            <constraint firstItem="bHv-Cu-QiJ" firstAttribute="top" secondItem="auL-Ug-tfx" secondAttribute="top" constant="5" id="Aqc-Bi-hjm"/>
+                            <constraint firstAttribute="trailing" secondItem="bHv-Cu-QiJ" secondAttribute="trailing" constant="5" id="cZ6-v0-3kx"/>
+                            <constraint firstItem="bHv-Cu-QiJ" firstAttribute="leading" secondItem="auL-Ug-tfx" secondAttribute="leading" constant="5" id="gbc-5U-zvv"/>
+                            <constraint firstItem="lku-ee-kML" firstAttribute="top" secondItem="bHv-Cu-QiJ" secondAttribute="bottom" constant="5" id="lOE-yT-YWv"/>
                         </constraints>
                     </view>
                     <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+                    <connections>
+                        <outlet property="aboutText" destination="bHv-Cu-QiJ" id="8fK-Wq-T7Q"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Gof-cK-mEf" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

@@ -666,6 +666,7 @@ static BOOL hasLoaded;
     self.topDrawerContents.slideOffset = destination.origin.y;
     self.slideAmountInPercentage = [Coordinate normalizeYCoord:destination.origin.y withReferenceBounds:self.topDrawerContents.view.bounds];
     
+    self.topDrawerContents.isRunningZoomAnimation = YES;
     // Slide animation blocks.
     [UIView animateWithDuration:0.3 animations:^{
         self.topDrawerContents.view.frame = destination;
@@ -693,8 +694,8 @@ static BOOL hasLoaded;
 }
 
 -(void)slideInCanvases {
-    // Don't slide back the canvas if we're refocusing.
-    if (self.topDrawerContents.isRefocus) {
+    // Don't slide back the canvas if we're refocusing or if the canvas didn't slide out before.
+    if (self.topDrawerContents.isRefocus || self.canvasesAreSlidOut == NO) {
         return;
     }
     
@@ -702,6 +703,7 @@ static BOOL hasLoaded;
     self.topDrawerContents.isRefocus = NO;
     self.topDrawerContents.hasRefocused = NO;
     
+    self.topDrawerContents.isRunningZoomAnimation = YES;
     // Restore canvas position and the animator.
     [UIView animateWithDuration:0.3 animations:^{
         self.topDrawerContents.view.frame = self.topCanvasFrameBeforeSlidingOut;

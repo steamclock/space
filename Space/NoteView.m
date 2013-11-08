@@ -38,7 +38,7 @@
     self.frame = CGRectMake(0, 0, diameter, diameter);
 
     self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, Key_NoteTitleLabelWidth, Key_NoteTitleLabelHeight)];
-    
+    // self.titleLabel.backgroundColor = [UIColor yellowColor];
     // Force the title label to float above the note circle.
     self.titleLabel.center = CGPointMake(self.center.x, -Key_NoteTitleLabelHeight);
     self.clipsToBounds = NO;
@@ -60,7 +60,12 @@
        
        // Use the first few characters of the content as the title.
        self.note.title = [self.note.content substringToIndex:charCount];
-       self.titleLabel.text = self.note.title;
+              
+       if ([self.note.content length] > Key_NoteTitleLabelLength) {
+           self.titleLabel.text = [NSString stringWithFormat:@"%@...", [self.note.title substringToIndex:Key_NoteTitleLabelLength]];
+       } else {
+           self.titleLabel.text = self.note.title;
+       }
     }
 }
 
@@ -68,7 +73,11 @@
     [_note removeObserver:self forKeyPath:@"content"];
     
     _note = note;
-    self.titleLabel.text = note.title;
+    self.titleLabel.text = note.content;
+    
+    if ([note.content length] > Key_NoteTitleLabelLength) {
+        self.titleLabel.text = [NSString stringWithFormat:@"%@...", [note.content substringToIndex:Key_NoteTitleLabelLength]];
+    }
     
     [_note addObserver:self forKeyPath:@"content" options:0 context:NULL];
 }
