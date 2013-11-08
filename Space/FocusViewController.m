@@ -66,7 +66,7 @@
     self.contentField.delegate = self;
     self.contentField.font = [UIFont systemFontOfSize:16];
     
-    self.placeHolder = [[UILabel alloc] initWithFrame:CGRectMake(10, 8, 0, 0)];
+    self.placeHolder = [[UILabel alloc] initWithFrame:CGRectMake(5, 7, 0, 0)];
     self.placeHolder.font = [UIFont systemFontOfSize:16];
     [self.placeHolder setText:@"Type your note..."];
     [self.placeHolder setTextColor:[UIColor lightGrayColor]];
