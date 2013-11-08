@@ -588,15 +588,15 @@ static BOOL dragStarted = NO;
     
     // Have the note fall down, and once it's fallen below a certain point, remove it, and draw the trashed note in the trash canvas.
     UIGravityBehavior *trashDrop = [[UIGravityBehavior alloc] initWithItems:@[self.notePendingDelete]];
-    trashDrop.gravityDirection = CGVectorMake(0, 20.0);
+    trashDrop.gravityDirection = CGVectorMake(0, 10);
     [self.animator addBehavior:trashDrop];
     
     __weak CanvasViewController* weakSelf = self;
     
-    CGPoint windowBottom = CGPointMake(0, self.topLevelView.frame.size.height);
-    CGPoint windowRelativeBottom = [self.view convertPoint:windowBottom fromView:self.topLevelView];
+    CGPoint unnormalizedCenter = [Coordinate unnormalizePoint:CGPointMake(note.positionX, note.positionY) withReferenceBounds:self.view.bounds];
+    unnormalizedCenter.y = self.view.bounds.size.height - unnormalizedCenter.y;
     
-    self.notePendingDelete.offscreenYDistance = windowRelativeBottom.y + Key_NoteRadius;
+    self.notePendingDelete.offscreenYDistance = self.view.bounds.size.height + unnormalizedCenter.y + 100;
     
     self.notePendingDelete.onDropOffscreen = ^{
         [weakSelf.animator removeBehavior:trashDrop];
