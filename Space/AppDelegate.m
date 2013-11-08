@@ -22,6 +22,8 @@
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     self.window.backgroundColor = [UIColor groupTableViewBackgroundColor];
     [self.window makeKeyAndVisible];
+    
+    self.window.tintColor = [UIColor orangeColor];
 
     ContainerViewController* container = [[ContainerViewController alloc] init];
     
@@ -47,6 +49,9 @@
     __weak CanvasViewController* weakNoteCanvas = noteCanvas;
     noteCanvas.focus.titleEntered = ^void(NSString* newTitle) {
         weakNoteCanvas.currentlyZoomedInNoteView.titleLabel.text = newTitle;
+        if ([weakNoteCanvas.currentlyZoomedInNoteView.titleLabel.text length] > 15) {
+            weakNoteCanvas.currentlyZoomedInNoteView.titleLabel.text = [NSString stringWithFormat:@"%@...", [newTitle substringToIndex:15]];
+        }
     };
     
     [container addChildViewController:focus];
