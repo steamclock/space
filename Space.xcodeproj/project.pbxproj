@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		84BFA00318231E6600A5A7E5 /* iTunesArtwork in Resources */ = {isa = PBXBuildFile; fileRef = 84BFA00118231E6600A5A7E5 /* iTunesArtwork */; };
+		84BFA00418231E6600A5A7E5 /* iTunesArtwork@2x in Resources */ = {isa = PBXBuildFile; fileRef = 84BFA00218231E6600A5A7E5 /* iTunesArtwork@2x */; };
 		A62D413317BD795F0073DDB4 /* Database.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413217BD795F0073DDB4 /* Database.m */; };
 		A62D413917BD7BE80073DDB4 /* Note.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413817BD7BE80073DDB4 /* Note.m */; };
 		A62D413C17BD7D850073DDB4 /* CanvasViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413B17BD7D850073DDB4 /* CanvasViewController.m */; };
@@ -50,6 +52,8 @@
 
 /* Begin PBXFileReference section */
 		1842E80713F540AB860880DC /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		84BFA00118231E6600A5A7E5 /* iTunesArtwork */ = {isa = PBXFileReference; lastKnownFileType = file; path = iTunesArtwork; sourceTree = "<group>"; };
+		84BFA00218231E6600A5A7E5 /* iTunesArtwork@2x */ = {isa = PBXFileReference; lastKnownFileType = file; path = "iTunesArtwork@2x"; sourceTree = "<group>"; };
 		A62D413117BD795F0073DDB4 /* Database.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Database.h; sourceTree = "<group>"; };
 		A62D413217BD795F0073DDB4 /* Database.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Database.m; sourceTree = "<group>"; };
 		A62D413717BD7BE80073DDB4 /* Note.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Note.h; sourceTree = "<group>"; };
@@ -127,6 +131,8 @@
 		A6F553E217BD737200728B8C = {
 			isa = PBXGroup;
 			children = (
+				84BFA00118231E6600A5A7E5 /* iTunesArtwork */,
+				84BFA00218231E6600A5A7E5 /* iTunesArtwork@2x */,
 				A6F553F617BD737200728B8C /* Space */,
 				A6F5541317BD737200728B8C /* SpaceTests */,
 				A6F553ED17BD737200728B8C /* Frameworks */,
@@ -297,6 +303,9 @@
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = "University of British Columbia";
 				TargetAttributes = {
+					A6F553EA17BD737200728B8C = {
+						DevelopmentTeam = GH868RP95T;
+					};
 					A6F5540A17BD737200728B8C = {
 						TestTargetID = A6F553EA17BD737200728B8C;
 					};
@@ -325,8 +334,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				84BFA00318231E6600A5A7E5 /* iTunesArtwork in Resources */,
 				A6F553FB17BD737200728B8C /* InfoPlist.strings in Resources */,
 				A6F5540617BD737200728B8C /* Images.xcassets in Resources */,
+				84BFA00418231E6600A5A7E5 /* iTunesArtwork@2x in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -509,12 +520,15 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D6C0872E37B24A98876C9A8E /* Pods.xcconfig */;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Space/Space-Prefix.pch";
 				INFOPLIST_FILE = "Space/Space-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "95A850CC-A4E7-4CFD-BE65-740921ADD78E";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -523,12 +537,15 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D6C0872E37B24A98876C9A8E /* Pods.xcconfig */;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Space/Space-Prefix.pch";
 				INFOPLIST_FILE = "Space/Space-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "95A850CC-A4E7-4CFD-BE65-740921ADD78E";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
