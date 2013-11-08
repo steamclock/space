@@ -39,11 +39,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 @property (strong, nonatomic) NoteView* currentlyZoomedInNoteView;
-@property (nonatomic) CGRect originalZoomedInNoteViewFrame;
 
 // A temporary duplicate note circle at the exact same location of the tapped note circle.
-@property (strong, nonatomic) UIImageView* originalNoteCircleIndicator;
-@property (strong, nonatomic) UILabel* originalNoteCircleTitleLabel;
+@property (strong, nonatomic) UIImageView* noteCircleForZoom;
 
 @property (nonatomic) BOOL isCurrentlyZoomedIn;
 

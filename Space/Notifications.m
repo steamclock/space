@@ -7,6 +7,10 @@
 //
 
 NSString* kCanvasChangedNotification = @"canvasChanged";
+NSString* kCanvasAddedorDeletedNotification = @"canvasAddedOrDeleted";
+
+NSString* kDisableAddButtonNotification = @"disableAddButton";
+NSString* kEnableAddButtonNotification = @"enableAddButton";
 
 NSString* kNoteCreatedNotification = @"noteCreated";
 
@@ -21,3 +25,10 @@ NSString* kNoteFocusedNotification = @"noteFocused";
 
 NSString* kDismissNoteNotification = @"dismissNote";
 NSString* kNoteDismissedNotification = @"noteDismissed";
+
+NSString* kDismissPopoverNotification = @"dismissPopover";
+
+NSString* kFlipHandleBarUpNotification = @"flipHandleBarUp";
+NSString* kFlipHandleBarDownNotification = @"flipHandleBarDown";
+
+NSString* kShowAboutPageNotification = @"showAboutPage";

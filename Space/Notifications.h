@@ -7,6 +7,10 @@
 //
 
 extern NSString* kCanvasChangedNotification;
+extern NSString* kCanvasAddedorDeletedNotification;
+
+extern NSString* kDisableAddButtonNotification;
+extern NSString* kEnableAddButtonNotification;
 
 extern NSString* kNoteCreatedNotification;
 
@@ -21,3 +25,10 @@ extern NSString* kNoteFocusedNotification;
 
 extern NSString* kDismissNoteNotification;
 extern NSString* kNoteDismissedNotification;
+
+extern NSString* kDismissPopoverNotification;
+
+extern NSString* kFlipHandleBarUpNotification;
+extern NSString* kFlipHandleBarDownNotification;
+
+extern NSString* kShowAboutPageNotification;

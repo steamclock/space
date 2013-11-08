@@ -27,6 +27,8 @@
 // tapping inside or outside the zoomed in note view.
 @property (nonatomic) UIView* focus;
 
+@property (nonatomic) UILabel* placeHolder;
+
 @end
 
 @implementation FocusViewController
@@ -63,6 +65,14 @@
     self.contentField.backgroundColor = [UIColor whiteColor];
     self.contentField.delegate = self;
     self.contentField.font = [UIFont systemFontOfSize:16];
+    
+    self.placeHolder = [[UILabel alloc] initWithFrame:CGRectMake(10, 8, 0, 0)];
+    self.placeHolder.font = [UIFont systemFontOfSize:16];
+    [self.placeHolder setText:@"Type your note..."];
+    [self.placeHolder setTextColor:[UIColor lightGrayColor]];
+    [self.placeHolder sizeToFit];
+    
+    [self.contentField addSubview:self.placeHolder];
     
     [self.view addSubview:self.focus];
     [self.focus addSubview:self.contentField];
@@ -133,8 +143,9 @@
     return YES;
 }
 
-- (void)textViewDidChange:(UITextView *)textView {
+-(void)textViewDidChange:(UITextView *)textView {
     NSLog(@"You've typed = %@", self.contentField.text);
+    self.placeHolder.hidden = ([textView.text length] > 0);
     
     if (self.titleEntered) {
         self.titleEntered(self.contentField.text);
@@ -148,13 +159,14 @@
 -(void)textViewDidBeginEditing:(UITextView *)textView {
     if (textView == self.contentField) {
         if ([self.contentField.text isEqualToString:@"New Note"] || [self.contentField.text length] == 0) {
-            self.contentField.textColor = [UIColor lightGrayColor];
-            self.contentField.text = @"Type your note...";
+            self.contentField.text = @"";
             self.isNewNote = YES;
             self.titleEntered(@"New Note");
+            self.placeHolder.hidden = NO;
         } else {
             self.contentField.textColor = [UIColor blackColor];
             self.isNewNote = NO;
+            self.placeHolder.hidden = YES;
         }
     }
 }
@@ -163,6 +175,7 @@
     if (textView == self.contentField) {
         if ([self.contentField.text isEqualToString:@"Type your note..."]) {
             self.contentField.text = @"";
+            self.placeHolder.hidden = NO;
         }
     }
     

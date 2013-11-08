@@ -11,8 +11,9 @@
 #import "DrawerViewController.h"
 #import "CanvasViewController.h"
 #import "FocusViewController.h"
-#import "CanvasSelectionViewController.h"
+#import "CanvasNavBarController.h"
 #import "Database.h"
+#import "UIResponder+KeyboardCache.h"
 
 @implementation AppDelegate
 
@@ -45,17 +46,19 @@
     
     __weak CanvasViewController* weakNoteCanvas = noteCanvas;
     noteCanvas.focus.titleEntered = ^void(NSString* newTitle) {
-        weakNoteCanvas.originalNoteCircleTitleLabel.text = newTitle;
+        weakNoteCanvas.currentlyZoomedInNoteView.titleLabel.text = newTitle;
     };
     
     [container addChildViewController:focus];
     [container.view addSubview:focus.view];
     
-    CanvasSelectionViewController* canvasSelect = [[CanvasSelectionViewController alloc] init];
+    CanvasNavBarController* canvasSelect = [[CanvasNavBarController alloc] init];
     [container addChildViewController:canvasSelect];
     [container.view addSubview:canvasSelect.view];
     
     self.window.rootViewController = container;
+    
+    [UIResponder cacheKeyboard];
     
     return YES;
 }

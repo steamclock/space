@@ -12,7 +12,7 @@
 		A62D413317BD795F0073DDB4 /* Database.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413217BD795F0073DDB4 /* Database.m */; };
 		A62D413917BD7BE80073DDB4 /* Note.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413817BD7BE80073DDB4 /* Note.m */; };
 		A62D413C17BD7D850073DDB4 /* CanvasViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A62D413B17BD7D850073DDB4 /* CanvasViewController.m */; };
-		A699F2F817CC06830001E6B0 /* CanvasSelectionViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A699F2F717CC06830001E6B0 /* CanvasSelectionViewController.m */; };
+		A699F2F817CC06830001E6B0 /* CanvasNavBarController.m in Sources */ = {isa = PBXBuildFile; fileRef = A699F2F717CC06830001E6B0 /* CanvasNavBarController.m */; };
 		A699F2FD17CC18FB0001E6B0 /* Notifications.m in Sources */ = {isa = PBXBuildFile; fileRef = A699F2FC17CC18FB0001E6B0 /* Notifications.m */; };
 		A6EF0DDF17C41173005EF2A0 /* DrawerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A6EF0DDE17C41173005EF2A0 /* DrawerViewController.m */; };
 		A6EF0DE217C537DD005EF2A0 /* FocusViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A6EF0DE117C537DD005EF2A0 /* FocusViewController.m */; };
@@ -34,9 +34,13 @@
 		A6F5541A17BD737200728B8C /* SpaceTests.m in Sources */ = {isa = PBXBuildFile; fileRef = A6F5541917BD737200728B8C /* SpaceTests.m */; };
 		B8270B5817D7C605007B6EBB /* CanvasMenuPopover.m in Sources */ = {isa = PBXBuildFile; fileRef = B8270B5717D7C605007B6EBB /* CanvasMenuPopover.m */; };
 		B83D42D517D8F5E800409BBF /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = B83D42D417D8F5E800409BBF /* Constants.m */; };
+		B875F3D51821C63800F2731C /* CanvasMenuViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B875F3D41821C63800F2731C /* CanvasMenuViewController.m */; };
 		B8A7AF921815F85600EE1F28 /* FocusView.m in Sources */ = {isa = PBXBuildFile; fileRef = B8A7AF911815F85600EE1F28 /* FocusView.m */; };
 		B8CFC07317EA4B7B000F0853 /* Coordinate.m in Sources */ = {isa = PBXBuildFile; fileRef = B8CFC07217EA4B7B000F0853 /* Coordinate.m */; };
 		B8F1A7B01819D4D1007BAABD /* ContainerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */; };
+		B8F27427182435560040C83C /* AboutPage.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B8F27426182435560040C83C /* AboutPage.storyboard */; };
+		B8F2742A182439F70040C83C /* AboutViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F27429182439F70040C83C /* AboutViewController.m */; };
+		B8F2742E18244FF50040C83C /* UIResponder+KeyboardCache.m in Sources */ = {isa = PBXBuildFile; fileRef = B8F2742D18244FF50040C83C /* UIResponder+KeyboardCache.m */; };
 		CA0F8356E0134BAC8244836C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1842E80713F540AB860880DC /* libPods.a */; };
 /* End PBXBuildFile section */
 
@@ -60,8 +64,8 @@
 		A62D413817BD7BE80073DDB4 /* Note.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Note.m; sourceTree = "<group>"; };
 		A62D413A17BD7D850073DDB4 /* CanvasViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CanvasViewController.h; sourceTree = "<group>"; };
 		A62D413B17BD7D850073DDB4 /* CanvasViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CanvasViewController.m; sourceTree = "<group>"; };
-		A699F2F617CC06830001E6B0 /* CanvasSelectionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CanvasSelectionViewController.h; sourceTree = "<group>"; };
-		A699F2F717CC06830001E6B0 /* CanvasSelectionViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CanvasSelectionViewController.m; sourceTree = "<group>"; };
+		A699F2F617CC06830001E6B0 /* CanvasNavBarController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CanvasNavBarController.h; sourceTree = "<group>"; };
+		A699F2F717CC06830001E6B0 /* CanvasNavBarController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CanvasNavBarController.m; sourceTree = "<group>"; };
 		A699F2FB17CC18FB0001E6B0 /* Notifications.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Notifications.h; sourceTree = "<group>"; };
 		A699F2FC17CC18FB0001E6B0 /* Notifications.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Notifications.m; sourceTree = "<group>"; };
 		A6EF0DDD17C41173005EF2A0 /* DrawerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DrawerViewController.h; sourceTree = "<group>"; };
@@ -92,12 +96,19 @@
 		B8270B5717D7C605007B6EBB /* CanvasMenuPopover.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CanvasMenuPopover.m; sourceTree = "<group>"; };
 		B83D42D317D8F5E800409BBF /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		B83D42D417D8F5E800409BBF /* Constants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Constants.m; sourceTree = "<group>"; };
+		B875F3D31821C63800F2731C /* CanvasMenuViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CanvasMenuViewController.h; sourceTree = "<group>"; };
+		B875F3D41821C63800F2731C /* CanvasMenuViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CanvasMenuViewController.m; sourceTree = "<group>"; };
 		B8A7AF901815F85600EE1F28 /* FocusView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FocusView.h; sourceTree = "<group>"; };
 		B8A7AF911815F85600EE1F28 /* FocusView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FocusView.m; sourceTree = "<group>"; };
 		B8CFC07117EA4B7B000F0853 /* Coordinate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Coordinate.h; sourceTree = "<group>"; };
 		B8CFC07217EA4B7B000F0853 /* Coordinate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Coordinate.m; sourceTree = "<group>"; };
 		B8F1A7AE1819D4D1007BAABD /* ContainerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ContainerViewController.h; sourceTree = "<group>"; };
 		B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ContainerViewController.m; sourceTree = "<group>"; };
+		B8F27426182435560040C83C /* AboutPage.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = AboutPage.storyboard; sourceTree = "<group>"; };
+		B8F27428182439F70040C83C /* AboutViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AboutViewController.h; sourceTree = "<group>"; };
+		B8F27429182439F70040C83C /* AboutViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AboutViewController.m; sourceTree = "<group>"; };
+		B8F2742C18244FF50040C83C /* UIResponder+KeyboardCache.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIResponder+KeyboardCache.h"; sourceTree = "<group>"; };
+		B8F2742D18244FF50040C83C /* UIResponder+KeyboardCache.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIResponder+KeyboardCache.m"; sourceTree = "<group>"; };
 		D6C0872E37B24A98876C9A8E /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -169,6 +180,10 @@
 				E4DD05C617E90A5800ED525D /* CoreData */,
 				B83D02C2180765CE003A2C7B /* Helper */,
 				E4DD05C717E90A7B00ED525D /* Constants */,
+				B8F2742B18244FD60040C83C /* CacheKeyboard */,
+				B8F27426182435560040C83C /* AboutPage.storyboard */,
+				B8F27428182439F70040C83C /* AboutViewController.h */,
+				B8F27429182439F70040C83C /* AboutViewController.m */,
 				B8F1A7AE1819D4D1007BAABD /* ContainerViewController.h */,
 				B8F1A7AF1819D4D1007BAABD /* ContainerViewController.m */,
 				A6F553FF17BD737200728B8C /* AppDelegate.h */,
@@ -183,10 +198,9 @@
 				A6EF0DDE17C41173005EF2A0 /* DrawerViewController.m */,
 				A62D413A17BD7D850073DDB4 /* CanvasViewController.h */,
 				A62D413B17BD7D850073DDB4 /* CanvasViewController.m */,
-				A699F2F617CC06830001E6B0 /* CanvasSelectionViewController.h */,
-				A699F2F717CC06830001E6B0 /* CanvasSelectionViewController.m */,
-				B8270B5617D7C605007B6EBB /* CanvasMenuPopover.h */,
-				B8270B5717D7C605007B6EBB /* CanvasMenuPopover.m */,
+				A699F2F617CC06830001E6B0 /* CanvasNavBarController.h */,
+				A699F2F717CC06830001E6B0 /* CanvasNavBarController.m */,
+				B875F3D21821C2E100F2731C /* CanvasMenu */,
 				A6F5540517BD737200728B8C /* Images.xcassets */,
 				A6F553F717BD737200728B8C /* Supporting Files */,
 			);
@@ -229,6 +243,26 @@
 				B8CFC07217EA4B7B000F0853 /* Coordinate.m */,
 			);
 			name = Helper;
+			sourceTree = "<group>";
+		};
+		B875F3D21821C2E100F2731C /* CanvasMenu */ = {
+			isa = PBXGroup;
+			children = (
+				B8270B5617D7C605007B6EBB /* CanvasMenuPopover.h */,
+				B8270B5717D7C605007B6EBB /* CanvasMenuPopover.m */,
+				B875F3D31821C63800F2731C /* CanvasMenuViewController.h */,
+				B875F3D41821C63800F2731C /* CanvasMenuViewController.m */,
+			);
+			name = CanvasMenu;
+			sourceTree = "<group>";
+		};
+		B8F2742B18244FD60040C83C /* CacheKeyboard */ = {
+			isa = PBXGroup;
+			children = (
+				B8F2742C18244FF50040C83C /* UIResponder+KeyboardCache.h */,
+				B8F2742D18244FF50040C83C /* UIResponder+KeyboardCache.m */,
+			);
+			name = CacheKeyboard;
 			sourceTree = "<group>";
 		};
 		E4DD05C617E90A5800ED525D /* CoreData */ = {
@@ -338,6 +372,7 @@
 				A6F553FB17BD737200728B8C /* InfoPlist.strings in Resources */,
 				A6F5540617BD737200728B8C /* Images.xcassets in Resources */,
 				84BFA00418231E6600A5A7E5 /* iTunesArtwork@2x in Resources */,
+				B8F27427182435560040C83C /* AboutPage.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -389,15 +424,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B8F2742A182439F70040C83C /* AboutViewController.m in Sources */,
 				B8A7AF921815F85600EE1F28 /* FocusView.m in Sources */,
 				A6F5540117BD737200728B8C /* AppDelegate.m in Sources */,
+				B8F2742E18244FF50040C83C /* UIResponder+KeyboardCache.m in Sources */,
 				A6F553FD17BD737200728B8C /* main.m in Sources */,
 				A6EF0DE517C56310005EF2A0 /* NoteView.m in Sources */,
-				A699F2F817CC06830001E6B0 /* CanvasSelectionViewController.m in Sources */,
+				A699F2F817CC06830001E6B0 /* CanvasNavBarController.m in Sources */,
 				A62D413917BD7BE80073DDB4 /* Note.m in Sources */,
 				B8F1A7B01819D4D1007BAABD /* ContainerViewController.m in Sources */,
 				B8CFC07317EA4B7B000F0853 /* Coordinate.m in Sources */,
 				A62D413C17BD7D850073DDB4 /* CanvasViewController.m in Sources */,
+				B875F3D51821C63800F2731C /* CanvasMenuViewController.m in Sources */,
 				A699F2FD17CC18FB0001E6B0 /* Notifications.m in Sources */,
 				B83D42D517D8F5E800409BBF /* Constants.m in Sources */,
 				A6EF0DDF17C41173005EF2A0 /* DrawerViewController.m in Sources */,

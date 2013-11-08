@@ -56,6 +56,8 @@
 
 @implementation DrawerViewController
 
+static BOOL hasLoaded;
+
 #pragma mark - Initial Setup
 
 -(void)viewDidLoad {
@@ -82,7 +84,7 @@
     
     [self drawCanvasLayout];
     [self stopPhysicsEngine];
-    [self startPhysicsEngine];
+    [self startPhysicsEngineWithDownwardGravity:YES];
     
     UITapGestureRecognizer* tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapOutsideOfCanvases:)];
     [self.view addGestureRecognizer:tapGestureRecognizer];
@@ -138,12 +140,18 @@
 
 #pragma mark - UIDynamic
 
--(void)startPhysicsEngine {
+-(void)startPhysicsEngineWithDownwardGravity:(BOOL)isDownwardGravity {
     self.animator = [[UIDynamicAnimator alloc] initWithReferenceView:self.view.superview];
     self.animator.delegate = self;
     
     self.gravity = [[UIGravityBehavior alloc] initWithItems:@[self.view]];
-    [self.gravity setMagnitude:5.0];
+    if (isDownwardGravity == NO) {
+        [self.gravity setMagnitude:-5.0];
+        self.isDownwardGravity = NO;
+    } else {
+        [self.gravity setMagnitude:5.0];
+        self.isDownwardGravity = YES;
+    }
     
     self.collision = [[UICollisionBehavior alloc] initWithItems:@[self.view]];
     self.collision.collisionDelegate = self;
@@ -183,8 +191,25 @@
 }
 
 -(void)dynamicAnimatorDidPause:(UIDynamicAnimator *)animator {
+    if (hasLoaded == NO) {
+        hasLoaded = YES;
+        return;
+    }
+    
     // Once gravity is done its work on the drawer, check how far down or up (relatively) the drawer is currently at.
     self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
+    
+    NSLog(@"Frame = %@", NSStringFromCGRect(self.view.frame));
+    
+    if (self.view.frame.origin.y <= self.minY + 1) {
+        // NSLog(@"Flip handle bar down");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kFlipHandleBarDownNotification object:self];
+    }
+    
+    if (self.view.frame.origin.y >= self.restY - 1) {
+        // NSLog(@"Flip handle bar up");
+        [[NSNotificationCenter defaultCenter] postNotificationName:kFlipHandleBarUpNotification object:self];
+    }
 }
 
 -(void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {
@@ -199,39 +224,41 @@
     self.drawerBehavior.resistance = 2.5;
 }
 
--(void)physicsForHandleDraggedDownwards {
-    if (self.view.frame.origin.y >= self.restY) {
-        return; // Don't run this function if the note canvas is already fully revealed.
+-(void)physicsForHandleDragged {
+    int downwardGravityThreshold;
+    int upwardGravityThreshold;
+    
+    UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
+    if (orientation == UIInterfaceOrientationPortrait || orientation == UIInterfaceOrientationPortraitUpsideDown) {
+        downwardGravityThreshold = -100;
+        upwardGravityThreshold = -600;
+    } else {
+        downwardGravityThreshold = -50;
+        upwardGravityThreshold = -400;
     }
     
-    int gravityTriggerThreshold = -650;
-    BOOL pastGravityThreshold;
-    pastGravityThreshold = (self.view.frame.origin.y > gravityTriggerThreshold) ? YES : NO;
-    
-    // Let gravity pull the drawer down when the drawer is dragged past a certain point.
-    if (pastGravityThreshold) {
-        [self.gravity setMagnitude:-5.0];
-        self.isDownwardGravity = YES;
-        
-        self.drawerBehavior.resistance = 0;
-    }
-}
-
--(void)physicsForHandleDraggedUpwards {
-    if (self.view.frame.origin.y <= self.minY) {
-        return; // Don't run this function if the trash canvas is already fully revealed.
+    if (self.view.frame.origin.y > downwardGravityThreshold) {
+        if (self.isDownwardGravity == NO) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = YES;
+        }
+    } else if (self.view.frame.origin.y < upwardGravityThreshold) {
+        if (self.isDownwardGravity) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = NO;
+        }
     }
     
-    int gravityTriggerThreshold = -50;
-    BOOL pastGravityThreshold;
-    pastGravityThreshold = (self.view.frame.origin.y < gravityTriggerThreshold) ? YES : NO;
-    
-    // Let gravity pull the drawer up when the drawer is dragged past a certain point.
-    if (pastGravityThreshold) {
-        [self.gravity setMagnitude:-5.0];
-        self.isDownwardGravity = NO;
-
-        self.drawerBehavior.resistance = 0;
+    if (self.isDownwardGravity) {
+        if (self.view.frame.origin.y < downwardGravityThreshold) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = NO;
+        }
+    } else {
+        if (self.view.frame.origin.y > upwardGravityThreshold) {
+            [self.gravity setMagnitude:-5.0];
+            self.isDownwardGravity = YES;
+        }
     }
 }
 
@@ -330,7 +357,7 @@
     
     self.currentDrawerYInPercentage = abs(self.view.frame.origin.y - Key_NavBarHeight) / self.view.frame.size.height;
     // NSLog(@"Drawer current Y in percentage = %f", self.currentDrawerYInPercentage);
-    // NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
+    NSLog(@"Drawer current Y = %f", self.view.frame.origin.y);
 }
 
 // Handles dragging of the drawer if the drag handle is directly touched initially.
@@ -351,13 +378,7 @@
         
         [self.animator addBehavior:self.gravity];
         
-        BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
-        
-        if (velocityDownwards) { // Case for dragging the canvas downward.
-            [self physicsForHandleDraggedDownwards];
-        } else if (!velocityDownwards) { // Case for dragging canvas upward.
-            [self physicsForHandleDraggedUpwards];
-        }
+        [self physicsForHandleDragged];
         
         // Add throwable feel to the drawer
         CGPoint verticalVelocity = [recognizer velocityInView:self.view.superview];
@@ -380,6 +401,8 @@
 
 // Allows "catching" of the handle if a pan gesture started outside the handle from the canvases' empty space.
 -(void)panningDrawer:(UIPanGestureRecognizer*)recognizer {
+    BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
+    
     CGPoint touchPointRelativeToWindow = [recognizer locationInView:self.view.superview];
     CGPoint touchPointRelativeToDrawer = [recognizer locationInView:self.view];
     
@@ -425,30 +448,28 @@
     if (recognizer.state == UIGestureRecognizerStateEnded) {
         [self.animator addBehavior:self.gravity];
         
-        BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
-        
         if (fromTopDrawer && velocityDownwards) {
             
             if (self.allowDrag) {
-                [self physicsForHandleDraggedDownwards];
+                [self physicsForHandleDragged];
             }
             
         } else if (fromTopDrawer && !velocityDownwards) {
 
             if (self.allowDrag) {
-                [self physicsForHandleDraggedUpwards];
+                [self physicsForHandleDragged];
             }
 
         } else if (!fromTopDrawer && velocityDownwards) {
             
             if (self.allowDrag) {
-                [self physicsForHandleDraggedDownwards];
+                [self physicsForHandleDragged];
             }
             
         } else if (!fromTopDrawer && !velocityDownwards) {
             
             if (self.allowDrag) {
-                [self physicsForHandleDraggedUpwards];
+                [self physicsForHandleDragged];
             }
         }
         
@@ -476,6 +497,8 @@
 
 // Allows "catching" of the handle if a pan gesture started outside the handle from the drawer's empty space.
 -(void)panOutsideOfCanvases:(UIPanGestureRecognizer*)recognizer {
+    BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
+    
     CGPoint touchPointRelativeToWindow = [recognizer locationInView:self.view.superview];
     CGPoint touchPointRelativeToDrawer = [recognizer locationInView:self.view];
     
@@ -515,15 +538,13 @@
         
         [self.animator addBehavior:self.gravity];
         
-        BOOL velocityDownwards = [recognizer velocityInView:self.view].y >= 0;
-        
         if (self.fromDragHandle && velocityDownwards) {
             
-                [self physicsForHandleDraggedDownwards];
+                [self physicsForHandleDragged];
             
         } else if (self.fromDragHandle && !velocityDownwards) {
             
-                [self physicsForHandleDraggedUpwards];
+                [self physicsForHandleDragged];
         }
         
         // Add throwable feel to the drawer
@@ -564,7 +585,7 @@
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
     if (self.animator == nil) {
-        [self startPhysicsEngine];
+        [self startPhysicsEngineWithDownwardGravity:YES];
     }
 }
 
@@ -651,7 +672,7 @@
     } completion:^(BOOL finished) {
         if (finished) {
             // After sliding the canvas up, reposition the zoomed in note view so that it is still at the same location as the focus view.
-            CGRect zoomedInNoteViewFrame = self.topDrawerContents.currentlyZoomedInNoteView.frame;
+            CGRect zoomedInNoteViewFrame = self.topDrawerContents.noteCircleForZoom.frame;
             CGFloat offset;
             if (self.topDrawerContents.hasRefocused) {
                 offset = destination.origin.y - previousY;
@@ -659,12 +680,10 @@
                 offset = destination.origin.y;
             }
             
-            self.topDrawerContents.currentlyZoomedInNoteView.frame = CGRectMake(zoomedInNoteViewFrame.origin.x,
-                                                                                zoomedInNoteViewFrame.origin.y - offset,
-                                                                                zoomedInNoteViewFrame.size.width,
-                                                                                zoomedInNoteViewFrame.size.height);
-            
-            self.topDrawerContents.originalZoomedInNoteViewFrame = self.topDrawerContents.currentlyZoomedInNoteView.frame;
+            self.topDrawerContents.noteCircleForZoom.frame = CGRectMake(zoomedInNoteViewFrame.origin.x,
+                                                                        zoomedInNoteViewFrame.origin.y - offset,
+                                                                        zoomedInNoteViewFrame.size.width,
+                                                                        zoomedInNoteViewFrame.size.height);
             
             self.topDrawerContents.isRunningZoomAnimation = NO;
         }
@@ -680,6 +699,7 @@
     }
     
     // Note is dismissed, reset the refocus flag.
+    self.topDrawerContents.isRefocus = NO;
     self.topDrawerContents.hasRefocused = NO;
     
     // Restore canvas position and the animator.
@@ -688,7 +708,11 @@
     } completion:^(BOOL finished) {
         if (finished) {
             if (self.animator == nil) {
-                [self startPhysicsEngine];
+                if (self.isDownwardGravity == NO) {
+                    [self startPhysicsEngineWithDownwardGravity:NO];
+                } else {
+                    [self startPhysicsEngineWithDownwardGravity:YES];
+                }
             }
             
             self.topDrawerContents.isRunningZoomAnimation = NO;

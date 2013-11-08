@@ -6,12 +6,12 @@
 //  Copyright (c) 2013 University of British Columbia. All rights reserved.
 //
 
-#import "CanvasSelectionViewController.h"
+#import "CanvasNavBarController.h"
 #import "CanvasMenuPopover.h"
 #import "Notifications.h"
 #import "Constants.h"
 
-@interface CanvasSelectionViewController ()
+@interface CanvasNavBarController ()
 
 @property UINavigationBar* menuBar;
 
@@ -22,7 +22,7 @@
 
 @end
 
-@implementation CanvasSelectionViewController
+@implementation CanvasNavBarController
 
 @synthesize canvasMenuPopoverController;
 
@@ -43,9 +43,10 @@
         
         if (popoverClass != nil && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
             
-            CanvasMenuPopover *canvasTitlePopover = [[CanvasMenuPopover alloc] init];
-            self.canvasMenuPopoverController = [[UIPopoverController alloc] initWithContentViewController:canvasTitlePopover];
-            canvasTitlePopover.popoverController = self.canvasMenuPopoverController;
+            CanvasMenuPopover *canvasMenuPopover = [[CanvasMenuPopover alloc] init];
+            UINavigationController* navController = [[UINavigationController alloc] initWithRootViewController:canvasMenuPopover];
+            self.canvasMenuPopoverController = [[UIPopoverController alloc] initWithContentViewController:navController];
+            canvasMenuPopover.popoverController = self.canvasMenuPopoverController;
             
             if ([self.defaults objectForKey:Key_CurrentCanvasIndex]) {
                                 
