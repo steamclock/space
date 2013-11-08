@@ -125,16 +125,12 @@ static BOOL isRotating;
     self.zoomAnimationDuration = 0.18;
 }
 
--(void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
+-(void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
     
     // Load last selected canvas.
     self.currentCanvas = [[[NSUserDefaults standardUserDefaults] objectForKey:Key_CanvasNumber] intValue];
     [self loadCurrentCanvas];
-}
-
--(void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
     
     [self addBoundariesForCanvas];
     
