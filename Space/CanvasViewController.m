@@ -125,12 +125,16 @@ static BOOL isRotating;
     self.zoomAnimationDuration = 0.18;
 }
 
--(void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
+-(void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
     
     // Load last selected canvas.
     self.currentCanvas = [[[NSUserDefaults standardUserDefaults] objectForKey:Key_CanvasNumber] intValue];
     [self loadCurrentCanvas];
+}
+
+-(void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
     
     [self addBoundariesForCanvas];
     
@@ -213,7 +217,9 @@ static BOOL isRotating;
     if (self.isCurrentlyZoomedIn) {
         self.isRefocus = NO;
         self.loadCurrentCanvasAfterAnimation = YES;
-        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:nil];
+        [self toggleZoomForNoteView:self.currentlyZoomedInNoteView completion:^{
+            [self loadCurrentCanvas];
+        }];
     } else {
         [self loadCurrentCanvas];
     }
