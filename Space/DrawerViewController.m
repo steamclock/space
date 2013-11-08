@@ -624,9 +624,6 @@ static BOOL hasLoaded;
 #pragma mark - Canvas Sliding
 
 -(void)slideOutCanvases {
-    // UIDynamic overwrites manual frame positioning, so it needs to be turned off first.
-    [self stopPhysicsEngine];
-    
     // Stores the frame before sliding out so we can slide back to it.
     if (self.topDrawerContents.isRefocus == NO) {
         self.topCanvasFrameBeforeSlidingOut = self.topDrawerContents.view.frame;
@@ -652,6 +649,9 @@ static BOOL hasLoaded;
     if (destination.origin.y > -Key_NavBarHeight) {
         self.topDrawerContents.isRunningZoomAnimation = NO;
         return;
+    } else {
+        // UIDynamic overwrites manual frame positioning, so it needs to be turned off first.
+        [self stopPhysicsEngine];
     }
     
     if (destination.origin.y > 0) {
