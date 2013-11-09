@@ -437,14 +437,17 @@ static BOOL dragStarted = NO;
     }
     
     UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(noteTap:)];
-    [noteView addGestureRecognizer:tapGestureRecognizer];
+    // [noteView addGestureRecognizer:tapGestureRecognizer];
+    [noteView performSelector:@selector(addGestureRecognizer:) withObject:tapGestureRecognizer afterDelay:0];
     
     UIPanGestureRecognizer* panGestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(noteDrag:)];
-    [noteView addGestureRecognizer:panGestureRecognizer];
-
+    // [noteView addGestureRecognizer:panGestureRecognizer];
+    [noteView performSelector:@selector(addGestureRecognizer:) withObject:panGestureRecognizer afterDelay:0];
+    
     UILongPressGestureRecognizer* longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(noteLongPress:)];
-    [noteView addGestureRecognizer:longPress];
-
+    // [noteView addGestureRecognizer:longPress];
+    [noteView performSelector:@selector(addGestureRecognizer:) withObject:longPress afterDelay:0];
+    
     [self.view addSubview:noteView];
     [self.collision addItem:noteView];
     [self.circleBehavior addItem:noteView];
@@ -748,6 +751,10 @@ static BOOL dragStarted = NO;
 }
 
 -(void)toggleZoomForNoteView:(NoteView*)noteView completion:(void (^)(void))zoomCompleted {
+    if (self.animator.isRunning) {
+        [self.animator removeAllBehaviors];
+    }
+    
     self.isRunningZoomAnimation = YES;
     UIInterfaceOrientation orientation = [UIApplication sharedApplication].statusBarOrientation;
     
@@ -759,10 +766,6 @@ static BOOL dragStarted = NO;
     if (self.isCurrentlyZoomedIn == NO || self.shouldZoomInAfterCreatingNewNote == YES) {
         noteView.originalPositionX = noteView.note.positionX;
         noteView.originalPositionY = noteView.note.positionY;
-        
-        // Cannot transform properly when the view is being controlled by the animator.
-        [self.collision removeItem:noteView];
-        [self.circleBehavior removeItem:noteView];
         
         self.isCurrentlyZoomedIn = YES;
         self.shouldZoomInAfterCreatingNewNote = NO;
@@ -790,6 +793,12 @@ static BOOL dragStarted = NO;
             }
             
         } completion:^(BOOL finished) {
+            
+            if ([[self.animator behaviors] count] == 0) {
+                [self.animator addBehavior:self.collision];
+                [self.animator addBehavior:self.circleBehavior];
+            }
+            
             // Show editor.
             [UIView animateWithDuration:self.zoomAnimationDuration animations:^{
                 self.focus.view.alpha = 1;
@@ -825,6 +834,11 @@ static BOOL dragStarted = NO;
             self.noteCircleForZoom.layer.masksToBounds = NO;
             
         } completion:^(BOOL finished) {
+            
+            if ([[self.animator behaviors] count] == 0) {
+                [self.animator addBehavior:self.collision];
+                [self.animator addBehavior:self.circleBehavior];
+            }
             
             self.isRunningZoomAnimation = NO;
             
