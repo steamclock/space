@@ -8,7 +8,6 @@
 
 #import "AppDelegate.h"
 #import "ContainerViewController.h"
-#import "DrawerViewController.h"
 #import "CanvasViewController.h"
 #import "FocusViewController.h"
 #import "CanvasNavBarController.h"
@@ -32,17 +31,17 @@
     CanvasViewController* noteCanvas = [[CanvasViewController alloc] initAsNoteCanvasWithTopLevelView:container.view];
     CanvasViewController* trashCanvas = [[CanvasViewController alloc] initAsTrashCanvasWithTopLevelView:container.view];
     
-    DrawerViewController* drawer = [[DrawerViewController alloc] init];
-    drawer.bottomDrawerContents = trashCanvas;
-    drawer.topDrawerContents = noteCanvas;
+    self.drawer = [[DrawerViewController alloc] init];
+    self.drawer.bottomDrawerContents = trashCanvas;
+    self.drawer.topDrawerContents = noteCanvas;
     
     container.view.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-    [container addChildViewController:drawer];
-    [container.view addSubview:drawer.view];
+    [container addChildViewController:self.drawer];
+    [container.view addSubview:self.drawer.view];
     
-    noteCanvas.drawer = drawer;
-    trashCanvas.drawer = drawer;
-    container.drawer = drawer;
+    noteCanvas.drawer = self.drawer;
+    trashCanvas.drawer = self.drawer;
+    container.drawer = self.drawer;
     
     FocusViewController* focus = [[FocusViewController alloc] init];
     focus.view.alpha = 0;

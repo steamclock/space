@@ -7,6 +7,8 @@
 //
 
 #import "CanvasMenuViewController.h"
+#import "AppDelegate.h"
+#import "DrawerViewController.h"
 #import "Notifications.h"
 #import "Constants.h"
 #import "Database.h"
@@ -187,9 +189,20 @@ static CanvasMenuViewController* _mainInstance;
                 return;
             }
             
-            [self deleteCanvas:indexPath.row];
-            [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-            [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasAddedorDeletedNotification object:self];
+            AppDelegate* delegate = [UIApplication sharedApplication].delegate;
+            DrawerViewController* drawerVC = delegate.drawer;
+            
+            if (drawerVC.topDrawerContents.isCurrentlyZoomedIn) {
+                [drawerVC.topDrawerContents toggleZoomForNoteView:drawerVC.topDrawerContents.currentlyZoomedInNoteView completion:^{
+                    [self deleteCanvas:indexPath.row];
+                    [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasAddedorDeletedNotification object:self];
+                }];
+            } else {
+                [self deleteCanvas:indexPath.row];
+                [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasAddedorDeletedNotification object:self];
+            }
         }
         
     }
@@ -208,6 +221,7 @@ static CanvasMenuViewController* _mainInstance;
     
     indexOfCanvasToDelete = canvasIndex;
     canvasToDelete = [self.canvasTitleIndices[indexOfCanvasToDelete] intValue];
+    
     [[Database sharedDatabase] deleteAllNotesInCanvas:canvasToDelete];
     
     [self.canvasTitles removeObjectAtIndex:indexOfCanvasToDelete];
