@@ -107,6 +107,7 @@ static BOOL isRotating;
         // Allow creating new notes.
         UITapGestureRecognizer *tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(spaceTap:)];
         [self.view addGestureRecognizer:tapGestureRecognizer];
+        tapGestureRecognizer.delegate = self;
         
         // Catch the recovered notes.
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(noteRecovered:) name:kNoteRecoveredNotification object:nil];
@@ -1098,6 +1099,10 @@ static BOOL dragStarted = NO;
 }
 
 - (void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {
+}
+
+-(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRequireFailureOfGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    return NO;
 }
 
 @end

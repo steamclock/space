@@ -32,7 +32,7 @@
 
 @class FocusViewController, DrawerViewController;
 
-@interface CanvasViewController : UIViewController <UIDynamicAnimatorDelegate>
+@interface CanvasViewController : UIViewController <UIDynamicAnimatorDelegate, UIGestureRecognizerDelegate>
 
 @property (weak, nonatomic) DrawerViewController* drawer;
 
