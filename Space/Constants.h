@@ -14,7 +14,7 @@ extern int const Key_NavBarHeight;
 extern NSString* const Key_AppInstalled;
 
 extern NSString* const Key_CanvasTitles;
-extern NSString* const Key_CanvasTitleIndices;
+extern NSString* const Key_CanvasTitlesIds;
 
 extern NSString* const Key_CanvasNumber;
 extern NSString* const Key_CanvasName;

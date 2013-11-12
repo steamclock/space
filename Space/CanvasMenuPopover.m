@@ -37,11 +37,11 @@
         
         self.defaults = [NSUserDefaults standardUserDefaults];
         
-        if ([self.defaults objectForKey:Key_CanvasTitles] && [self.defaults objectForKey:Key_CanvasTitleIndices]) {
+        if ([self.defaults objectForKey:Key_CanvasTitles] && [self.defaults objectForKey:Key_CanvasTitlesIds]) {
             
             // Load available canvases.
             [self initializeMenuWithCanvasTitles:[self.defaults objectForKey:Key_CanvasTitles]
-                                      andIndices:[self.defaults objectForKey:Key_CanvasTitleIndices]];
+                                      andIndices:[self.defaults objectForKey:Key_CanvasTitlesIds]];
             
         } else {
             
@@ -50,7 +50,7 @@
                                       andIndices:@[@0, @1]];
             
             [self.defaults setObject:@[@"Canvas One", @"Canvas Two"] forKey:Key_CanvasTitles];
-            [self.defaults setObject:@[@0, @1] forKey:Key_CanvasTitleIndices];
+            [self.defaults setObject:@[@0, @1] forKey:Key_CanvasTitlesIds];
             [self.defaults setObject:[NSNumber numberWithInt:0] forKey:Key_CurrentCanvasIndex];
             [self.defaults synchronize];
         }
@@ -107,7 +107,7 @@
     // Test tableview
     self.canvasMenuViewController = [CanvasMenuViewController canvasMenuViewController];
     self.canvasMenuViewController.view.frame = self.view.frame;
-    [self.canvasMenuViewController setupMenuWithCanvasTitles:canvasTitles andIndices:canvasIndices];
+    [self.canvasMenuViewController setupMenuWithCanvasTitles:canvasTitles andIds:canvasIndices];
     
     [self.view addSubview:self.canvasMenuViewController.view];
 }

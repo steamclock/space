@@ -79,12 +79,12 @@ static CanvasMenuViewController* _mainInstance;
     // Dispose of any resources that can be recreated.
 }
 
--(void)setupMenuWithCanvasTitles:(NSArray *)canvasTitles andIndices:(NSArray *)canvasIndices {
+-(void)setupMenuWithCanvasTitles:(NSArray *)canvasTitles andIds:(NSArray *)canvasIds {
     // Store canvas titles and indices in NSUserDefaults.
     self.canvasTitles = [canvasTitles mutableCopy];
-    self.canvasTitleIndices = [canvasIndices mutableCopy];
+    self.canvasTitlesIds = [canvasIds mutableCopy];
     [self.defaults setObject:self.canvasTitles forKey:Key_CanvasTitles];
-    [self.defaults setObject:self.canvasTitleIndices forKey:Key_CanvasTitleIndices];
+    [self.defaults setObject:self.canvasTitlesIds forKey:Key_CanvasTitlesIds];
     [self.defaults synchronize];
 }
 
@@ -214,20 +214,20 @@ static CanvasMenuViewController* _mainInstance;
 #pragma mark - Delete Canvas
 
 -(void)deleteCanvas:(int)canvasIndex {
-    int canvasToDelete;
+    int canvasIdToDelete;
     int indexOfCanvasToDelete;
-    int canvasToSwitchTo;
+    int canvasIdToSwitchTo;
     int indexOfCanvasToSwitchTo;
     
     indexOfCanvasToDelete = canvasIndex;
-    canvasToDelete = [self.canvasTitleIndices[indexOfCanvasToDelete] intValue];
+    canvasIdToDelete = [self.canvasTitlesIds[indexOfCanvasToDelete] intValue];
     
-    [[Database sharedDatabase] deleteAllNotesInCanvas:canvasToDelete];
+    [[Database sharedDatabase] deleteAllNotesInCanvas:canvasIdToDelete];
     
     [self.canvasTitles removeObjectAtIndex:indexOfCanvasToDelete];
-    [self.canvasTitleIndices removeObjectAtIndex:indexOfCanvasToDelete];
+    [self.canvasTitlesIds removeObjectAtIndex:indexOfCanvasToDelete];
     [self.defaults setObject:self.canvasTitles forKey:Key_CanvasTitles];
-    [self.defaults setObject:self.canvasTitleIndices forKey:Key_CanvasTitleIndices];
+    [self.defaults setObject:self.canvasTitlesIds forKey:Key_CanvasTitlesIds];
     [self.defaults synchronize];
     
     // Switches canvas view to the previous one by default
@@ -239,15 +239,15 @@ static CanvasMenuViewController* _mainInstance;
         indexOfCanvasToSwitchTo = 0;
     }
     
-    canvasToSwitchTo = [[self.canvasTitleIndices objectAtIndex:indexOfCanvasToSwitchTo] intValue];
-    NSLog(@"Canvas to switch to after delete = %d", canvasToSwitchTo);
+    canvasIdToSwitchTo = [[self.canvasTitlesIds objectAtIndex:indexOfCanvasToSwitchTo] intValue];
+    NSLog(@"Canvas to switch to after delete = %d", canvasIdToSwitchTo);
     
     [self.defaults setObject:[NSNumber numberWithInt:indexOfCanvasToSwitchTo] forKey:Key_CurrentCanvasIndex];
     [self.defaults synchronize];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
                                                         object:self
-                                                      userInfo:@{Key_CanvasNumber:[NSNumber numberWithInt:canvasToSwitchTo],
+                                                      userInfo:@{Key_CanvasNumber:[NSNumber numberWithInt:canvasIdToSwitchTo],
                                                                  Key_CanvasName:[self.canvasTitles objectAtIndex:indexOfCanvasToSwitchTo]}];
     
     // Delete operation completed, so reset the check.
@@ -301,13 +301,15 @@ static CanvasMenuViewController* _mainInstance;
         [self.canvasTitles replaceObjectAtIndex:self.pathOfCellToEdit.row withObject:self.currentTextField.text];
     }
     
+    int canvasIdToUpdate = [[self.canvasTitlesIds objectAtIndex:self.pathOfCellToEdit.row] intValue];
+    
     [self.defaults setObject:[NSNumber numberWithInt:self.pathOfCellToEdit.row] forKey:Key_CurrentCanvasIndex];
     [self.defaults setObject:self.canvasTitles forKey:Key_CanvasTitles];
     [self.defaults synchronize];
     
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
                                                         object:self
-                                                      userInfo:@{Key_CanvasNumber:[NSNumber numberWithInt:self.pathOfCellToEdit.row],
+                                                      userInfo:@{Key_CanvasNumber:[NSNumber numberWithInt:canvasIdToUpdate],
                                                                  Key_CanvasName:[self.canvasTitles objectAtIndex:self.pathOfCellToEdit.row]}];
     
     self.cellToEdit.textLabel.alpha = 1;
@@ -365,22 +367,23 @@ static CanvasMenuViewController* _mainInstance;
     BOOL isIndexUpdated = NO;
     
     // Loop through canvas title indices and assign a unique number that has not been taken yet.
-    for (int i = 0; i < [self.canvasTitleIndices count]; i++) {
-        if ([self.canvasTitleIndices containsObject:[NSNumber numberWithInt:i]]) {
+    for (int i = 0; i < [self.canvasTitlesIds count]; i++) {
+        if ([self.canvasTitlesIds containsObject:[NSNumber numberWithInt:i]]) {
             continue;
         } else {
-            [self.canvasTitleIndices addObject:[NSNumber numberWithInt:i]];
+            [self.canvasTitlesIds addObject:[NSNumber numberWithInt:i]];
             isIndexUpdated = YES;
             break;
         }
     }
     
     if (isIndexUpdated == NO) {
-        [self.canvasTitleIndices addObject:[NSNumber numberWithInt:self.canvasTitleIndices.count]];
+        [self.canvasTitlesIds addObject:[NSNumber numberWithInt:self.canvasTitlesIds.count]];
     }
     
+    [self.defaults setObject:[NSNumber numberWithInt:newCanvasPath.row] forKey:Key_CurrentCanvasIndex];
     [self.defaults setObject:self.canvasTitles forKey:Key_CanvasTitles];
-    [self.defaults setObject:self.canvasTitleIndices forKey:Key_CanvasTitleIndices];
+    [self.defaults setObject:self.canvasTitlesIds forKey:Key_CanvasTitlesIds];
     [self.defaults synchronize];
     
     [self.tableView insertRowsAtIndexPaths:@[newCanvasPath] withRowAnimation:UITableViewRowAnimationAutomatic];
@@ -464,7 +467,7 @@ static CanvasMenuViewController* _mainInstance;
     // Ask observer to change canvas.
     [[NSNotificationCenter defaultCenter] postNotificationName:kCanvasChangedNotification
                                                         object:self
-                                                      userInfo:@{Key_CanvasNumber:self.canvasTitleIndices[canvasIndex],
+                                                      userInfo:@{Key_CanvasNumber:self.canvasTitlesIds[canvasIndex],
                                                                  Key_CanvasName:[self.canvasTitles objectAtIndex:canvasIndex]}];
 }
 
