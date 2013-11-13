@@ -1101,7 +1101,14 @@ static BOOL dragStarted = NO;
 - (void)dynamicAnimatorWillResume:(UIDynamicAnimator *)animator {
 }
 
--(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRequireFailureOfGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+#pragma mark - Gesture Recognizer Delegate
+
+-(BOOL)gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldReceiveTouch:(UITouch *)touch {
+    if (touch.view == self.view) {
+        return YES;
+    } else if ([self.view.subviews containsObject:touch.view] && ![touch.view isKindOfClass:[self class]]) {
+        return YES;
+    }
     return NO;
 }
 
