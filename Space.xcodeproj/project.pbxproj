@@ -338,7 +338,7 @@
 				ORGANIZATIONNAME = "University of British Columbia";
 				TargetAttributes = {
 					A6F553EA17BD737200728B8C = {
-						DevelopmentTeam = GH868RP95T;
+						DevelopmentTeam = 22DP2FRY4C;
 					};
 					A6F5540A17BD737200728B8C = {
 						TestTargetID = A6F553EA17BD737200728B8C;
@@ -566,7 +566,7 @@
 				GCC_PREFIX_HEADER = "Space/Space-Prefix.pch";
 				INFOPLIST_FILE = "Space/Space-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "CC11FEF7-2B61-4E4B-BDAB-4A9CF032686E";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -578,12 +578,12 @@
 				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution: Michael Griffin (22DP2FRY4C)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Space/Space-Prefix.pch";
 				INFOPLIST_FILE = "Space/Space-Info.plist";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "";
+				PROVISIONING_PROFILE = "CC11FEF7-2B61-4E4B-BDAB-4A9CF032686E";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
